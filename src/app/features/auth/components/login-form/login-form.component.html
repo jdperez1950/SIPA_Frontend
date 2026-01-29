@@ -1,0 +1,76 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+  <!-- Email Field -->
+  <div>
+    <label for="email" class="block text-sm font-medium text-sipa-text-body">
+      Correo Electrónico
+    </label>
+    <div class="mt-1">
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        class="appearance-none block w-full px-3 py-2 border border-sipa-form-input-border rounded-md shadow-sm placeholder-sipa-form-placeholder focus:outline-none focus:ring-sipa-form-input-focus focus:border-sipa-form-input-focus sm:text-sm"
+        [class.border-sipa-urgent]="form.controls.email.invalid && form.controls.email.touched"
+      />
+    </div>
+    @if (form.controls.email.invalid && form.controls.email.touched) {
+      <div class="mt-1 text-sm text-sipa-urgent">
+        @if (form.controls.email.hasError('required')) {
+          El correo es requerido
+        } @else if (form.controls.email.hasError('email')) {
+          Formato de correo inválido
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Password Field -->
+  <div>
+    <label for="password" class="block text-sm font-medium text-sipa-text-body">
+      Contraseña
+    </label>
+    <div class="mt-1">
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        class="appearance-none block w-full px-3 py-2 border border-sipa-form-input-border rounded-md shadow-sm placeholder-sipa-form-placeholder focus:outline-none focus:ring-sipa-form-input-focus focus:border-sipa-form-input-focus sm:text-sm"
+        [class.border-sipa-urgent]="form.controls.password.invalid && form.controls.password.touched"
+      />
+    </div>
+    @if (form.controls.password.invalid && form.controls.password.touched) {
+      <div class="mt-1 text-sm text-sipa-urgent">
+        @if (form.controls.password.hasError('required')) {
+          La contraseña es requerida
+        } @else if (form.controls.password.hasError('minlength')) {
+          Mínimo 6 caracteres
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center justify-between">
+    <div class="text-sm">
+      <a routerLink="/auth/forgot-password" class="font-medium text-sipa-primary hover:text-sipa-secondary">
+        ¿Olvidaste tu contraseña?
+      </a>
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <div>
+    <button
+      type="submit"
+      [disabled]="isLoading() || form.invalid"
+      class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-sipa-action-primary-text bg-sipa-action-primary-bg hover:bg-sipa-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sipa-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    >
+      @if (isLoading()) {
+        <span class="material-symbols-rounded animate-spin -ml-1 mr-3 text-[20px] text-white leading-none">progress_activity</span>
+        Iniciando sesión...
+      } @else {
+        Ingresar
+      }
+    </button>
+  </div>
+</form>

@@ -1,3 +1,77 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@use "tailwindcss";
+
+@theme {
+  /* --- 1. MARCA INSTITUCIONAL --- */
+  --color-sipa-primary: #0033A0;
+  --color-sipa-primary-hover: #002575;
+  --color-sipa-secondary: #D92330;
+  --color-sipa-secondary-hover: #B91C26;
+  --color-sipa-accent: #00C3E3;
+
+  /* --- 2. INTERFAZ GENERAL --- */
+  --color-sipa-bg: #F3F4F6;
+  --color-sipa-surface: #FFFFFF;
+  --color-sipa-surface-alt: #F9FAFB;
+  --color-sipa-border: #E5E7EB;
+  --color-sipa-border-strong: #D1D5DB;
+  
+  --color-sipa-text-main: #111827;
+  --color-sipa-text-body: #374151;
+  --color-sipa-text-muted: #6B7280;
+  --color-sipa-text-inverted: #FFFFFF;
+
+  /* --- 3. ACCIONES --- */
+  --color-sipa-action-primary-bg: #0033A0;
+  --color-sipa-action-primary-text: #FFFFFF;
+  --color-sipa-action-secondary-bg: transparent;
+  --color-sipa-action-secondary-border: #0033A0;
+  --color-sipa-action-secondary-text: #0033A0;
+  --color-sipa-action-danger-bg: #FEE2E2;
+  --color-sipa-action-danger-text: #991B1B;
+  --color-sipa-action-disabled-bg: #E5E7EB;
+  --color-sipa-action-disabled-text: #9CA3AF;
+
+  /* --- 4. FORMULARIOS --- */
+  --color-sipa-form-input-bg: #FFFFFF;
+  --color-sipa-form-input-border: #D1D5DB;
+  --color-sipa-form-input-focus: #0033A0;
+  --color-sipa-form-input-error: #EF4444;
+  --color-sipa-form-placeholder: #9CA3AF;
+
+  /* --- 5. SEMÁFORO DE NEGOCIO --- */
+  --color-sipa-validated: #15803D;
+  --color-sipa-validated-bg: #DCFCE7;
+  --color-sipa-returned: #B91C1C;
+  --color-sipa-returned-bg: #FEE2E2;
+  --color-sipa-process: #0369A1;
+  --color-sipa-process-bg: #E0F2FE;
+  --color-sipa-pending: #4B5563;
+  --color-sipa-pending-bg: #F3F4F6;
+
+  /* --- 6. PRIORIDADES --- */
+  --color-sipa-urgent: #DC2626;
+  --color-sipa-alert: #EA580C;
+  --color-sipa-info: #2563EB;
+
+  /* --- 7. ESCENARIOS DE VIABILIDAD --- */
+  --color-sipa-enabled: #16A34A;
+  --color-sipa-pre-enabled: #84CC16;
+  --color-sipa-high-possibility: #EAB308;
+  --color-sipa-possibility: #F59E0B;
+  --color-sipa-no-possibility: #9CA3AF;
+  
+  /* --- 8. PALETA EXTENDIDA --- */
+  --color-sipa-chart-blue: #3B82F6;
+  --color-sipa-chart-indigo: #6366F1;
+  --color-sipa-chart-purple: #8B5CF6;
+  --color-sipa-chart-pink: #EC4899;
+  --color-sipa-chart-teal: #14B8A6;
+  --color-sipa-chart-cyan: #06B6D4;
+  --color-sipa-chart-orange: #F97316;
+  --color-sipa-chart-slate: #64748B;
+
+  /* --- 9. DEGRADADOS --- */
+  --background-image-sipa-gradient-institutional: linear-gradient(135deg, #0033A0 0%, #0044CC 100%);
+  --background-image-sipa-gradient-digital: linear-gradient(90deg, #0033A0 0%, #00C3E3 100%);
+  --background-image-sipa-gradient-deep: linear-gradient(180deg, #0098DA 0%, #0033A0 100%);
+}
