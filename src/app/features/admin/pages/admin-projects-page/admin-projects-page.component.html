@@ -31,116 +31,137 @@
       <!-- Status Filter -->
       <div class="flex flex-wrap gap-2 w-full md:w-auto">
         <button (click)="filterByStatus(null)" [class]="selectedStatus() === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Todos</button>
-        <button (click)="filterByStatus('ACTIVO')" [class]="selectedStatus() === 'ACTIVO' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Activos</button>
-        <button (click)="filterByStatus('CERTIFICADO')" [class]="selectedStatus() === 'CERTIFICADO' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Certificados</button>
-        <button (click)="filterByStatus('SUSPENDIDO')" [class]="selectedStatus() === 'SUSPENDIDO' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Suspendidos</button>
+        <button (click)="filterByStatus('ACTIVE')" [class]="selectedStatus() === 'ACTIVE' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Activos</button>
+        <button (click)="filterByStatus('CERTIFIED')" [class]="selectedStatus() === 'CERTIFIED' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Certificados</button>
+        <button (click)="filterByStatus('SUSPENDED')" [class]="selectedStatus() === 'SUSPENDED' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Suspendidos</button>
       </div>
     </div>
   </div>
 
   <!-- Projects Grid (Card Layout) -->
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-    @for (project of filteredProjects(); track project.id) {
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 flex flex-col gap-4">
-        <!-- Card Header -->
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">{{ project.code }}</span>
-              <span [class]="'px-2 py-0.5 rounded text-[10px] font-bold ' + getStatusClass(project.status)">
-                {{ project.status }}
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-24 text-gray-500">
+      <span class="material-symbols-rounded animate-spin text-4xl mb-4">progress_activity</span>
+      <p class="text-lg font-medium">Cargando proyectos...</p>
+    </div>
+  } @else if (projects().length === 0) {
+    <div class="flex flex-col items-center justify-center py-24 text-gray-500 bg-white rounded-xl border border-gray-200 border-dashed">
+      <span class="material-symbols-rounded text-5xl mb-4 text-gray-300">folder_off</span>
+      <p class="text-lg font-medium text-gray-900">No se encontraron proyectos</p>
+      <p class="text-sm">Intenta ajustar los filtros de búsqueda</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      @for (project of projects(); track project.id) {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 flex flex-col gap-4">
+          <!-- Card Header -->
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">{{ project.code }}</span>
+                <span [class]="'px-2 py-0.5 rounded text-[10px] font-bold ' + getStatusClass(project.status)">
+                  {{ getStatusLabel(project.status) }}
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 leading-tight">{{ project.organization }}</h3>
+              <div class="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                <span class="material-symbols-rounded text-sm">location_on</span>
+                {{ project.municipality }}
+              </div>
+            </div>
+            <div class="flex flex-col items-end">
+              <span [class]="'text-xs font-bold flex items-center gap-1 ' + getViabilityColor(project.viabilityStatus)">
+                <span class="material-symbols-rounded text-sm">verified</span>
+                {{ project.viabilityStatus.replace('_', ' ') }}
               </span>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 leading-tight">{{ project.organization }}</h3>
-            <div class="flex items-center gap-1 text-sm text-gray-500 mt-1">
-              <span class="material-symbols-rounded text-sm">location_on</span>
-              {{ project.municipality }}
+          </div>
+
+          <div class="border-t border-gray-100 my-1"></div>
+
+          <!-- Progress Steppers -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <!-- Technical Axis -->
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] text-gray-400 font-medium uppercase">Técnico</span>
+              <div class="flex gap-1">
+                @for (step of [1,2,3,4]; track step) {
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.technical >= step ? 'bg-blue-500' : 'bg-gray-200')"></div>
+                }
+              </div>
+            </div>
+            <!-- Legal Axis -->
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] text-gray-400 font-medium uppercase">Legal</span>
+              <div class="flex gap-1">
+                @for (step of [1,2,3,4]; track step) {
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.legal >= step ? 'bg-purple-500' : 'bg-gray-200')"></div>
+                }
+              </div>
+            </div>
+            <!-- Financial Axis -->
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] text-gray-400 font-medium uppercase">Financiero</span>
+              <div class="flex gap-1">
+                @for (step of [1,2,3,4]; track step) {
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.financial >= step ? 'bg-green-500' : 'bg-gray-200')"></div>
+                }
+              </div>
+            </div>
+            <!-- Social Axis -->
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] text-gray-400 font-medium uppercase">Social</span>
+              <div class="flex gap-1">
+                @for (step of [1,2,3,4]; track step) {
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.social >= step ? 'bg-orange-500' : 'bg-gray-200')"></div>
+                }
+              </div>
             </div>
           </div>
-          <div class="flex flex-col items-end">
-            <span [class]="'text-xs font-bold flex items-center gap-1 ' + getViabilityColor(project.viabilityStatus)">
-              <span class="material-symbols-rounded text-sm">verified</span>
-              {{ project.viabilityStatus.replace('_', ' ') }}
-            </span>
+
+          <div class="border-t border-gray-100 my-1"></div>
+
+          <!-- Advisor & Actions -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              @if (project.advisor) {
+                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                  {{ project.advisor.name.charAt(0) }}
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-gray-400">Asesor Asignado</span>
+                  <span class="text-sm font-medium text-gray-900">{{ project.advisor.name }}</span>
+                </div>
+              } @else {
+                <div class="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                  <span class="material-symbols-rounded text-lg">priority_high</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-gray-400">Sin Asignación</span>
+                  <span class="text-sm font-medium text-orange-600">Requiere Atención</span>
+                </div>
+              }
+            </div>
+
+            <button 
+              (click)="openAssignModal(project)"
+              class="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+            >
+              {{ project.advisor ? 'Reasignar' : 'Asignar Asesor' }}
+            </button>
           </div>
         </div>
-
-        <div class="border-t border-gray-100 my-1"></div>
-
-        <!-- Progress Steppers -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <!-- Technical Axis -->
-          <div class="flex flex-col gap-1">
-            <span class="text-[10px] text-gray-400 font-medium uppercase">Técnico</span>
-            <div class="flex gap-1">
-              @for (step of [1,2,3,4]; track step) {
-                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.technical >= step ? 'bg-blue-500' : 'bg-gray-200')"></div>
-              }
-            </div>
-          </div>
-          <!-- Legal Axis -->
-          <div class="flex flex-col gap-1">
-            <span class="text-[10px] text-gray-400 font-medium uppercase">Legal</span>
-            <div class="flex gap-1">
-              @for (step of [1,2,3,4]; track step) {
-                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.legal >= step ? 'bg-purple-500' : 'bg-gray-200')"></div>
-              }
-            </div>
-          </div>
-          <!-- Financial Axis -->
-          <div class="flex flex-col gap-1">
-            <span class="text-[10px] text-gray-400 font-medium uppercase">Financiero</span>
-            <div class="flex gap-1">
-              @for (step of [1,2,3,4]; track step) {
-                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.financial >= step ? 'bg-green-500' : 'bg-gray-200')"></div>
-              }
-            </div>
-          </div>
-          <!-- Social Axis -->
-          <div class="flex flex-col gap-1">
-            <span class="text-[10px] text-gray-400 font-medium uppercase">Social</span>
-            <div class="flex gap-1">
-              @for (step of [1,2,3,4]; track step) {
-                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.social >= step ? 'bg-orange-500' : 'bg-gray-200')"></div>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div class="border-t border-gray-100 my-1"></div>
-
-        <!-- Advisor & Actions -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            @if (project.advisor) {
-              <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                {{ project.advisor.name.charAt(0) }}
-              </div>
-              <div class="flex flex-col">
-                <span class="text-xs text-gray-400">Asesor Asignado</span>
-                <span class="text-sm font-medium text-gray-900">{{ project.advisor.name }}</span>
-              </div>
-            } @else {
-              <div class="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                <span class="material-symbols-rounded text-lg">priority_high</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-xs text-gray-400">Sin Asignación</span>
-                <span class="text-sm font-medium text-orange-600">Requiere Atención</span>
-              </div>
-            }
-          </div>
-
-          <button 
-            (click)="openAssignModal(project)"
-            class="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-          >
-            {{ project.advisor ? 'Reasignar' : 'Asignar Asesor' }}
-          </button>
-        </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+    
+    <!-- Pagination -->
+    <app-pagination
+      [totalItems]="totalItems()"
+      [itemsPerPage]="pageSize()"
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)">
+    </app-pagination>
+  }
 
   <!-- Assignment Modal Overlay -->
   @if (showAssignModal() && selectedProject()) {

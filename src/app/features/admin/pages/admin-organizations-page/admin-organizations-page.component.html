@@ -1,0 +1,132 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Organizaciones</h1>
+      <p class="text-gray-500">Gestión de organizaciones y acceso al sistema</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+    <!-- Search -->
+    <div class="relative w-full">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <span class="material-symbols-rounded text-gray-400">search</span>
+      </span>
+      <input 
+        type="text" 
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        placeholder="Buscar por nombre, RUC/DNI o correo..."
+      >
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+            <th class="px-6 py-4">Organización / Persona</th>
+            <th class="px-6 py-4">Ubicación</th>
+            <th class="px-6 py-4">Contacto</th>
+            <th class="px-6 py-4">Estado</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @if (isLoading()) {
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                <span class="material-symbols-rounded animate-spin text-3xl">progress_activity</span>
+                <p class="mt-2">Cargando organizaciones...</p>
+              </td>
+            </tr>
+          } @else if (organizations().length === 0) {
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                <span class="material-symbols-rounded text-4xl mb-2">search_off</span>
+                <p>No se encontraron organizaciones</p>
+              </td>
+            </tr>
+          } @else {
+            @for (org of organizations(); track org.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <!-- Org Info -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-100 text-blue-700">
+                      {{ org.name.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">{{ org.name }}</p>
+                      <div class="flex items-center gap-2 text-xs text-gray-500">
+                        <span class="bg-gray-100 px-1.5 py-0.5 rounded">{{ org.identifier }}</span>
+                        <span>{{ getOrganizationTypeLabel(org.type) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Location -->
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ org.municipality }}</span>
+                    <span class="text-xs">{{ org.region }}</span>
+                  </div>
+                </td>
+
+                <!-- Contact -->
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  <div class="flex flex-col">
+                    @if (org.contactName) {
+                      <span class="font-medium">{{ org.contactName }}</span>
+                    }
+                    <span class="text-xs truncate max-w-[150px]" [title]="org.email">{{ org.email }}</span>
+                  </div>
+                </td>
+
+                <!-- Status -->
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                    [class.bg-green-50]="org.status === 'ACTIVE'"
+                    [class.text-green-700]="org.status === 'ACTIVE'"
+                    [class.border-green-200]="org.status === 'ACTIVE'"
+                    [class.bg-gray-50]="org.status !== 'ACTIVE'"
+                    [class.text-gray-600]="org.status !== 'ACTIVE'"
+                    [class.border-gray-200]="org.status !== 'ACTIVE'">
+                    <span class="h-1.5 w-1.5 rounded-full" 
+                      [class.bg-green-500]="org.status === 'ACTIVE'"
+                      [class.bg-gray-400]="org.status !== 'ACTIVE'"></span>
+                    {{ org.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="px-6 py-4 text-right">
+                  <button 
+                    (click)="resetPassword(org)"
+                    class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Restablecer Contraseña">
+                    <span class="material-symbols-rounded">lock_reset</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <app-pagination
+      [totalItems]="totalItems()"
+      [itemsPerPage]="pageSize()"
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)">
+    </app-pagination>
+  </div>
+</div>

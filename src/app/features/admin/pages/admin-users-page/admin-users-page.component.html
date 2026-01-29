@@ -88,87 +88,111 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          @for (user of filteredUsers(); track user.id) {
-            <tr class="hover:bg-gray-50 transition-colors">
-              <!-- User Info -->
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div [class]="'h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ' + user.avatarColor">
-                    {{ user.name.charAt(0) }}
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">{{ user.name }}</p>
-                    <p class="text-xs text-gray-500">{{ user.email }}</p>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Role -->
-              <td class="px-6 py-4">
-                <span [class]="'px-2 py-1 rounded-md text-xs font-medium border ' + getRoleBadgeClass(user.role)">
-                  {{ user.role }}
-                </span>
-              </td>
-
-              <!-- Workload -->
-              <td class="px-6 py-4">
-                @if (user.role === 'ASESOR' || user.role === 'SPAT') {
-                  <div class="flex items-center gap-2">
-                    <div class="flex-1 w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        [class]="'h-full rounded-full ' + getWorkloadColor(user.projectsAssigned || 0, user.maxProjects || 10)" 
-                        [style.width.%]="((user.projectsAssigned || 0) / (user.maxProjects || 10)) * 100"
-                      ></div>
-                    </div>
-                    <span class="text-xs text-gray-500 font-medium">{{ user.projectsAssigned }}/{{ user.maxProjects }}</span>
-                  </div>
-                } @else {
-                  <span class="text-xs text-gray-400">N/A</span>
-                }
-              </td>
-
-              <!-- Status -->
-              <td class="px-6 py-4">
-                <span [class]="'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ' + 
-                  (user.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')">
-                  <span [class]="'w-1.5 h-1.5 rounded-full ' + (user.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500')"></span>
-                  {{ user.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-
-              <!-- Actions -->
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <button 
-                    (click)="openEditModal(user)"
-                    class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    title="Editar"
-                  >
-                    <span class="material-symbols-rounded text-lg">edit</span>
-                  </button>
-                  <button 
-                    (click)="resetPassword(user)"
-                    class="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
-                    title="Restablecer Contraseña"
-                  >
-                    <span class="material-symbols-rounded text-lg">lock_reset</span>
-                  </button>
-                  <button 
-                    (click)="toggleUserStatus(user)"
-                    class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                    [title]="user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'"
-                  >
-                    <span class="material-symbols-rounded text-lg">
-                      {{ user.status === 'ACTIVE' ? 'block' : 'check_circle' }}
-                    </span>
-                  </button>
-                </div>
+          @if (isLoading()) {
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                <span class="material-symbols-rounded animate-spin text-3xl">progress_activity</span>
+                <p class="mt-2">Cargando usuarios...</p>
               </td>
             </tr>
+          } @else if (users().length === 0) {
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                <span class="material-symbols-rounded text-4xl mb-2">search_off</span>
+                <p>No se encontraron usuarios</p>
+              </td>
+            </tr>
+          } @else {
+            @for (user of filteredUsers(); track user.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <!-- User Info -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div [class]="'h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ' + user.avatarColor">
+                      {{ user.name.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">{{ user.name }}</p>
+                      <p class="text-xs text-gray-500">{{ user.email }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Role -->
+                <td class="px-6 py-4">
+                  <span [class]="'px-2 py-1 rounded-md text-xs font-medium border ' + getRoleBadgeClass(user.role)">
+                    {{ user.role }}
+                  </span>
+                </td>
+
+                <!-- Workload -->
+                <td class="px-6 py-4">
+                  @if (user.role === 'ASESOR' || user.role === 'SPAT') {
+                    <div class="flex items-center gap-2">
+                      <div class="flex-1 w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div 
+                          [class]="'h-full rounded-full ' + getWorkloadColor(user.projectsAssigned || 0, user.maxProjects || 10)" 
+                          [style.width.%]="((user.projectsAssigned || 0) / (user.maxProjects || 10)) * 100"
+                        ></div>
+                      </div>
+                      <span class="text-xs text-gray-500 font-medium">{{ user.projectsAssigned }}/{{ user.maxProjects }}</span>
+                    </div>
+                  } @else {
+                    <span class="text-xs text-gray-400">N/A</span>
+                  }
+                </td>
+
+                <!-- Status -->
+                <td class="px-6 py-4">
+                  <span [class]="'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ' + 
+                    (user.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')">
+                    <span [class]="'w-1.5 h-1.5 rounded-full ' + (user.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500')"></span>
+                    {{ user.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="px-6 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button 
+                      (click)="openEditModal(user)"
+                      class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Editar"
+                    >
+                      <span class="material-symbols-rounded text-lg">edit</span>
+                    </button>
+                    <button 
+                      (click)="resetPassword(user)"
+                      class="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                      title="Restablecer Contraseña"
+                    >
+                      <span class="material-symbols-rounded text-lg">lock_reset</span>
+                    </button>
+                    <button 
+                      (click)="toggleUserStatus(user)"
+                      class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      [title]="user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'"
+                    >
+                      <span class="material-symbols-rounded text-lg">
+                        {{ user.status === 'ACTIVE' ? 'block' : 'check_circle' }}
+                      </span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination -->
+    <app-pagination
+      [totalItems]="totalItems()"
+      [itemsPerPage]="pageSize()"
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)">
+    </app-pagination>
   </div>
 </div>
 

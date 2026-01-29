@@ -17,6 +17,7 @@ export class SidebarComponent {
     { label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
     { label: 'Usuarios', icon: 'group', route: '/admin/users' },
     { label: 'Proyectos', icon: 'folder_open', route: '/admin/projects' },
+    { label: 'Organizaciones', icon: 'corporate_fare', route: '/admin/organizations' },
     { label: 'Catálogos', icon: 'settings', route: '/admin/settings' },
     { label: 'Reportes', icon: 'bar_chart', route: '/admin/reports' },
   ];

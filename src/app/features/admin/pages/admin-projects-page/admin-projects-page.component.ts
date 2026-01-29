@@ -1,81 +1,34 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface Project {
-  id: string;
-  code: string;
-  organization: string;
-  municipality: string;
-  status: 'ACTIVO' | 'SUSPENDIDO' | 'CERTIFICADO' | 'BENEFICIADO';
-  viabilityStatus: 'HABILITADO' | 'PRE_HABILITADO' | 'SIN_POSIBILIDAD';
-  axesProgress: {
-    technical: number; // 0-4 (Steps)
-    legal: number;
-    financial: number;
-    social: number;
-  };
-  advisor?: {
-    id: string;
-    name: string;
-  };
-}
+import { AdminDataService } from '../../services/admin-data.service';
+import { Project, ProjectStatus } from '../../../../core/models/domain.models';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-admin-projects-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './admin-projects-page.component.html',
   styles: []
 })
-export class AdminProjectsPageComponent {
+export class AdminProjectsPageComponent implements OnInit {
+  private adminDataService = inject(AdminDataService);
+
   // State
   searchQuery = signal('');
-  selectedStatus = signal<string | null>(null);
+  selectedStatus = signal<ProjectStatus | null>(null);
   showAssignModal = signal<boolean>(false);
   selectedProject = signal<Project | null>(null);
+  isLoading = signal(false);
 
-  // Mock Data
-  projects = signal<Project[]>([
-    {
-      id: '1',
-      code: 'VIV-2024-001',
-      organization: 'Asoc. Vivienda Digna',
-      municipality: 'Guatemala',
-      status: 'ACTIVO',
-      viabilityStatus: 'HABILITADO',
-      axesProgress: { technical: 3, legal: 2, financial: 1, social: 4 },
-      advisor: { id: '2', name: 'Carlos Ruiz' }
-    },
-    {
-      id: '2',
-      code: 'VIV-2024-004',
-      organization: 'Comunidad Esperanza',
-      municipality: 'Mixco',
-      status: 'ACTIVO',
-      viabilityStatus: 'PRE_HABILITADO',
-      axesProgress: { technical: 1, legal: 1, financial: 0, social: 2 }
-    },
-    {
-      id: '3',
-      code: 'VIV-2024-012',
-      organization: 'Fundación Techo Seguro',
-      municipality: 'Villa Nueva',
-      status: 'SUSPENDIDO',
-      viabilityStatus: 'SIN_POSIBILIDAD',
-      axesProgress: { technical: 0, legal: 0, financial: 0, social: 0 }
-    },
-    {
-      id: '4',
-      code: 'VIV-2024-015',
-      organization: 'Coop. Unión y Fuerza',
-      municipality: 'Escuintla',
-      status: 'CERTIFICADO',
-      viabilityStatus: 'HABILITADO',
-      axesProgress: { technical: 4, legal: 4, financial: 4, social: 4 },
-      advisor: { id: '5', name: 'María Gómez' }
-    }
-  ]);
+  // Pagination State
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalItems = signal(0);
+
+  // Data
+  projects = signal<Project[]>([]);
 
   // Mock Advisors for Modal
   availableAdvisors = [
@@ -84,21 +37,52 @@ export class AdminProjectsPageComponent {
     { id: '8', name: 'Roberto Díaz', workload: 30, recommended: true }, // Smart suggestion
   ];
 
-  // Computed
-  filteredProjects = computed(() => {
-    const query = this.searchQuery().toLowerCase();
-    const status = this.selectedStatus();
-    
-    return this.projects().filter(p => {
-      const matchesSearch = p.organization.toLowerCase().includes(query) || p.code.toLowerCase().includes(query);
-      const matchesStatus = status ? p.status === status : true;
-      return matchesSearch && matchesStatus;
+  constructor() {
+    // React to filter changes to reset pagination and reload
+    effect(() => {
+      const query = this.searchQuery();
+      const status = this.selectedStatus();
+      
+      // Untracked to avoid loops if needed, but here we want to react
+      // We set page to 1 when filters change
+      this.currentPage.set(1);
+      this.loadProjects();
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnInit() {
+    // Initial load handled by effect
+  }
+
+  loadProjects() {
+    this.isLoading.set(true);
+    this.adminDataService.getProjects(
+      this.currentPage(), 
+      this.pageSize(), 
+      this.searchQuery(),
+      this.selectedStatus()
+    ).subscribe({
+      next: (response) => {
+        this.projects.set(response.data);
+        this.totalItems.set(response.meta.totalItems);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading projects', err);
+        this.isLoading.set(false);
+      }
     });
-  });
+  }
+
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.loadProjects();
+  }
 
   // Actions
-  filterByStatus(status: string | null) {
+  filterByStatus(status: ProjectStatus | null) {
     this.selectedStatus.set(status);
+    // Effect will trigger reload
   }
 
   openAssignModal(project: Project) {
@@ -112,28 +96,45 @@ export class AdminProjectsPageComponent {
   }
 
   assignAdvisor(advisor: any) {
-    // Here we would call the API
-    console.log(`Assigning ${advisor.name} to project ${this.selectedProject()?.code}`);
+    const project = this.selectedProject();
+    if (!project) return;
+
+    this.isLoading.set(true);
     
-    // Optimistic update
-    this.projects.update(projects => 
-      projects.map(p => 
-        p.id === this.selectedProject()?.id 
-          ? { ...p, advisor: { id: advisor.id, name: advisor.name } } 
-          : p
-      )
-    );
-    
-    this.closeAssignModal();
+    this.adminDataService.assignAdvisor(project.id, { id: advisor.id, name: advisor.name }).subscribe({
+      next: (updatedProject) => {
+        this.projects.update(projects => 
+          projects.map(p => 
+            p.id === updatedProject.id ? updatedProject : p
+          )
+        );
+        this.isLoading.set(false);
+        this.closeAssignModal();
+      },
+      error: (err) => {
+        console.error('Error assigning advisor', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   // Helpers
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'ACTIVE': return 'ACTIVO';
+      case 'SUSPENDED': return 'SUSPENDIDO';
+      case 'CERTIFIED': return 'CERTIFICADO';
+      case 'BENEFICIARY': return 'BENEFICIADO';
+      default: return status;
+    }
+  }
+
   getStatusClass(status: string): string {
     switch (status) {
-      case 'ACTIVO': return 'bg-blue-100 text-blue-700';
-      case 'SUSPENDIDO': return 'bg-red-100 text-red-700';
-      case 'CERTIFICADO': return 'bg-green-100 text-green-700';
-      case 'BENEFICIADO': return 'bg-purple-100 text-purple-700';
+      case 'ACTIVE': return 'bg-blue-100 text-blue-700'; // Changed from ACTIVO to ACTIVE to match model
+      case 'SUSPENDED': return 'bg-red-100 text-red-700'; // Changed from SUSPENDIDO to SUSPENDED
+      case 'CERTIFIED': return 'bg-green-100 text-green-700'; // Changed from CERTIFICADO to CERTIFIED
+      case 'BENEFICIARY': return 'bg-purple-100 text-purple-700'; // Changed from BENEFICIADO to BENEFICIARY
       default: return 'bg-gray-100 text-gray-700';
     }
   }
@@ -142,6 +143,7 @@ export class AdminProjectsPageComponent {
     switch (status) {
       case 'HABILITADO': return 'text-green-600';
       case 'PRE_HABILITADO': return 'text-orange-500';
+      case 'ALTA_POSIBILIDAD': return 'text-blue-500';
       case 'SIN_POSIBILIDAD': return 'text-red-500';
       default: return 'text-gray-400';
     }
