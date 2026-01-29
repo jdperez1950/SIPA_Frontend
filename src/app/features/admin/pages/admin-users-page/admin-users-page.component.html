@@ -1,0 +1,263 @@
+<div class="space-y-6">
+  <!-- Header & Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+      <p class="text-gray-500">Administra el acceso y roles del personal del sistema</p>
+    </div>
+    <button 
+      (click)="openCreateModal()"
+      class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+      <span class="material-symbols-rounded text-sm">person_add</span>
+      <span>Nuevo Usuario</span>
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+    <!-- Search -->
+    <div class="relative w-full md:w-96">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <span class="material-symbols-rounded text-gray-400">search</span>
+      </span>
+      <input 
+        type="text" 
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        placeholder="Buscar por nombre o correo..."
+      >
+    </div>
+
+    <!-- Role Chips -->
+    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+      <button 
+        (click)="filterByRole(null)"
+        [class.bg-gray-800]="selectedRole() === null"
+        [class.text-white]="selectedRole() === null"
+        [class.bg-gray-100]="selectedRole() !== null"
+        [class.text-gray-600]="selectedRole() !== null"
+        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-gray-200"
+      >
+        Todos
+      </button>
+      <button 
+        (click)="filterByRole('ADMIN')"
+        [class.bg-purple-600]="selectedRole() === 'ADMIN'"
+        [class.text-white]="selectedRole() === 'ADMIN'"
+        [class.bg-purple-50]="selectedRole() !== 'ADMIN'"
+        [class.text-purple-700]="selectedRole() !== 'ADMIN'"
+        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-purple-100"
+      >
+        Admin
+      </button>
+      <button 
+        (click)="filterByRole('ASESOR')"
+        [class.bg-green-600]="selectedRole() === 'ASESOR'"
+        [class.text-white]="selectedRole() === 'ASESOR'"
+        [class.bg-green-50]="selectedRole() !== 'ASESOR'"
+        [class.text-green-700]="selectedRole() !== 'ASESOR'"
+        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-green-100"
+      >
+        Asesor
+      </button>
+      <button 
+        (click)="filterByRole('SPAT')"
+        [class.bg-blue-600]="selectedRole() === 'SPAT'"
+        [class.text-white]="selectedRole() === 'SPAT'"
+        [class.bg-blue-50]="selectedRole() !== 'SPAT'"
+        [class.text-blue-700]="selectedRole() !== 'SPAT'"
+        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-blue-100"
+      >
+        SPAT
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+            <th class="px-6 py-4">Usuario</th>
+            <th class="px-6 py-4">Rol</th>
+            <th class="px-6 py-4">Carga de Trabajo</th>
+            <th class="px-6 py-4">Estado</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (user of filteredUsers(); track user.id) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <!-- User Info -->
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div [class]="'h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ' + user.avatarColor">
+                    {{ user.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ user.name }}</p>
+                    <p class="text-xs text-gray-500">{{ user.email }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Role -->
+              <td class="px-6 py-4">
+                <span [class]="'px-2 py-1 rounded-md text-xs font-medium border ' + getRoleBadgeClass(user.role)">
+                  {{ user.role }}
+                </span>
+              </td>
+
+              <!-- Workload -->
+              <td class="px-6 py-4">
+                @if (user.role === 'ASESOR' || user.role === 'SPAT') {
+                  <div class="flex items-center gap-2">
+                    <div class="flex-1 w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        [class]="'h-full rounded-full ' + getWorkloadColor(user.projectsAssigned || 0, user.maxProjects || 10)" 
+                        [style.width.%]="((user.projectsAssigned || 0) / (user.maxProjects || 10)) * 100"
+                      ></div>
+                    </div>
+                    <span class="text-xs text-gray-500 font-medium">{{ user.projectsAssigned }}/{{ user.maxProjects }}</span>
+                  </div>
+                } @else {
+                  <span class="text-xs text-gray-400">N/A</span>
+                }
+              </td>
+
+              <!-- Status -->
+              <td class="px-6 py-4">
+                <span [class]="'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ' + 
+                  (user.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')">
+                  <span [class]="'w-1.5 h-1.5 rounded-full ' + (user.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500')"></span>
+                  {{ user.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button 
+                    (click)="openEditModal(user)"
+                    class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    title="Editar"
+                  >
+                    <span class="material-symbols-rounded text-lg">edit</span>
+                  </button>
+                  <button 
+                    (click)="resetPassword(user)"
+                    class="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                    title="Restablecer Contraseña"
+                  >
+                    <span class="material-symbols-rounded text-lg">lock_reset</span>
+                  </button>
+                  <button 
+                    (click)="toggleUserStatus(user)"
+                    class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    [title]="user.status === 'ACTIVE' ? 'Desactivar' : 'Activar'"
+                  >
+                    <span class="material-symbols-rounded text-lg">
+                      {{ user.status === 'ACTIVE' ? 'block' : 'check_circle' }}
+                    </span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Create/Edit User -->
+@if (showModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-slide-in">
+      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <h3 class="font-bold text-gray-800 text-lg">
+          {{ isEditing() ? 'Editar Usuario' : 'Nuevo Usuario' }}
+        </h3>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      
+      <form [formGroup]="userForm" (ngSubmit)="saveUser()" class="p-6 space-y-4">
+        <!-- Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+          <input 
+            type="text" 
+            formControlName="name"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            placeholder="Ej: Juan Pérez"
+          >
+          @if (userForm.controls.name.touched && userForm.controls.name.invalid) {
+            <p class="text-xs text-red-500 mt-1">El nombre es requerido.</p>
+          }
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+          <input 
+            type="email" 
+            formControlName="email"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            placeholder="Ej: juan.perez@sipa.gob"
+          >
+          @if (userForm.controls.email.touched && userForm.controls.email.invalid) {
+            <p class="text-xs text-red-500 mt-1">Ingrese un correo válido.</p>
+          }
+        </div>
+
+        <!-- Role -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+          <select 
+            formControlName="role"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+          >
+            <option value="ADMIN">Administrador</option>
+            <option value="ASESOR">Asesor</option>
+            <option value="SPAT">SPAT</option>
+            <option value="CONSULTA">Consulta</option>
+          </select>
+        </div>
+
+        <!-- Status (Only for Edit) -->
+        @if (isEditing()) {
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+            <select 
+              formControlName="status"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+            >
+              <option value="ACTIVE">Activo</option>
+              <option value="INACTIVE">Inactivo</option>
+            </select>
+          </div>
+        }
+
+        <div class="pt-4 flex gap-3">
+          <button 
+            type="button" 
+            (click)="closeModal()"
+            class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+          >
+            {{ isEditing() ? 'Guardar Cambios' : 'Crear Usuario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

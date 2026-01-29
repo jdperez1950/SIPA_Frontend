@@ -1,0 +1,116 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Dashboard de Control</h1>
+      <p class="text-gray-500">Resumen general del estado del sistema SIPA v2</p>
+    </div>
+    <button class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+      <span class="material-symbols-rounded text-sm">download</span>
+      <span>Descargar Reporte</span>
+    </button>
+  </div>
+
+  <!-- KPI Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    @for (kpi of kpiData; track kpi.title) {
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">{{ kpi.title }}</p>
+            <h3 class="text-3xl font-bold text-gray-900">{{ kpi.value }}</h3>
+          </div>
+          <div [class]="'p-3 rounded-lg ' + kpi.bgClass">
+            <span [class]="'material-symbols-rounded text-xl ' + kpi.colorClass">{{ kpi.icon }}</span>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center text-sm">
+          @if (kpi.trendUp) {
+            <span class="text-green-600 flex items-center font-medium">
+              <span class="material-symbols-rounded text-sm mr-1">trending_up</span>
+              {{ kpi.trend }}
+            </span>
+            <span class="text-gray-400 ml-2">vs mes anterior</span>
+          } @else {
+             <span class="text-orange-600 flex items-center font-medium">
+              <span class="material-symbols-rounded text-sm mr-1">priority_high</span>
+              {{ kpi.trend }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Main Content Grid (Charts & Activity) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Chart Section (Placeholder) -->
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-900">Estado de Proyectos</h3>
+        <select class="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+          <option>Últimos 6 meses</option>
+          <option>Este año</option>
+        </select>
+      </div>
+      
+      <!-- Visual Placeholder for Chart -->
+      <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 relative overflow-hidden group">
+        <div class="absolute inset-0 flex items-center justify-center opacity-10">
+          <span class="material-symbols-rounded text-9xl text-gray-400">donut_large</span>
+        </div>
+        <div class="text-center z-10">
+          <p class="text-gray-500 font-medium">Gráfico de Distribución (Placeholder)</p>
+          <p class="text-xs text-gray-400">Implementar con ECharts o Ngx-Charts</p>
+        </div>
+      </div>
+      
+      <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="text-center">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Suelo</p>
+          <p class="text-lg font-bold text-blue-600">45%</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Social</p>
+          <p class="text-lg font-bold text-purple-600">25%</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Financiero</p>
+          <p class="text-lg font-bold text-green-600">20%</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Técnico</p>
+          <p class="text-lg font-bold text-orange-600">10%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <h3 class="text-lg font-bold text-gray-900 mb-6">Actividad Reciente</h3>
+      <div class="space-y-6">
+        @for (activity of recentActivity; track activity.target) {
+          <div class="flex gap-4">
+            <div class="flex-shrink-0">
+              <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-xs">
+                {{ activity.user.charAt(0) }}
+              </div>
+            </div>
+            <div>
+              <p class="text-sm text-gray-900">
+                <span class="font-medium">{{ activity.user }}</span> 
+                {{ activity.action }} 
+                <span class="font-medium text-blue-600">{{ activity.target }}</span>
+              </p>
+              <p class="text-xs text-gray-500 mt-1">{{ activity.time }}</p>
+            </div>
+          </div>
+        }
+      </div>
+      <button class="w-full mt-6 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors">
+        Ver toda la actividad
+      </button>
+    </div>
+  </div>
+</div>

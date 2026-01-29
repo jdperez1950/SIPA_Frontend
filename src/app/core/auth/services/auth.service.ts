@@ -25,7 +25,7 @@ export class AuthService {
         if (credentials.email === 'demo@demo.com' && credentials.password === '123456789') {
           const mockUser: User = { 
             id: '1', 
-            role: 'ASESOR', 
+            role: 'ADMIN', 
             name: 'Usuario Demo',
             email: credentials.email
           };

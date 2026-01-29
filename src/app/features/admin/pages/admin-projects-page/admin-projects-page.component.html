@@ -1,0 +1,195 @@
+<div class="space-y-6 relative">
+  <!-- Header & Filters -->
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Gestión de Proyectos</h1>
+        <p class="text-gray-500">Supervisa el avance y asignación de proyectos de vivienda</p>
+      </div>
+      <button class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+        <span class="material-symbols-rounded text-sm">add</span>
+        <span>Registrar Proyecto</span>
+      </button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <!-- Search -->
+      <div class="relative w-full md:w-80">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="material-symbols-rounded text-gray-400">search</span>
+        </span>
+        <input 
+          type="text" 
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Buscar por ID u Organización..."
+        >
+      </div>
+
+      <!-- Status Filter -->
+      <div class="flex flex-wrap gap-2 w-full md:w-auto">
+        <button (click)="filterByStatus(null)" [class]="selectedStatus() === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Todos</button>
+        <button (click)="filterByStatus('ACTIVO')" [class]="selectedStatus() === 'ACTIVO' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Activos</button>
+        <button (click)="filterByStatus('CERTIFICADO')" [class]="selectedStatus() === 'CERTIFICADO' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Certificados</button>
+        <button (click)="filterByStatus('SUSPENDIDO')" [class]="selectedStatus() === 'SUSPENDIDO' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700'" class="px-3 py-1 rounded-full text-sm font-medium transition-colors">Suspendidos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects Grid (Card Layout) -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    @for (project of filteredProjects(); track project.id) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 flex flex-col gap-4">
+        <!-- Card Header -->
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">{{ project.code }}</span>
+              <span [class]="'px-2 py-0.5 rounded text-[10px] font-bold ' + getStatusClass(project.status)">
+                {{ project.status }}
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 leading-tight">{{ project.organization }}</h3>
+            <div class="flex items-center gap-1 text-sm text-gray-500 mt-1">
+              <span class="material-symbols-rounded text-sm">location_on</span>
+              {{ project.municipality }}
+            </div>
+          </div>
+          <div class="flex flex-col items-end">
+            <span [class]="'text-xs font-bold flex items-center gap-1 ' + getViabilityColor(project.viabilityStatus)">
+              <span class="material-symbols-rounded text-sm">verified</span>
+              {{ project.viabilityStatus.replace('_', ' ') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 my-1"></div>
+
+        <!-- Progress Steppers -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <!-- Technical Axis -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] text-gray-400 font-medium uppercase">Técnico</span>
+            <div class="flex gap-1">
+              @for (step of [1,2,3,4]; track step) {
+                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.technical >= step ? 'bg-blue-500' : 'bg-gray-200')"></div>
+              }
+            </div>
+          </div>
+          <!-- Legal Axis -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] text-gray-400 font-medium uppercase">Legal</span>
+            <div class="flex gap-1">
+              @for (step of [1,2,3,4]; track step) {
+                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.legal >= step ? 'bg-purple-500' : 'bg-gray-200')"></div>
+              }
+            </div>
+          </div>
+          <!-- Financial Axis -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] text-gray-400 font-medium uppercase">Financiero</span>
+            <div class="flex gap-1">
+              @for (step of [1,2,3,4]; track step) {
+                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.financial >= step ? 'bg-green-500' : 'bg-gray-200')"></div>
+              }
+            </div>
+          </div>
+          <!-- Social Axis -->
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] text-gray-400 font-medium uppercase">Social</span>
+            <div class="flex gap-1">
+              @for (step of [1,2,3,4]; track step) {
+                <div [class]="'h-1.5 flex-1 rounded-full ' + (project.axesProgress.social >= step ? 'bg-orange-500' : 'bg-gray-200')"></div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 my-1"></div>
+
+        <!-- Advisor & Actions -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            @if (project.advisor) {
+              <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                {{ project.advisor.name.charAt(0) }}
+              </div>
+              <div class="flex flex-col">
+                <span class="text-xs text-gray-400">Asesor Asignado</span>
+                <span class="text-sm font-medium text-gray-900">{{ project.advisor.name }}</span>
+              </div>
+            } @else {
+              <div class="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                <span class="material-symbols-rounded text-lg">priority_high</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-xs text-gray-400">Sin Asignación</span>
+                <span class="text-sm font-medium text-orange-600">Requiere Atención</span>
+              </div>
+            }
+          </div>
+
+          <button 
+            (click)="openAssignModal(project)"
+            class="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            {{ project.advisor ? 'Reasignar' : 'Asignar Asesor' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Assignment Modal Overlay -->
+  @if (showAssignModal() && selectedProject()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up">
+        <!-- Modal Header -->
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+          <div>
+            <h3 class="font-bold text-gray-900">Asignar Asesor</h3>
+            <p class="text-xs text-gray-500">{{ selectedProject()?.organization }}</p>
+          </div>
+          <button (click)="closeAssignModal()" class="text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <!-- Modal Body: Advisor List -->
+        <div class="p-4 max-h-80 overflow-y-auto">
+          <p class="text-sm text-gray-500 mb-3">Sugerencias basadas en carga de trabajo:</p>
+          <div class="space-y-2">
+            @for (advisor of availableAdvisors; track advisor.id) {
+              <button 
+                (click)="assignAdvisor(advisor)"
+                class="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group text-left"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold group-hover:bg-blue-200 group-hover:text-blue-700">
+                    {{ advisor.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">{{ advisor.name }}</p>
+                    <p class="text-xs text-gray-500">Carga: {{ advisor.workload }}%</p>
+                  </div>
+                </div>
+                @if (advisor.recommended) {
+                  <span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-bold">Recomendado</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <button (click)="closeAssignModal()" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

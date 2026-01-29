@@ -1,0 +1,56 @@
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10">
+  <!-- Left: Sidebar Toggle & Search -->
+  <div class="flex items-center gap-4">
+    <button 
+      (click)="layoutService.toggleSidebar()"
+      class="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+    >
+      <span class="material-symbols-rounded">menu</span>
+    </button>
+
+    <!-- Global Search -->
+    <div class="relative hidden md:block">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <span class="material-symbols-rounded text-gray-400 text-xl">search</span>
+      </span>
+      <input 
+        type="text" 
+        class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 lg:w-96"
+        placeholder="Buscar proyectos por ID, nombre..."
+      >
+    </div>
+  </div>
+
+  <!-- Right: Notifications & Profile -->
+  <div class="flex items-center gap-4">
+    <!-- Notifications -->
+    <button class="relative p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors">
+      <span class="material-symbols-rounded">notifications</span>
+      <span class="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+    </button>
+
+    <!-- Profile Dropdown (Simplified for Mockup) -->
+    <div class="relative group">
+      <button class="flex items-center gap-3 p-1 rounded-lg hover:bg-gray-50 transition-colors">
+        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
+          AD
+        </div>
+        <div class="hidden md:block text-left">
+          <p class="text-sm font-medium text-gray-700">Admin User</p>
+          <p class="text-xs text-gray-500">Super Admin</p>
+        </div>
+        <span class="material-symbols-rounded text-gray-400">expand_more</span>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 hidden group-hover:block hover:block">
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Perfil</a>
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Configuración</a>
+        <div class="border-t border-gray-100 my-1"></div>
+        <button (click)="logout()" class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
