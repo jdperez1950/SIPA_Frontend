@@ -16,10 +16,10 @@ export class TrafficLightComponent {
   lightClass = computed(() => {
     const base = 'w-3 h-3 rounded-full';
     switch (this.priority()) {
-      case 'URGENT': return `${base} bg-red-500 animate-pulse`;
-      case 'ALERT': return `${base} bg-yellow-400`;
-      case 'NORMAL': return `${base} bg-green-500`;
-      default: return `${base} bg-gray-300`;
+      case 'URGENT': return `${base} bg-sipa-urgent animate-pulse`;
+      case 'ALERT': return `${base} bg-sipa-alert`;
+      case 'NORMAL': return `${base} bg-sipa-normal`;
+      default: return `${base} bg-sipa-normal`;
     }
   });
 
