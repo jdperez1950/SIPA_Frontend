@@ -54,6 +54,24 @@ src/
     └── app.routes.ts          # Lazy Loading de las features.
 ```
 
+## 🎨 Design System & UI Kit
+
+El proyecto cuenta con un sistema de diseño centralizado basado en **Tailwind CSS** y componentes reutilizables.
+
+### Paleta de Colores
+Los colores semánticos (estados, prioridades) están definidos en `src/app/core/constants/theme-colors.ts` y mapeados en `tailwind.config.js` bajo el prefijo `sipa-*`.
+
+- **Estados:** `sipa-validated`, `sipa-returned`, `sipa-process`, `sipa-pending`.
+- **Prioridades:** `sipa-urgent`, `sipa-alert`, `sipa-normal`.
+
+### Componentes Base (UI Kit)
+Ubicados en `src/app/shared/ui/`, son componentes "Dumb" puros (Standalone) que implementan la identidad visual del SIPA v2.
+
+- **Status Badge:** Etiqueta visual para estados de requisitos (Validado, Devuelto, etc.).
+- **Traffic Light:** Indicador de prioridad tipo semáforo (Urgente = Rojo pulsante).
+- **Chat Bubble:** Burbuja de mensaje para la bitácora técnica, diferencia roles por alineación y color.
+- **PDF Viewer:** Wrapper de `ngx-extended-pdf-viewer` configurado para español y optimizado para la pantalla dividida.
+
 ## 🧠 Patrones de Diseño Implementados
 
 ### 1. Standalone Components
