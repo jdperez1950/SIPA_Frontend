@@ -2,7 +2,7 @@ import { Component, computed, inject, signal, OnInit, effect } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminDataService } from '../../services/admin-data.service';
-import { Project, ProjectStatus } from '../../../../core/models/domain.models';
+import { Project, ProjectStatus, AdvisorCandidate } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { ProjectWizardComponent } from './components/project-wizard/project-wizard.component';
 
@@ -33,7 +33,7 @@ export class AdminProjectsPageComponent implements OnInit {
   projects = signal<Project[]>([]);
 
   // Mock Advisors for Modal
-  availableAdvisors = [
+  availableAdvisors: AdvisorCandidate[] = [
     { id: '2', name: 'Carlos Ruiz', workload: 80, recommended: false },
     { id: '5', name: 'María Gómez', workload: 100, recommended: false },
     { id: '8', name: 'Roberto Díaz', workload: 30, recommended: true }, // Smart suggestion
@@ -105,7 +105,7 @@ export class AdminProjectsPageComponent implements OnInit {
     this.selectedProject.set(null);
   }
 
-  assignAdvisor(advisor: any) {
+  assignAdvisor(advisor: AdvisorCandidate) {
     const project = this.selectedProject();
     if (!project) return;
 
@@ -135,27 +135,29 @@ export class AdminProjectsPageComponent implements OnInit {
       case 'SUSPENDED': return 'SUSPENDIDO';
       case 'CERTIFIED': return 'CERTIFICADO';
       case 'BENEFICIARY': return 'BENEFICIADO';
+      case 'RETURNED_FOR_CORRECTION': return 'EN SUBSANACIÓN';
       default: return status;
     }
   }
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'ACTIVE': return 'bg-blue-100 text-blue-700'; // Changed from ACTIVO to ACTIVE to match model
-      case 'SUSPENDED': return 'bg-red-100 text-red-700'; // Changed from SUSPENDIDO to SUSPENDED
-      case 'CERTIFIED': return 'bg-green-100 text-green-700'; // Changed from CERTIFICADO to CERTIFIED
-      case 'BENEFICIARY': return 'bg-purple-100 text-purple-700'; // Changed from BENEFICIADO to BENEFICIARY
+      case 'ACTIVE': return 'bg-blue-100 text-blue-700';
+      case 'SUSPENDED': return 'bg-red-100 text-red-700';
+      case 'CERTIFIED': return 'bg-green-100 text-green-700';
+      case 'BENEFICIARY': return 'bg-purple-100 text-purple-700';
+      case 'RETURNED_FOR_CORRECTION': return 'bg-orange-100 text-orange-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   }
 
-  getViabilityColor(status: string): string {
-    switch (status) {
+  getViabilityColor(scenario: string): string {
+    switch (scenario) {
       case 'HABILITADO': return 'text-green-600';
-      case 'PRE_HABILITADO': return 'text-orange-500';
-      case 'ALTA_POSIBILIDAD': return 'text-blue-500';
-      case 'SIN_POSIBILIDAD': return 'text-red-500';
-      default: return 'text-gray-400';
+      case 'PRE_HABILITADO': return 'text-blue-600';
+      case 'ALTA_POSIBILIDAD': return 'text-yellow-600';
+      case 'SIN_POSIBILIDAD': return 'text-red-600';
+      default: return 'text-gray-500';
     }
   }
 }

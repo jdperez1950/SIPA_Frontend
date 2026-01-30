@@ -14,6 +14,9 @@ export interface IdentificationData {
   municipality: string;
   organizationId: string;
   organizationName: string;
+  startDate: string;
+  endDate: string;
+  submissionDeadline: string;
 }
 
 export interface EvaluationAxis {

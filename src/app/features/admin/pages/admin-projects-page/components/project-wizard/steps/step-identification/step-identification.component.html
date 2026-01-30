@@ -53,6 +53,50 @@
     </div>
   </div>
 
+  <!-- Dates Section -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Start Date -->
+    <div class="space-y-2">
+      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+      <input 
+        type="date" 
+        id="startDate"
+        formControlName="startDate"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+
+    <!-- Submission Deadline -->
+    <div class="space-y-2">
+      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas</label>
+      <input 
+        type="date" 
+        id="submissionDeadline"
+        formControlName="submissionDeadline"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        [ngClass]="{'border-red-300 focus:ring-red-200': form.errors?.['deadlineInvalid'] && form.get('submissionDeadline')?.touched}"
+      >
+      @if (form.errors?.['deadlineInvalid'] && form.get('submissionDeadline')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Debe estar entre Inicio y Fin.</p>
+      }
+    </div>
+
+    <!-- End Date -->
+    <div class="space-y-2">
+      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización</label>
+      <input 
+        type="date" 
+        id="endDate"
+        formControlName="endDate"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        [ngClass]="{'border-red-300 focus:ring-red-200': form.errors?.['endDateInvalid'] && form.get('endDate')?.touched}"
+      >
+      @if (form.errors?.['endDateInvalid'] && form.get('endDate')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Debe ser posterior al Inicio.</p>
+      }
+    </div>
+  </div>
+
   <!-- Organization -->
   <div class="space-y-2">
     <label for="organization" class="block text-sm font-medium text-gray-700">Organización Responsable</label>

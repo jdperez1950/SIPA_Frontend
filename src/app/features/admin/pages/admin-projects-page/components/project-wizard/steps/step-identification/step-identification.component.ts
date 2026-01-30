@@ -48,7 +48,10 @@ export class StepIdentificationComponent implements OnInit {
           department: value.department,
           municipality: value.municipality,
           organizationId: value.organizationId,
-          organizationName: selectedOrg?.name || ''
+          organizationName: selectedOrg?.name || '',
+          startDate: value.startDate,
+          endDate: value.endDate,
+          submissionDeadline: value.submissionDeadline
         });
       } else {
         // Can emit null or invalid state if parent handles it
@@ -61,19 +64,40 @@ export class StepIdentificationComponent implements OnInit {
       projectName: [this.initialData?.projectName || '', [Validators.required, Validators.minLength(5)]],
       department: [this.initialData?.department || '', Validators.required],
       municipality: [this.initialData?.municipality || '', Validators.required],
-      organizationId: [this.initialData?.organizationId || '', Validators.required]
-    });
+      organizationId: [this.initialData?.organizationId || '', Validators.required],
+      startDate: [this.initialData?.startDate || '', Validators.required],
+      endDate: [this.initialData?.endDate || '', Validators.required],
+      submissionDeadline: [this.initialData?.submissionDeadline || '', Validators.required]
+    }, { validators: [this.dateRangeValidator] });
 
     // Reset municipality when department changes
     this.form.get('department')?.valueChanges.subscribe(() => {
-      // Only reset if it's a user change, not initial load. 
-      // For simplicity, we might just accept it resets if they change dept manually.
-      // But we need to handle the case where we just set the initial value.
-      // The initial setValue above won't trigger this subscription yet because it's defined after.
-      // Wait, setValue in group initialization sets the value.
-      // The subscription is created AFTER, so it won't fire for the initial value.
       this.form.get('municipality')?.setValue('');
     });
+  }
+
+  private dateRangeValidator(group: FormGroup) {
+    const start = group.get('startDate')?.value;
+    const end = group.get('endDate')?.value;
+    const deadline = group.get('submissionDeadline')?.value;
+
+    if (!start || !end || !deadline) return null;
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const deadlineDate = new Date(deadline);
+
+    const errors: any = {};
+
+    if (endDate < startDate) {
+      errors.endDateInvalid = true;
+    }
+
+    if (deadlineDate < startDate || deadlineDate > endDate) {
+      errors.deadlineInvalid = true;
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null;
   }
 
   private loadOrganizations() {
