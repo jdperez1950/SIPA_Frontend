@@ -152,6 +152,24 @@ docker run -d -p 8080:80 sipa-frontend
 - **Feature/:** Ramas por funcionalidad.
   - Ejemplo: `feature/validacion-manual`, `feature/reportes-powerbi`.
 
+## 🤖 Configuración IA y Herramientas
+
+Se recomienda el siguiente entorno para maximizar la productividad con asistentes de IA:
+
+### Herramientas
+- **Editor de Código:** [Trae](https://www.trae.ai/) (Recomendado) o Visual Studio Code.
+- **Agentes IA:**
+  - **Trae Agents:** Utilizando modelos **Gemini 3** para generación y análisis de código.
+  - **OpenCode:** Agente complementario.
+
+### Configuración MCP (Model Context Protocol)
+Este proyecto utiliza el servidor **MCP Angular CLI** para que los agentes de IA comprendan mejor la estructura y contexto del proyecto.
+- Asegúrese de tener configurado el servidor MCP de Angular en su editor para habilitar herramientas como `search_documentation`, `get_best_practices`, y `list_projects`.
+
+### Despliegue (CI/CD)
+- **Entorno de Pruebas:** Despliegue automático en Vercel al hacer push a la rama `main`.
+- **URL de Acceso:** [https://sipa-frontend.vercel.app/auth/login](https://sipa-frontend.vercel.app/auth/login)
+
 ## 📝 Notas Importantes para Desarrolladores
 
 - **Validación Manual:** La pantalla de `validation-page` usa un layout de pantalla dividida. El visor de PDF a la izquierda no debe recargarse si el asesor cambia de pregunta, solo debe cambiar el source (`src`).
