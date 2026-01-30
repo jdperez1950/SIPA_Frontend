@@ -1,0 +1,47 @@
+<div class="animate-fade-in">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+    <span class="material-symbols-rounded text-blue-600">engineering</span>
+    Designación de Mesa Técnica
+  </h3>
+  <p class="text-gray-500 mb-6">Asigna los validadores ministeriales para cada eje activo. Se ordenan por menor carga de trabajo.</p>
+
+  <div class="space-y-6">
+    @for (axis of activeAxes; track axis.id) {
+      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+            <span class="material-symbols-rounded">category</span>
+          </div>
+          <div>
+            <h4 class="font-bold text-gray-900">{{ axis.name }}</h4>
+            <p class="text-xs text-gray-500">Requiere un evaluador experto</p>
+          </div>
+        </div>
+
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Asesor Asignado</label>
+          <div class="relative">
+             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span class="material-symbols-rounded text-gray-400">person_search</span>
+            </span>
+            <select 
+              [value]="getAssignment(axis.id)"
+              (change)="onSelectAdvisor(axis.id, $event)"
+              class="pl-10 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 border"
+            >
+              <option value="" disabled selected>Seleccione un asesor...</option>
+              @for (advisor of getAdvisorsForAxis(axis.id); track advisor.id) {
+                <option [value]="advisor.id">
+                  {{ advisor.name }} (Carga: {{ advisor.workload }}%)
+                </option>
+              }
+            </select>
+          </div>
+          @if (getAdvisorsForAxis(axis.id).length === 0) {
+             <p class="text-xs text-red-500 mt-1">No hay asesores disponibles para este eje.</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

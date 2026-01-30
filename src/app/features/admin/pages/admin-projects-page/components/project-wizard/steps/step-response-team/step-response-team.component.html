@@ -1,0 +1,58 @@
+<div class="animate-fade-in">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+    <span class="material-symbols-rounded text-blue-600">group_add</span>
+    Equipo de Respuesta
+  </h3>
+  <p class="text-gray-500 mb-6">
+    Selecciona los usuarios de <span class="font-bold text-gray-700">{{ organizationName }}</span> autorizados para responder las preguntas.
+  </p>
+
+  @if (isLoading) {
+    <div class="flex justify-center py-12">
+      <span class="material-symbols-rounded animate-spin text-3xl text-blue-600">progress_activity</span>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (user of organizationUsers; track user.id) {
+        <div 
+          (click)="toggleMember(user)"
+          class="flex items-center p-4 rounded-xl border cursor-pointer transition-all hover:bg-gray-50 group"
+          [ngClass]="{
+            'border-blue-500 bg-blue-50 hover:bg-blue-50': isSelected(user.id),
+            'border-gray-200': !isSelected(user.id)
+          }"
+        >
+          <div 
+            class="w-5 h-5 rounded border flex items-center justify-center mr-4 transition-colors"
+            [ngClass]="{
+              'bg-blue-600 border-blue-600': isSelected(user.id),
+              'bg-white border-gray-300 group-hover:border-blue-400': !isSelected(user.id)
+            }"
+          >
+            @if (isSelected(user.id)) {
+              <span class="material-symbols-rounded text-white text-xs font-bold">check</span>
+            }
+          </div>
+
+          <div class="flex-1">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-medium text-gray-900">{{ user.name }}</p>
+                <p class="text-sm text-gray-500">{{ user.email }}</p>
+              </div>
+              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">
+                {{ user.role }}
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (organizationUsers.length === 0) {
+        <div class="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-xl">
+          <p>No se encontraron usuarios para esta organización.</p>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AdminDataService } from '../../services/admin-data.service';
 import { Project, ProjectStatus } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { ProjectWizardComponent } from './components/project-wizard/project-wizard.component';
 
 @Component({
   selector: 'app-admin-projects-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent],
   templateUrl: './admin-projects-page.component.html',
   styles: []
 })
@@ -16,6 +17,7 @@ export class AdminProjectsPageComponent implements OnInit {
   private adminDataService = inject(AdminDataService);
 
   // State
+  showWizard = signal(false); // Controls Wizard visibility
   searchQuery = signal('');
   selectedStatus = signal<ProjectStatus | null>(null);
   showAssignModal = signal<boolean>(false);
@@ -80,6 +82,14 @@ export class AdminProjectsPageComponent implements OnInit {
   }
 
   // Actions
+  toggleWizard(show: boolean) {
+    this.showWizard.set(show);
+    if (!show) {
+      // Refresh list when wizard closes (in case new project was added)
+      this.loadProjects();
+    }
+  }
+
   filterByStatus(status: ProjectStatus | null) {
     this.selectedStatus.set(status);
     // Effect will trigger reload

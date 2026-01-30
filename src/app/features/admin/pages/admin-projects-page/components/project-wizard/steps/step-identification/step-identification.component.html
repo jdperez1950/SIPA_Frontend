@@ -1,0 +1,77 @@
+<form [formGroup]="form" class="space-y-6 max-w-3xl mx-auto">
+  <!-- Project Name -->
+  <div class="space-y-2">
+    <label for="projectName" class="block text-sm font-medium text-gray-700">Nombre del Proyecto</label>
+    <div class="relative">
+      <input 
+        type="text" 
+        id="projectName"
+        formControlName="projectName"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        placeholder="Ej. Construcción de Vivienda de Interés Social..."
+        [ngClass]="{'border-red-300 focus:ring-red-200': form.get('projectName')?.invalid && form.get('projectName')?.touched}"
+      >
+      @if (form.get('projectName')?.invalid && form.get('projectName')?.touched) {
+        <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+      }
+    </div>
+    @if (form.get('projectName')?.errors?.['minlength']) {
+      <p class="text-xs text-red-500 mt-1">El nombre debe tener al menos 5 caracteres.</p>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Department -->
+    <div class="space-y-2">
+      <label for="department" class="block text-sm font-medium text-gray-700">Departamento</label>
+      <select 
+        id="department"
+        formControlName="department"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+      >
+        <option value="">Seleccione...</option>
+        @for (dept of departments; track dept) {
+          <option [value]="dept">{{ dept }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Municipality -->
+    <div class="space-y-2">
+      <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio</label>
+      <select 
+        id="municipality"
+        formControlName="municipality"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+        [attr.disabled]="!form.get('department')?.value ? '' : null"
+      >
+        <option value="">Seleccione...</option>
+        @for (mun of availableMunicipalities; track mun) {
+          <option [value]="mun">{{ mun }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Organization -->
+  <div class="space-y-2">
+    <label for="organization" class="block text-sm font-medium text-gray-700">Organización Responsable</label>
+    <div class="relative">
+      <select 
+        id="organization"
+        formControlName="organizationId"
+        class="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+      >
+        <option value="">Seleccione la entidad responsable...</option>
+        @for (org of organizations; track org.id) {
+          <option [value]="org.id">{{ org.name }} ({{ org.identifier }})</option>
+        }
+      </select>
+      <span class="absolute left-3 top-3.5 text-gray-400 material-symbols-rounded">business</span>
+      <span class="absolute right-4 top-3.5 text-gray-500 pointer-events-none material-symbols-rounded">expand_more</span>
+    </div>
+    <p class="text-xs text-gray-500 mt-1">
+      <span class="font-medium text-blue-600">Nota:</span> Esta selección determinará los usuarios disponibles para el equipo de respuesta.
+    </p>
+  </div>
+</form>

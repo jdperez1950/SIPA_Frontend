@@ -1,0 +1,121 @@
+<div class="flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+  <!-- Header / Stepper -->
+  <div class="bg-gray-50 border-b border-gray-200 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold text-gray-800">Alta Integral de Proyecto</h2>
+      <div class="text-sm text-gray-500">
+        Paso <span class="font-bold text-blue-600">{{ currentStep() }}</span> de {{ STEPS.length }}
+      </div>
+    </div>
+
+    <!-- Stepper Visual -->
+    <div class="relative flex items-center justify-between w-full max-w-4xl mx-auto">
+      <!-- Connecting Line -->
+      <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-0 transform -translate-y-1/2 rounded-full"></div>
+      <div 
+        class="absolute top-1/2 left-0 h-1 bg-blue-600 -z-0 transform -translate-y-1/2 rounded-full transition-all duration-500"
+        [style.width.%]="((currentStep() - 1) / (STEPS.length - 1)) * 100"
+      ></div>
+
+      <!-- Steps -->
+      @for (step of STEPS; track step.number) {
+        <div class="relative z-10 flex flex-col items-center group cursor-pointer" 
+             (click)="goToStep(step.number)">
+          <div 
+            class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white"
+            [ngClass]="{
+              'border-blue-600 text-blue-600 shadow-md scale-110': currentStep() === step.number,
+              'border-blue-600 bg-blue-600 text-white': currentStep() > step.number,
+              'border-gray-300 text-gray-400': currentStep() < step.number
+            }"
+          >
+            @if (currentStep() > step.number) {
+              <span class="material-symbols-rounded text-lg">check</span>
+            } @else {
+              <span class="material-symbols-rounded text-lg">{{ step.icon }}</span>
+            }
+          </div>
+          <span 
+            class="absolute top-12 text-xs font-medium whitespace-nowrap transition-colors duration-300"
+            [ngClass]="{
+              'text-blue-700': currentStep() >= step.number,
+              'text-gray-400': currentStep() < step.number
+            }"
+          >
+            {{ step.title }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="flex-1 p-8 overflow-y-auto">
+    <!-- Steps Content -->
+    <div class="mb-8">
+      @switch (currentStep()) {
+        @case (1) {
+          <app-step-identification 
+            [initialData]="identificationData()"
+            (dataChange)="updateIdentification($event)"
+          ></app-step-identification>
+        }
+        @case (2) {
+          <app-step-evaluation
+            [axes]="evaluationAxes()"
+            (toggleAxis)="toggleAxis($event)"
+          ></app-step-evaluation>
+        }
+        @case (3) {
+          <app-step-technical-table
+            [activeAxes]="activeAxes()"
+            [assignments]="technicalTableAssignments()"
+            (assign)="updateTechnicalTable($event)"
+          ></app-step-technical-table>
+        }
+        @case (4) {
+          @if (identificationData(); as data) {
+            <app-step-response-team
+              [organizationId]="data.organizationId"
+              [organizationName]="data.organizationName"
+              [selectedMembers]="responseTeam()"
+              (selectionChange)="updateResponseTeam($event)"
+            ></app-step-response-team>
+          }
+        }
+      }
+    
+  </div>
+
+  <!-- Footer / Actions -->
+  <div class="bg-gray-50 p-4 border-t border-gray-200 flex items-center justify-between">
+    <button 
+      (click)="prevStep()" 
+      [disabled]="currentStep() === 1"
+      class="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+    >
+      <span class="material-symbols-rounded">arrow_back</span>
+      Anterior
+    </button>
+
+    @if (currentStep() < 4) {
+      <button 
+        (click)="nextStep()" 
+        [disabled]="!isCurrentStepValid()"
+        class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
+      >
+        Siguiente
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </button>
+    } @else {
+      <button 
+        (click)="finishWizard()" 
+        [disabled]="!isCurrentStepValid()"
+        class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
+      >
+        <span class="material-symbols-rounded">check_circle</span>
+        Finalizar Alta
+      </button>
+    }
+  </div>
+</div>
