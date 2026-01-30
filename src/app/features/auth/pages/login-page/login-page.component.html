@@ -1,0 +1,88 @@
+<div class="min-h-screen flex bg-white">
+  <!-- SECCIÓN IZQUIERDA: Branding (Solo Desktop) -->
+  <div class="hidden lg:flex lg:w-1/2 bg-sipa-gradient-deep flex-col justify-center items-center relative text-white px-12">
+    <div class="text-center">
+      <!-- Icono Casa (Google Material Symbol) -->
+      <span class="material-symbols-rounded text-[8rem] mb-6 opacity-90 leading-none select-none">home</span>
+      
+      <h1 class="text-5xl font-bold tracking-tight mb-2">
+        Autogestión
+      </h1>
+      <h2 class="text-4xl font-light tracking-wide mb-6">
+        de <span class="font-bold">Vivienda</span>
+      </h2>
+      
+      <div class="w-24 h-1 bg-white/30 mx-auto rounded-full mb-6"></div>
+      
+      <p class="text-xl text-blue-100 font-light">
+        SIPA v2
+      </p>
+    </div>
+
+    <!-- Decoración de fondo (opcional) -->
+    <div class="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
+  </div>
+
+  <!-- SECCIÓN DERECHA: Formulario -->
+  <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:w-1/2 bg-white relative">
+    
+    <div class="mx-auto w-full max-w-sm lg:w-96">
+      <!-- HEADER MÓVIL (Solo visible en pantallas pequeñas) -->
+      <div class="lg:hidden text-center mb-10">
+        <span class="material-symbols-rounded text-[4rem] mx-auto mb-4 text-sipa-primary leading-none select-none block">home</span>
+        <h2 class="text-2xl font-bold text-sipa-primary">
+          Autogestión de Vivienda
+        </h2>
+        <p class="text-sipa-text-muted">SIPA v2</p>
+      </div>
+
+      <!-- HEADER FORMULARIO (Desktop + Móvil) -->
+      <div class="text-center mb-8">
+        <!-- Logo Ministerio (Placeholder) -->
+        <div class="flex justify-center mb-8">
+          <div class="flex flex-col items-center">
+            <span class="material-symbols-rounded text-[48px] text-gray-400 mb-2 leading-none">account_balance</span>
+            <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold text-center">
+              Ministerio de Vivienda,<br>Ciudad y Territorio
+            </span>
+            <div class="w-8 h-1 bg-yellow-400 mt-2"></div> <!-- Bandera Colombia detalle -->
+          </div>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-900">
+          Iniciar Sesión
+        </h2>
+      </div>
+
+      <!-- MENSAJES DE ERROR -->
+      @if (errorMessage()) {
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="material-symbols-rounded text-[20px] text-red-500 leading-none">error</span>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-red-700">
+                {{ errorMessage() }}
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- FORMULARIO -->
+      <app-login-form
+        [isLoading]="isLoading()"
+        (login)="handleLogin($event)">
+      </app-login-form>
+
+      <!-- VERSION FOOTER -->
+      <div class="mt-10 text-center">
+        <p class="text-xs text-gray-400">
+          v2.06/01/2026
+        </p>
+      </div>
+      
+    </div>
+  </div>
+</div>
