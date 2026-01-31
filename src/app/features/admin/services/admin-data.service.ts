@@ -11,7 +11,8 @@ import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
 export class AdminDataService {
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
-  private projects = signal<Project[]>(PROJECTS_MOCK);
+  // private projects = signal<Project[]>(PROJECTS_MOCK);
+  private projects = signal<Project[]>([]);
   private organizations = signal<Organization[]>(ORGANIZATIONS_MOCK);
 
   constructor() {}
