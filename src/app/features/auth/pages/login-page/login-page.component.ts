@@ -23,10 +23,14 @@ export class LoginPageComponent {
     this.errorMessage.set(null);
 
     this.authService.login(credentials).subscribe({
-      next: () => {
+      next: (user) => {
         this.isLoading.set(false);
-        // Redirigir al dashboard o project-workspace según rol (simplificado por ahora)
-        this.router.navigate(['/dashboard']); 
+        // Redirect based on Role
+        if (user.role === 'ADMIN') {
+          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);

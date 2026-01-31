@@ -1,9 +1,10 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AlertToastComponent } from './shared/components/alert-toast/alert-toast.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, AlertToastComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

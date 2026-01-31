@@ -1,0 +1,52 @@
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10">
+  <!-- Left: Sidebar Toggle -->
+  <div class="flex items-center gap-4">
+    <button 
+      (click)="layoutService.toggleSidebar()"
+      class="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+    >
+      <span class="material-symbols-rounded">menu</span>
+    </button>
+  </div>
+
+  <!-- Right: Profile -->
+  <div class="flex items-center gap-4">
+    <!-- Backdrop for closing menu -->
+    @if (isProfileMenuOpen()) {
+      <div class="fixed inset-0 z-10" (click)="isProfileMenuOpen.set(false)"></div>
+    }
+
+    <!-- Profile Dropdown -->
+    <div class="relative z-20">
+      <button 
+        (click)="toggleProfileMenu()"
+        class="flex items-center gap-3 p-1 rounded-lg hover:bg-gray-50 transition-colors"
+      >
+        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
+          AD
+        </div>
+        <div class="hidden md:block text-left">
+          <p class="text-sm font-medium text-gray-700">Admin User</p>
+          <p class="text-xs text-gray-500">Super Admin</p>
+        </div>
+        <span class="material-symbols-rounded text-gray-400 transition-transform duration-200"
+          [class.rotate-180]="isProfileMenuOpen()">
+          expand_more
+        </span>
+      </button>
+
+      <!-- Dropdown Menu -->
+      @if (isProfileMenuOpen()) {
+        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Perfil</a>
+          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Configuración</a>
+          <div class="border-t border-gray-100 my-1"></div>
+          <button (click)="logout()" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+            <span class="material-symbols-rounded text-lg">logout</span>
+            Cerrar Sesión
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
