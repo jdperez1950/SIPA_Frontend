@@ -31,6 +31,17 @@ export class AuthService {
           };
           return of(mockUser);
         }
+        
+        if (credentials.email === 'org@demo.com' && credentials.password === '123456789') {
+          const mockOrgUser: User = { 
+            id: '2', 
+            role: 'ORGANIZACION', 
+            name: 'Organización Demo',
+            email: credentials.email
+          };
+          return of(mockOrgUser);
+        }
+
         return throwError(() => new Error('Credenciales inválidas'));
       }),
       tap(user => this.#currentUser.set(user))

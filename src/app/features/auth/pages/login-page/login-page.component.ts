@@ -28,6 +28,8 @@ export class LoginPageComponent {
         // Redirect based on Role
         if (user.role === 'ADMIN') {
           this.router.navigate(['/admin/dashboard']);
+        } else if (user.role === 'ORGANIZACION') {
+          this.router.navigate(['/workspace']);
         } else {
           this.router.navigate(['/dashboard']);
         }
