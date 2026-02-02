@@ -11,14 +11,16 @@ import { QuestionDefinition } from '../../../../../../core/models/question.model
     <div class="w-full">
       @switch (question().controlType) {
         @case ('TEXT_AREA') {
+          <label [for]="question().id" class="sr-only">{{ question().text }}</label>
           <textarea 
+            [id]="question().id"
             [formControl]="control"
             class="w-full min-h-[120px] p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-y text-gray-700"
             placeholder="Escriba su respuesta aquí..."
           ></textarea>
         }
         @case ('SINGLE_SELECT') {
-          <div class="space-y-3">
+          <div class="space-y-3" role="radiogroup" [attr.aria-label]="question().text">
             @for (opt of question().options; track opt.value) {
               <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors group"
                 [class.border-blue-500]="control.value === opt.value"
@@ -27,7 +29,24 @@ import { QuestionDefinition } from '../../../../../../core/models/question.model
                   type="radio" 
                   [formControl]="control" 
                   [value]="opt.value"
-                  class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2 focus:outline-none"
+                >
+                <span class="ml-3 text-gray-700 font-medium group-hover:text-gray-900">{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+        }
+        @case ('MULTI_SELECT') {
+          <div class="space-y-3" role="group" [attr.aria-label]="question().text">
+            @for (opt of question().options; track opt.value) {
+              <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors group"
+                [class.border-blue-500]="isChecked(opt.value)"
+                [class.bg-blue-50]="isChecked(opt.value)">
+                <input 
+                  type="checkbox" 
+                  [checked]="isChecked(opt.value)"
+                  (change)="onCheckboxChange($event, opt.value)"
+                  class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 focus:outline-none"
                 >
                 <span class="ml-3 text-gray-700 font-medium group-hover:text-gray-900">{{ opt.label }}</span>
               </label>
@@ -35,8 +54,10 @@ import { QuestionDefinition } from '../../../../../../core/models/question.model
           </div>
         }
         @case ('DATE') {
+           <label [for]="question().id" class="sr-only">{{ question().text }}</label>
            <input 
              type="date" 
+             [id]="question().id"
              [formControl]="control"
              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
            >

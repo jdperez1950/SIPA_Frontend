@@ -34,12 +34,14 @@
         id="password"
         type="password"
         formControlName="password"
-        class="appearance-none block w-full px-3 py-2 border border-sipa-form-input-border rounded-md shadow-sm placeholder-sipa-form-placeholder focus:outline-none focus:ring-sipa-form-input-focus focus:border-sipa-form-input-focus sm:text-sm"
+        [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched"
+        [attr.aria-describedby]="(form.controls.password.invalid && form.controls.password.touched) ? 'password-error' : null"
+        class="appearance-none block w-full px-3 py-2 border border-sipa-form-input-border rounded-md shadow-sm placeholder-sipa-form-placeholder focus:outline-none focus:ring-2 focus:ring-sipa-form-input-focus focus:border-sipa-form-input-focus sm:text-sm transition-all"
         [class.border-sipa-urgent]="form.controls.password.invalid && form.controls.password.touched"
       />
     </div>
     @if (form.controls.password.invalid && form.controls.password.touched) {
-      <div class="mt-1 text-sm text-sipa-urgent">
+      <div id="password-error" class="mt-1 text-sm text-sipa-urgent" role="alert">
         @if (form.controls.password.hasError('required')) {
           La contraseña es requerida
         } @else if (form.controls.password.hasError('minlength')) {

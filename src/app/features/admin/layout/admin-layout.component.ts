@@ -11,6 +11,7 @@ import { AlertToastComponent } from '../../../shared/components/alert-toast/aler
   imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, AlertToastComponent],
   template: `
     <div class="flex h-screen bg-gray-100 overflow-hidden font-sans">
+      <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:p-4 focus:bg-white focus:text-blue-700 focus:shadow-lg rounded-br-lg">Saltar al contenido principal</a>
       <app-alert-toast />
       <!-- Sidebar -->
       <app-sidebar />
@@ -21,7 +22,7 @@ import { AlertToastComponent } from '../../../shared/components/alert-toast/aler
         <app-topbar />
 
         <!-- Main Content Area -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6 relative">
+        <main id="main-content" class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6 relative" tabindex="-1">
           <router-outlet />
         </main>
       </div>

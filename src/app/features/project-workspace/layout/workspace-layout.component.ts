@@ -8,6 +8,8 @@ import { QuestionRibbonComponent } from './components/question-ribbon/question-r
   imports: [RouterOutlet, QuestionRibbonComponent],
   template: `
     <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
+      <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:p-4 focus:bg-white focus:text-blue-700 focus:shadow-lg rounded-br-lg">Saltar al contenido principal</a>
+      
       <!-- Top Navigation / Context Header -->
       <header class="bg-white border-b border-gray-200 shadow-sm z-10 sticky top-0">
         <div class="px-6 py-4 max-w-7xl mx-auto w-full">
@@ -18,10 +20,10 @@ import { QuestionRibbonComponent } from './components/question-ribbon/question-r
             </div>
             
             <div class="flex gap-3">
-               <button class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors shadow-sm font-medium">
+               <button type="button" class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors shadow-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                  Ir al panel de eje
                </button>
-               <button class="px-4 py-2 text-sm text-white bg-gray-800 hover:bg-gray-700 rounded-md transition-colors shadow-sm font-medium">
+               <button type="button" class="px-4 py-2 text-sm text-white bg-gray-800 hover:bg-gray-700 rounded-md transition-colors shadow-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
                  Ir al panel general
                </button>
             </div>
@@ -35,7 +37,7 @@ import { QuestionRibbonComponent } from './components/question-ribbon/question-r
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 w-full max-w-5xl mx-auto px-6 py-8">
+      <main id="main-content" class="flex-1 w-full max-w-5xl mx-auto px-6 py-8" tabindex="-1">
         <router-outlet></router-outlet>
       </main>
     </div>
