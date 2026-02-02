@@ -15,9 +15,15 @@ export const roleGuard = (allowedRoles: string[]): CanMatchFn => {
     }
 
     // Redirect if not authorized (or just return false to skip route match)
-    // If user is logged in but wrong role -> redirect to dashboard
+    // If user is logged in but wrong role -> redirect to their home
     // If not logged in -> redirect to login
     if (user) {
+      if (user.role === 'ORGANIZACION') {
+        return router.createUrlTree(['/workspace']);
+      }
+      if (user.role === 'ADMIN') {
+        return router.createUrlTree(['/admin/dashboard']);
+      }
       return router.createUrlTree(['/dashboard']);
     } else {
       return router.createUrlTree(['/auth/login']);

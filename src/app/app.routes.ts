@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/pages/dashboard-page/dashboard-page.component').then(m => m.DashboardPageComponent)
   },
   {
+    path: 'workspace',
+    canMatch: [roleGuard(['ORGANIZACION'])],
+    loadChildren: () => import('./features/project-workspace/project-workspace.routes').then(m => m.PROJECT_WORKSPACE_ROUTES)
+  },
+  {
     path: 'admin',
     canMatch: [roleGuard(['ADMIN'])],
     loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES)

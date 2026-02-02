@@ -15,7 +15,7 @@ export enum ViabilityScenario {
 }
 
 // User Models
-export type UserRole = 'ADMIN' | 'ASESOR' | 'SPAT' | 'CONSULTA';
+export type UserRole = 'ADMIN' | 'ASESOR' | 'SPAT' | 'CONSULTA' | 'ORGANIZACION';
 export type UserStatus = 'ACTIVE' | 'INACTIVE';
 
 export interface User {
