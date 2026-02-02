@@ -1,0 +1,49 @@
+<div class="animate-fade-in">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+    <span class="material-symbols-rounded text-blue-600">quiz</span>
+    Parametrización de Evaluación
+  </h3>
+  <p class="text-gray-500 mb-6">Selecciona los ejes temáticos que aplicarán a este proyecto.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    @for (axis of axes; track axis.id) {
+      <div 
+        (click)="toggleAxis.emit(axis.id)"
+        class="cursor-pointer border-2 rounded-xl p-6 transition-all duration-200 flex items-start gap-4 group hover:shadow-md"
+        [ngClass]="{
+          'border-blue-600 bg-blue-50': axis.isActive,
+          'border-gray-200 bg-white hover:border-blue-300': !axis.isActive
+        }"
+      >
+        <!-- Checkbox / Status -->
+        <div 
+          class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors mt-1"
+          [ngClass]="{
+            'bg-blue-600 border-blue-600': axis.isActive,
+            'border-gray-300 bg-white': !axis.isActive
+          }"
+        >
+          @if (axis.isActive) {
+            <span class="material-symbols-rounded text-white text-sm font-bold">check</span>
+          }
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1">
+          <h4 class="font-bold text-gray-900 mb-1">{{ axis.name }}</h4>
+          <p class="text-sm text-gray-500 mb-2">
+            @if (axis.isActive) {
+              Eje activo para evaluación
+            } @else {
+              Click para activar
+            }
+          </p>
+          <div class="flex items-center gap-1 text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded w-fit">
+            <span class="material-symbols-rounded text-sm">list_alt</span>
+            {{ axis.questionCount }} preguntas
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
