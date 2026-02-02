@@ -11,8 +11,8 @@ import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
 export class AdminDataService {
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
-  private projects = signal<Project[]>(PROJECTS_MOCK);
- //private projects = signal<Project[]>([]);
+   private projects = signal<Project[]>(PROJECTS_MOCK);
+  //private projects = signal<Project[]>([]);
   private organizations = signal<Organization[]>(ORGANIZATIONS_MOCK);
 
   constructor() {}
@@ -93,6 +93,16 @@ export class AdminDataService {
     return of(updatedUser).pipe(delay(300));
   }
 
+  getAdvisors(): Observable<User[]> {
+    return of(this.users().filter(u => u.role === 'ASESOR')).pipe(delay(300));
+  }
+
+  getOrganizationUsers(organizationId: string): Observable<User[]> {
+    // Mock: return random users assigned to this org or just some users
+    // Ideally, users would have an 'organizationId' field. For mock, we'll return a subset.
+    return of(this.users().filter((_, i) => i % 2 === 0)).pipe(delay(300));
+  }
+
   // --- Projects Methods ---
 
   getProjects(page: number = 1, pageSize: number = 10, query: string = '', status: string | null = null): Observable<PaginatedResponse<Project>> {
@@ -158,11 +168,7 @@ export class AdminDataService {
 
     if (query) {
       const q = query.toLowerCase();
-      data = data.filter(o => 
-        o.name.toLowerCase().includes(q) || 
-        o.identifier.includes(q) || 
-        o.email.toLowerCase().includes(q)
-      );
+      data = data.filter(o => o.name.toLowerCase().includes(q) || o.identifier.includes(q));
     }
 
     const totalItems = data.length;
@@ -180,6 +186,10 @@ export class AdminDataService {
         currentPage: page
       }
     }).pipe(delay(500));
+  }
+
+  getAllOrganizations(): Observable<Organization[]> {
+    return of(this.organizations()).pipe(delay(300));
   }
 
   resetOrganizationPassword(id: string): Observable<boolean> {

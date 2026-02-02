@@ -25,7 +25,6 @@ export interface User {
   email: string;
   status: UserStatus;
   avatarColor?: string;
-  // Specific fields for Advisors/SPAT
   projectsAssigned?: number;
   maxProjects?: number;
 }
@@ -50,6 +49,11 @@ export interface ProjectAdvisor {
   name: string;
 }
 
+export interface AdvisorCandidate extends ProjectAdvisor {
+  workload: number;
+  recommended: boolean;
+}
+
 export interface ProjectProgress {
   technical: number;
   legal: number;
@@ -67,6 +71,10 @@ export interface Project {
   viabilityStatus: ViabilityScenario;
   advisor?: ProjectAdvisor;
   progress: ProjectProgress;
+  startDate?: string;
+  endDate?: string;
+  submissionDeadline?: string;
+  correctionDeadline?: string; // New field for correction period
 }
 
 export interface CreateProjectDTO {
@@ -75,6 +83,9 @@ export interface CreateProjectDTO {
   state: string;
   status: ProjectStatus;
   viabilityStatus: ViabilityScenario;
+  startDate: string;
+  endDate: string;
+  submissionDeadline: string;
 }
 
 export interface UpdateProjectDTO extends Partial<CreateProjectDTO> {
