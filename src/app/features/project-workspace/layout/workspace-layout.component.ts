@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { QuestionRibbonComponent } from './components/question-ribbon/question-ribbon.component';
+import { AuthService } from '../../../core/auth/services/auth.service';
 
 @Component({
   selector: 'app-workspace-layout',
@@ -19,12 +20,15 @@ import { QuestionRibbonComponent } from './components/question-ribbon/question-r
               <div class="text-xs text-gray-500 mt-1">Organización: ACME Corp | Proyecto: Construcción de Vivienda Fase 1</div>
             </div>
             
-            <div class="flex gap-3">
-               <button type="button" class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors shadow-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                 Ir al panel de eje
-               </button>
-               <button type="button" class="px-4 py-2 text-sm text-white bg-gray-800 hover:bg-gray-700 rounded-md transition-colors shadow-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
-                 Ir al panel general
+            <div class="flex gap-3 items-center">
+               <button 
+                 type="button" 
+                 (click)="logout()" 
+                 class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                 aria-label="Cerrar sesión"
+               >
+                 <span class="material-symbols-rounded text-lg" aria-hidden="true">logout</span>
+                 <span class="hidden sm:inline">Salir</span>
                </button>
             </div>
           </div>
@@ -43,4 +47,12 @@ import { QuestionRibbonComponent } from './components/question-ribbon/question-r
     </div>
   `
 })
-export class WorkspaceLayoutComponent {}
+export class WorkspaceLayoutComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
+}
