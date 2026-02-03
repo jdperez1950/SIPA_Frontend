@@ -227,7 +227,8 @@ export class AdminOrganizationCreateModalComponent implements OnInit {
       email: formData.email,
       municipality: formData.municipality,
       region: formData.region,
-      contactName: formData.contactName
+      contactName: formData.contactName,
+      status: this.organization ? this.organization.status : 'ACTIVE'
     };
 
     if (this.organization) {
