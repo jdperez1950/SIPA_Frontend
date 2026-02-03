@@ -121,3 +121,14 @@ export interface PaginatedResponse<T> {
     currentPage: number;
   };
 }
+
+export interface CreateOrganizationDTO {
+  name: string;
+  type: OrganizationType;
+  identifier: string;
+  email: string;
+  municipality: string;
+  region: string;
+  contactName?: string;
+  status: OrganizationStatus;
+}

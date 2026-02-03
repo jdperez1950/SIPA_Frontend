@@ -5,6 +5,12 @@
       <h1 class="text-2xl font-bold text-gray-900">Organizaciones</h1>
       <p class="text-gray-500">Gestión de organizaciones y acceso al sistema</p>
     </div>
+    <button 
+      (click)="showCreateModal.set(true)"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-colors shadow-sm">
+      <span class="material-symbols-rounded text-xl">add</span>
+      Agregar Organización
+    </button>
   </div>
 
   <!-- Filters -->
@@ -98,21 +104,25 @@
                     [class.bg-gray-50]="org.status !== 'ACTIVE'"
                     [class.text-gray-600]="org.status !== 'ACTIVE'"
                     [class.border-gray-200]="org.status !== 'ACTIVE'">
-                    <span class="h-1.5 w-1.5 rounded-full" 
-                      [class.bg-green-500]="org.status === 'ACTIVE'"
-                      [class.bg-gray-400]="org.status !== 'ACTIVE'"></span>
                     {{ org.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
 
                 <!-- Actions -->
                 <td class="px-6 py-4 text-right">
-                  <button 
-                    (click)="resetPassword(org)"
-                    class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Restablecer Contraseña">
-                    <span class="material-symbols-rounded">lock_reset</span>
-                  </button>
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="resetPassword(org)" 
+                      class="p-1 text-gray-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50" 
+                      title="Restablecer Contraseña">
+                      <span class="material-symbols-rounded">lock_reset</span>
+                    </button>
+                    <button 
+                      (click)="openEditModal(org)"
+                      class="p-1 text-gray-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50" 
+                      title="Editar">
+                      <span class="material-symbols-rounded">edit</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
             }
@@ -120,13 +130,23 @@
         </tbody>
       </table>
     </div>
-
+    
     <!-- Pagination -->
     <app-pagination
-      [totalItems]="totalItems()"
-      [itemsPerPage]="pageSize()"
-      [currentPage]="currentPage()"
-      (pageChange)="onPageChange($event)">
-    </app-pagination>
+        [totalItems]="totalItems()"
+        [itemsPerPage]="pageSize()"
+        [currentPage]="currentPage()"
+        (pageChange)="onPageChange($event)">
+      </app-pagination>
   </div>
+
+  <!-- Create/Edit Modal -->
+  @if (showCreateModal()) {
+    <app-admin-organization-create-modal
+      [organization]="selectedOrganization()"
+      (close)="showCreateModal.set(false); selectedOrganization.set(null)"
+      (create)="handleCreateOrganization($event)"
+      (update)="handleUpdateOrganization($event)">
+    </app-admin-organization-create-modal>
+  }
 </div>
