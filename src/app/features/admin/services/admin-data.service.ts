@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse } from '../../../core/models/domain.models';
+import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
 import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
@@ -11,8 +11,7 @@ import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
 export class AdminDataService {
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
-   private projects = signal<Project[]>(PROJECTS_MOCK);
-  //private projects = signal<Project[]>([]);
+  private projects = signal<Project[]>(PROJECTS_MOCK);
   private organizations = signal<Organization[]>(ORGANIZATIONS_MOCK);
 
   constructor() {}
@@ -96,32 +95,21 @@ export class AdminDataService {
   getAdvisors(): Observable<User[]> {
     return of(this.users().filter(u => u.role === 'ASESOR')).pipe(delay(300));
   }
-
-  getOrganizationUsers(organizationId: string): Observable<User[]> {
-    // Mock: return random users assigned to this org or just some users
-    // Ideally, users would have an 'organizationId' field. For mock, we'll return a subset.
-    return of(this.users().filter((_, i) => i % 2 === 0)).pipe(delay(300));
-  }
-
-  // --- Projects Methods ---
-
-  getProjects(page: number = 1, pageSize: number = 10, query: string = '', status: string | null = null): Observable<PaginatedResponse<Project>> {
+  
+  // New methods for Project Wizard
+  getProjects(page: number = 1, pageSize: number = 10, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
     let data = this.projects();
-
     if (query) {
       const q = query.toLowerCase();
-      data = data.filter(p => p.code.toLowerCase().includes(q) || p.organization.toLowerCase().includes(q));
+      data = data.filter(p => p.code.toLowerCase().includes(q) || p.municipality.toLowerCase().includes(q));
     }
-
     if (status) {
       data = data.filter(p => p.status === status);
     }
-
     const totalItems = data.length;
     const totalPages = Math.ceil(totalItems / pageSize);
     const startIndex = (page - 1) * pageSize;
     const paginatedData = data.slice(startIndex, startIndex + pageSize);
-
     return of({
       data: paginatedData,
       meta: {
@@ -134,21 +122,35 @@ export class AdminDataService {
     }).pipe(delay(500));
   }
 
-  createProject(dto: CreateProjectDTO): Observable<Project> {
+  createProject(request: CreateProjectRequest): Observable<Project> {
+    console.log('Creating Project V2:', request);
+
+    // Map Request to existing Project Model (Mock)
     const newProject: Project = {
       id: Math.random().toString(36).substr(2, 9),
-      code: `PRJ-2026-${Math.floor(Math.random() * 1000)}`, // Auto-generated
-      ...dto,
-      progress: { technical: 0, legal: 0, financial: 0, social: 0 }
+      code: `PROJ-${Math.floor(Math.random() * 10000)}`, // Generate Code
+      organization: request.organization.name,
+      municipality: request.municipality,
+      state: request.department,
+      status: 'ACTIVE',
+      viabilityStatus: 'PRE_HABILITADO' as any,
+      progress: {
+        technical: 0,
+        legal: 0,
+        financial: 0,
+        social: 0
+      },
+      startDate: request.dates.start,
+      endDate: request.dates.end,
+      submissionDeadline: request.dates.submissionDeadline
     };
 
-    this.projects.update(current => [...current, newProject]);
-    return of(newProject).pipe(delay(500));
+    this.projects.update(current => [newProject, ...current]);
+    return of(newProject).pipe(delay(1000));
   }
 
-  assignAdvisor(projectId: string, advisor: { id: string, name: string }): Observable<Project> {
+  assignAdvisor(projectId: string, advisor: { id: string; name: string }): Observable<Project> {
     let updatedProject: Project | undefined;
-
     this.projects.update(current => current.map(p => {
       if (p.id === projectId) {
         updatedProject = { ...p, advisor };
@@ -156,9 +158,12 @@ export class AdminDataService {
       }
       return p;
     }));
-
     if (!updatedProject) throw new Error('Project not found');
-    return of(updatedProject).pipe(delay(300));
+    return of(updatedProject).pipe(delay(500));
+  }
+
+  getAllOrganizations(): Observable<Organization[]> {
+    return of(this.organizations()).pipe(delay(500));
   }
 
   // --- Organizations Methods ---
@@ -166,11 +171,13 @@ export class AdminDataService {
   getOrganizations(page: number = 1, pageSize: number = 10, query: string = ''): Observable<PaginatedResponse<Organization>> {
     let data = this.organizations();
 
+    // Filter
     if (query) {
       const q = query.toLowerCase();
-      data = data.filter(o => o.name.toLowerCase().includes(q) || o.identifier.includes(q));
+      data = data.filter(o => o.name.toLowerCase().includes(q) || o.identifier.includes(q) || o.email.toLowerCase().includes(q));
     }
 
+    // Pagination
     const totalItems = data.length;
     const totalPages = Math.ceil(totalItems / pageSize);
     const startIndex = (page - 1) * pageSize;
@@ -188,27 +195,44 @@ export class AdminDataService {
     }).pipe(delay(500));
   }
 
-  getAllOrganizations(): Observable<Organization[]> {
-    return of(this.organizations()).pipe(delay(300));
+  getOrganizationUsers(organizationId: string): Observable<User[]> {
+    return of(this.users().filter(u => u.role === 'ORGANIZACION')).pipe(delay(300));
+  }
+
+  createOrganization(dto: CreateOrganizationDTO, file: File): Observable<Organization> {
+    const newOrg: Organization = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...dto,
+      userId: 'temp-user-id' // Mock linked user
+    };
+
+    console.log('Uploading file:', file.name, 'Size:', file.size);
+    
+    this.organizations.update(current => [newOrg, ...current]);
+    return of(newOrg).pipe(delay(1500)); // Simulate upload delay
+  }
+
+  updateOrganization(id: string, dto: Partial<CreateOrganizationDTO>): Observable<Organization> {
+    let updatedOrg: Organization | undefined;
+    
+    this.organizations.update(current => current.map(o => {
+      if (o.id === id) {
+        updatedOrg = { ...o, ...dto };
+        return updatedOrg;
+      }
+      return o;
+    }));
+
+    if (!updatedOrg) throw new Error('Organization not found');
+    return of(updatedOrg).pipe(delay(500));
   }
 
   resetOrganizationPassword(id: string): Observable<boolean> {
-    // In a real app, this would trigger a backend process
-    // Here we just verify the organization exists
-    const org = this.organizations().find(o => o.id === id);
-    if (!org) throw new Error('Organization not found');
-    return of(true).pipe(delay(500));
+    return of(true).pipe(delay(1000));
   }
 
-  // Helpers
   private getRandomAvatarColor(): string {
-    const colors = [
-      'bg-purple-100 text-purple-700',
-      'bg-green-100 text-green-700',
-      'bg-blue-100 text-blue-700',
-      'bg-orange-100 text-orange-700',
-      'bg-pink-100 text-pink-700'
-    ];
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500'];
     return colors[Math.floor(Math.random() * colors.length)];
   }
 }

@@ -3,49 +3,60 @@ import { Organization } from '../../models/domain.models';
 export const ORGANIZATIONS_MOCK: Organization[] = [
   {
     id: '1',
-    name: 'Asociación de Productores de Café Villa Rica',
+    name: 'Constructora Bolívar S.A.',
     type: 'COMPANY',
-    identifier: '20123456789',
-    email: 'contacto@cafevillarica.com',
+    identifier: '860002503', // NIT
+    email: 'proyectos@constructorabolivar.com',
     status: 'ACTIVE',
-    contactName: 'Juan Pérez',
-    municipality: 'Villa Rica',
-    region: 'Pasco',
+    contactName: 'Carlos Rodríguez',
+    municipality: 'Bogotá D.C.',
+    region: 'Bogotá D.C.',
     userId: '101'
   },
   {
     id: '2',
-    name: 'Cooperativa Agraria Cafetalera La Florida',
+    name: 'Fundación Mario Santo Domingo',
     type: 'COMPANY',
-    identifier: '20987654321',
-    email: 'info@laflorida.pe',
+    identifier: '890101234', // NIT
+    email: 'contacto@fmsd.org.co',
     status: 'ACTIVE',
-    contactName: 'Maria Rodriguez',
-    municipality: 'Chanchamayo',
-    region: 'Junín',
+    contactName: 'Ana María Martínez',
+    municipality: 'Barranquilla',
+    region: 'Atlántico',
     userId: '102'
   },
   {
     id: '3',
-    name: 'Carlos Andrés Segovia',
+    name: 'Jorge Eliécer García',
     type: 'PERSON',
-    identifier: '45678901',
-    email: 'carlos.segovia@email.com',
+    identifier: '79123456', // CC
+    email: 'jorge.garcia@email.com',
     status: 'ACTIVE',
-    municipality: 'Satipo',
-    region: 'Junín',
+    municipality: 'Medellín',
+    region: 'Antioquia',
     userId: '103'
   },
   {
     id: '4',
-    name: 'Asociación de Cacao del VRAEM',
+    name: 'Unión Temporal Vivienda 2024',
     type: 'COMPANY',
-    identifier: '20555666777',
-    email: 'cacao.vraem@asociacion.pe',
+    identifier: '901234567', // NIT
+    email: 'direccion@utvivienda2024.com',
     status: 'INACTIVE',
-    contactName: 'Pedro Castillo',
-    municipality: 'Pichari',
-    region: 'Cusco',
+    contactName: 'Luis Fernando Torres',
+    municipality: 'Cali',
+    region: 'Valle del Cauca',
     userId: '104'
+  },
+  {
+    id: '5',
+    name: 'María Fernanda Valencia',
+    type: 'PERSON',
+    identifier: '52345678', // CC
+    email: 'maria.valencia@arquitectos.com',
+    status: 'ACTIVE',
+    municipality: 'Bucaramanga',
+    region: 'Santander',
+    userId: '105'
   }
 ];
