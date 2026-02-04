@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO } from '../../../core/models/domain.models';
+import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
 import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
@@ -120,6 +120,33 @@ export class AdminDataService {
         currentPage: page
       }
     }).pipe(delay(500));
+  }
+
+  createProject(request: CreateProjectRequest): Observable<Project> {
+    console.log('Creating Project V2:', request);
+
+    // Map Request to existing Project Model (Mock)
+    const newProject: Project = {
+      id: Math.random().toString(36).substr(2, 9),
+      code: `PROJ-${Math.floor(Math.random() * 10000)}`, // Generate Code
+      organization: request.organization.name,
+      municipality: request.municipality,
+      state: request.department,
+      status: 'ACTIVE',
+      viabilityStatus: 'PRE_HABILITADO' as any,
+      progress: {
+        technical: 0,
+        legal: 0,
+        financial: 0,
+        social: 0
+      },
+      startDate: request.dates.start,
+      endDate: request.dates.end,
+      submissionDeadline: request.dates.submissionDeadline
+    };
+
+    this.projects.update(current => [newProject, ...current]);
+    return of(newProject).pipe(delay(1000));
   }
 
   assignAdvisor(projectId: string, advisor: { id: string; name: string }): Observable<Project> {

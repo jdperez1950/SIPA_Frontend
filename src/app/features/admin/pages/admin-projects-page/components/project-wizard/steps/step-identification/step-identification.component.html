@@ -97,25 +97,61 @@
     </div>
   </div>
 
-  <!-- Organization -->
-  <div class="space-y-2">
-    <label for="organization" class="block text-sm font-medium text-gray-700">Organización Responsable</label>
-    <div class="relative">
-      <select 
-        id="organization"
-        formControlName="organizationId"
-        class="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
-      >
-        <option value="">Seleccione la entidad responsable...</option>
-        @for (org of organizations; track org.id) {
-          <option [value]="org.id">{{ org.name }} ({{ org.identifier }})</option>
-        }
-      </select>
-      <span class="absolute left-3 top-3.5 text-gray-400 material-symbols-rounded">business</span>
-      <span class="absolute right-4 top-3.5 text-gray-500 pointer-events-none material-symbols-rounded">expand_more</span>
+  <!-- Organization Details Section -->
+  <div class="pt-6 border-t border-gray-200">
+    <h3 class="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
+      <span class="material-symbols-rounded text-blue-600">domain</span>
+      Información de la Organización Responsable
+    </h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Organization Name -->
+      <div class="space-y-2">
+        <label for="organizationName" class="block text-sm font-medium text-gray-700">Nombre de la Organización</label>
+        <input 
+          type="text" 
+          id="organizationName"
+          formControlName="organizationName"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Ej. Alcaldía de..."
+        >
+      </div>
+
+      <!-- Organization Identifier -->
+      <div class="space-y-2">
+        <label for="organizationIdentifier" class="block text-sm font-medium text-gray-700">Identificación (NIT/Código)</label>
+        <input 
+          type="text" 
+          id="organizationIdentifier"
+          formControlName="organizationIdentifier"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Ej. 899.999.000-1"
+        >
+      </div>
     </div>
-    <p class="text-xs text-gray-500 mt-1">
-      <span class="font-medium text-blue-600">Nota:</span> Esta selección determinará los usuarios disponibles para el equipo de respuesta.
-    </p>
+
+    <!-- Organization Address -->
+    <div class="space-y-2 mb-6">
+      <label for="organizationAddress" class="block text-sm font-medium text-gray-700">Dirección</label>
+      <input 
+        type="text" 
+        id="organizationAddress"
+        formControlName="organizationAddress"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Ej. Calle 123 # 45-67"
+      >
+    </div>
+
+    <!-- Organization Description -->
+    <div class="space-y-2">
+      <label for="organizationDescription" class="block text-sm font-medium text-gray-700">Descripción de la Entidad</label>
+      <textarea 
+        id="organizationDescription"
+        formControlName="organizationDescription"
+        rows="3"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+        placeholder="Breve descripción de la entidad y su rol..."
+      ></textarea>
+    </div>
   </div>
 </form>

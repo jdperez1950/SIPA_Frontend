@@ -61,27 +61,26 @@
           ></app-step-identification>
         }
         @case (2) {
-          <app-step-evaluation
-            [axes]="evaluationAxes()"
-            (toggleAxis)="toggleAxis($event)"
-          ></app-step-evaluation>
-        }
-        @case (3) {
-          <app-step-technical-table
-            [activeAxes]="activeAxes()"
-            [assignments]="technicalTableAssignments()"
-            (assign)="updateTechnicalTable($event)"
-          ></app-step-technical-table>
-        }
-        @case (4) {
           @if (identificationData(); as data) {
             <app-step-response-team
-              [organizationId]="data.organizationId"
               [organizationName]="data.organizationName"
               [selectedMembers]="responseTeam()"
               (selectionChange)="updateResponseTeam($event)"
             ></app-step-response-team>
           }
+        }
+        @case (3) {
+          <app-step-evaluation
+            [axes]="evaluationAxes()"
+            (toggleAxis)="toggleAxis($event)"
+          ></app-step-evaluation>
+        }
+        @case (4) {
+          <app-step-technical-table
+            [activeAxes]="activeAxes()"
+            [assignments]="technicalTableAssignments()"
+            (assign)="updateTechnicalTable($event)"
+          ></app-step-technical-table>
         }
       }
     

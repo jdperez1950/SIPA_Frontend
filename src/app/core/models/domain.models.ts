@@ -88,6 +88,52 @@ export interface CreateProjectDTO {
   submissionDeadline: string;
 }
 
+// --- New V2 Project Creation Models ---
+
+export interface ProjectOrganizationData {
+  name: string;
+  description: string;
+  identifier: string;
+  address: string;
+}
+
+export interface ProjectResponseTeamMember {
+  userId?: string;
+  userName: string;
+  userEmail: string;
+  documentType: string;
+  documentNumber: string;
+  phoneNumber: string;
+  status: string;
+}
+
+export interface ProjectTechnicalAssignment {
+  axisId: string;
+  advisorId: string;
+}
+
+export interface CreateProjectRequest {
+  // Identification
+  name: string;
+  department: string;
+  municipality: string;
+  organization: ProjectOrganizationData;
+  dates: {
+    start: string;
+    end: string;
+    submissionDeadline: string;
+  };
+  
+  // Response Team
+  responseTeam: ProjectResponseTeamMember[];
+  
+  // Evaluation
+  activeAxes: string[]; // IDs of active axes
+  
+  // Technical Table
+  technicalTable: ProjectTechnicalAssignment[];
+}
+
 export interface UpdateProjectDTO extends Partial<CreateProjectDTO> {
   id: string;
   advisorId?: string;

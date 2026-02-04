@@ -2,8 +2,6 @@ import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentificationData } from '../../project-wizard.types';
-import { AdminDataService } from '../../../../../../services/admin-data.service';
-import { Organization } from '../../../../../../../../core/models/domain.models';
 
 @Component({
   selector: 'app-step-identification',
@@ -17,13 +15,9 @@ export class StepIdentificationComponent implements OnInit {
   @Output() dataChange = new EventEmitter<IdentificationData>();
 
   private fb = inject(FormBuilder);
-  private adminDataService = inject(AdminDataService);
 
   form!: FormGroup;
-  organizations: Organization[] = [];
-  filteredOrganizations: Organization[] = [];
-  isLoadingOrgs = false;
-
+  
   // Mock locations (Should ideally come from a service)
   departments = ['Cundinamarca', 'Antioquia', 'Valle del Cauca', 'Atlántico', 'Santander'];
   municipalities: Record<string, string[]> = {
@@ -36,19 +30,18 @@ export class StepIdentificationComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.loadOrganizations();
     
     // Emit changes to parent
     this.form.valueChanges.subscribe(value => {
       if (this.form.valid) {
-        const selectedOrg = this.organizations.find(o => o.id === value.organizationId);
-        
         this.dataChange.emit({
           projectName: value.projectName,
           department: value.department,
           municipality: value.municipality,
-          organizationId: value.organizationId,
-          organizationName: selectedOrg?.name || '',
+          organizationName: value.organizationName,
+          organizationDescription: value.organizationDescription,
+          organizationIdentifier: value.organizationIdentifier,
+          organizationAddress: value.organizationAddress,
           startDate: value.startDate,
           endDate: value.endDate,
           submissionDeadline: value.submissionDeadline
@@ -64,7 +57,10 @@ export class StepIdentificationComponent implements OnInit {
       projectName: [this.initialData?.projectName || '', [Validators.required, Validators.minLength(5)]],
       department: [this.initialData?.department || '', Validators.required],
       municipality: [this.initialData?.municipality || '', Validators.required],
-      organizationId: [this.initialData?.organizationId || '', Validators.required],
+      organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
+      organizationDescription: [this.initialData?.organizationDescription || '', [Validators.required, Validators.minLength(10)]],
+      organizationIdentifier: [this.initialData?.organizationIdentifier || '', Validators.required],
+      organizationAddress: [this.initialData?.organizationAddress || '', Validators.required],
       startDate: [this.initialData?.startDate || '', Validators.required],
       endDate: [this.initialData?.endDate || '', Validators.required],
       submissionDeadline: [this.initialData?.submissionDeadline || '', Validators.required]
@@ -98,18 +94,6 @@ export class StepIdentificationComponent implements OnInit {
     }
 
     return Object.keys(errors).length > 0 ? errors : null;
-  }
-
-  private loadOrganizations() {
-    this.isLoadingOrgs = true;
-    this.adminDataService.getAllOrganizations().subscribe({
-      next: (orgs) => {
-        this.organizations = orgs;
-        this.filteredOrganizations = orgs; // Initialize with all
-        this.isLoadingOrgs = false;
-      },
-      error: () => this.isLoadingOrgs = false
-    });
   }
 
   // Helper for template

@@ -5,7 +5,9 @@ import { StepEvaluationComponent } from './steps/step-evaluation/step-evaluation
 import { StepTechnicalTableComponent } from './steps/step-technical-table/step-technical-table.component';
 import { StepResponseTeamComponent } from './steps/step-response-team/step-response-team.component';
 import { AlertService } from '../../../../../../core/services/alert.service';
+import { AdminDataService } from '../../../../services/admin-data.service';
 import { inject } from '@angular/core';
+import { CreateProjectRequest } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
   EvaluationAxis, 
@@ -30,13 +32,14 @@ export class ProjectWizardComponent {
   @Output() completed = new EventEmitter<void>();
   
   private alertService = inject(AlertService);
+  private adminService = inject(AdminDataService);
 
   // --- Constants ---
   readonly STEPS = [
     { number: 1, title: 'Identificación', icon: 'badge' },
-    { number: 2, title: 'Evaluación', icon: 'quiz' },
-    { number: 3, title: 'Mesa Técnica', icon: 'engineering' },
-    { number: 4, title: 'Equipo Respuesta', icon: 'group_add' }
+    { number: 2, title: 'Equipo Respuesta', icon: 'group_add' },
+    { number: 3, title: 'Evaluación', icon: 'quiz' },
+    { number: 4, title: 'Mesa Técnica', icon: 'engineering' }
   ];
 
   // --- State ---
@@ -45,19 +48,22 @@ export class ProjectWizardComponent {
   // Step 1 Data
   identificationData = signal<IdentificationData | null>(null);
 
-  // Step 2 Data
+  // Step 3 Data
   evaluationAxes = signal<EvaluationAxis[]>([
-    { id: 'SUELO', name: 'Suelo', questionCount: 45, isActive: false },
-    { id: 'SOCIAL', name: 'Social', questionCount: 30, isActive: false },
-    { id: 'FINANCIERO', name: 'Financiero', questionCount: 25, isActive: false },
-    { id: 'PRECONSTRUCCION', name: 'Preconstrucción', questionCount: 20, isActive: false }
+    { id: 'SUELO', name: 'Suelo', questionCount: 45, isActive: true },
+    { id: 'SOCIAL', name: 'Social', questionCount: 30, isActive: true },
+    { id: 'FINANCIERO', name: 'Financiero', questionCount: 25, isActive: true },
+    { id: 'PRECONSTRUCCION', name: 'Preconstrucción', questionCount: 20, isActive: true }
   ]);
 
+  // Step 2 Data
+  responseTeam = signal<ResponseTeamMember[]>([]);
+
   // Step 3 Data
-  technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
+  // (managed in evaluationAxes signal)
 
   // Step 4 Data
-  responseTeam = signal<ResponseTeamMember[]>([]);
+  technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
 
   // --- Computed Helpers ---
   activeAxes = computed(() => this.evaluationAxes().filter(axis => axis.isActive));
@@ -68,14 +74,14 @@ export class ProjectWizardComponent {
       case 1:
         return !!this.identificationData();
       case 2:
-        return this.activeAxes().length > 0;
+        return this.responseTeam().length > 0;
       case 3: 
+        return this.activeAxes().length > 0;
+      case 4:
         const activeIds = this.activeAxes().map(a => a.id);
         const assignedIds = this.technicalTableAssignments().map(a => a.axisId);
         // All active axes must have an assignment
         return activeIds.every(id => assignedIds.includes(id));
-      case 4:
-        return this.responseTeam().length > 0;
       default:
         return false;
     }
@@ -111,15 +117,50 @@ export class ProjectWizardComponent {
 
   finishWizard() {
     if (this.isCurrentStepValid()) {
-      console.log('Wizard Completed', {
-        identification: this.identificationData(),
-        evaluation: this.activeAxes(),
-        technicalTable: this.technicalTableAssignments(),
-        responseTeam: this.responseTeam()
+      const data = this.identificationData();
+      if (!data) return;
+
+      const request: CreateProjectRequest = {
+        name: data.projectName,
+        department: data.department,
+        municipality: data.municipality,
+        organization: {
+          name: data.organizationName,
+          description: data.organizationDescription,
+          identifier: data.organizationIdentifier,
+          address: data.organizationAddress
+        },
+        dates: {
+          start: data.startDate,
+          end: data.endDate,
+          submissionDeadline: data.submissionDeadline
+        },
+        responseTeam: this.responseTeam().map(m => ({
+          userId: m.userId,
+          userName: m.userName,
+          userEmail: m.userEmail,
+          documentType: m.documentType,
+          documentNumber: m.documentNumber,
+          phoneNumber: m.phoneNumber,
+          status: m.status
+        })),
+        activeAxes: this.activeAxes().map(a => a.id),
+        technicalTable: this.technicalTableAssignments().map(a => ({
+          axisId: a.axisId,
+          advisorId: a.advisorId
+        }))
+      };
+
+      this.adminService.createProject(request).subscribe({
+        next: () => {
+          this.alertService.success('Proyecto registrado exitosamente');
+          this.completed.emit();
+        },
+        error: (err) => {
+          console.error(err);
+          this.alertService.error('Error al registrar el proyecto');
+        }
       });
-      
-      this.alertService.success('Proyecto registrado exitosamente');
-      this.completed.emit();
     }
   }
 
@@ -128,7 +169,7 @@ export class ProjectWizardComponent {
   updateIdentification(data: IdentificationData) {
     // If organization changes, we might need to reset Step 4
     const prev = this.identificationData();
-    if (prev && prev.organizationId !== data.organizationId) {
+    if (prev && prev.organizationIdentifier !== data.organizationIdentifier) {
       this.responseTeam.set([]); // Reset response team
     }
     this.identificationData.set(data);
@@ -139,7 +180,7 @@ export class ProjectWizardComponent {
       axes.map(axis => {
         if (axis.id === axisId) {
           const isActive = !axis.isActive;
-          // If turning off, remove assignment from Step 3
+          // If turning off, remove assignment from Step 4
           if (!isActive) {
             this.technicalTableAssignments.update(assignments => 
               assignments.filter(a => a.axisId !== axisId)

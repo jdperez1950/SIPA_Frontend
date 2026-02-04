@@ -1,68 +1,114 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ResponseTeamMember } from '../../project-wizard.types';
-import { FormsModule } from '@angular/forms';
-
-// Mock User Interface (should be imported from models)
-interface OrganizationUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-step-response-team',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './step-response-team.component.html',
   styles: []
 })
 export class StepResponseTeamComponent implements OnInit {
-  @Input({ required: true }) organizationId!: string;
+  @Input() organizationId?: string;
   @Input({ required: true }) organizationName!: string;
   @Input({ required: true }) selectedMembers: ResponseTeamMember[] = [];
   @Output() selectionChange = new EventEmitter<ResponseTeamMember[]>();
 
-  organizationUsers: OrganizationUser[] = [];
-  isLoading = false;
+  private fb = inject(FormBuilder);
+  userForm!: FormGroup;
+  isSearching = false;
+
+  // Mock document types
+  documentTypes = [
+    { value: 'CC', label: 'Cédula de Ciudadanía' },
+    { value: 'CE', label: 'Cédula de Extranjería' },
+    { value: 'NIT', label: 'NIT' },
+    { value: 'PAS', label: 'Pasaporte' }
+  ];
 
   ngOnInit() {
-    this.loadOrganizationUsers();
+    this.initForm();
   }
 
-  loadOrganizationUsers() {
-    this.isLoading = true;
-    // Simulate API call to get users by organization ID
+  private initForm() {
+    this.userForm = this.fb.group({
+      documentType: ['CC', Validators.required],
+      documentNumber: ['', [Validators.required, Validators.minLength(5)]],
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
+      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      status: ['ACTIVE', Validators.required]
+    });
+  }
+
+  searchUserByDocument() {
+    const docNumber = this.userForm.get('documentNumber')?.value;
+    if (!docNumber) return;
+
+    this.isSearching = true;
+    
+    // Simulate API search
     setTimeout(() => {
-      this.organizationUsers = [
-        { id: 'USR-101', name: 'Juan Pérez', email: 'juan.perez@org.com', role: 'Representante Legal' },
-        { id: 'USR-102', name: 'Maria Rodriguez', email: 'maria.r@org.com', role: 'Ingeniera Residente' },
-        { id: 'USR-103', name: 'Pedro Alcantara', email: 'pedro.a@org.com', role: 'Arquitecto' },
-        { id: 'USR-104', name: 'Luisa Fernanda', email: 'luisa.f@org.com', role: 'Auxiliar Administrativo' },
-      ];
-      this.isLoading = false;
-    }, 600);
+      this.isSearching = false;
+      // Mock existing user check
+      if (docNumber === '123456789') {
+        this.userForm.patchValue({
+          name: 'Usuario Existente',
+          email: 'usuario.existente@email.com',
+          phoneNumber: '3001234567',
+          documentType: 'CC',
+          status: 'ACTIVE'
+        });
+      }
+    }, 800);
   }
 
-  isSelected(userId: string): boolean {
-    return this.selectedMembers.some(m => m.userId === userId);
-  }
-
-  toggleMember(user: OrganizationUser) {
-    const isSelected = this.isSelected(user.id);
-    let newSelection = [...this.selectedMembers];
-
-    if (isSelected) {
-      newSelection = newSelection.filter(m => m.userId !== user.id);
-    } else {
-      newSelection.push({
-        userId: user.id,
-        userName: user.name,
-        userEmail: user.email
-      });
+  addMember() {
+    if (this.userForm.invalid) {
+      this.userForm.markAllAsTouched();
+      return;
     }
 
-    this.selectionChange.emit(newSelection);
+    const formValue = this.userForm.value;
+    
+    // Check if user already added
+    const exists = this.selectedMembers.some(
+      m => m.documentNumber === formValue.documentNumber
+    );
+
+    if (exists) {
+      alert('Este usuario ya ha sido agregado al equipo.');
+      return;
+    }
+
+    const newMember: ResponseTeamMember = {
+      userName: formValue.name,
+      userEmail: formValue.email,
+      documentType: formValue.documentType,
+      documentNumber: formValue.documentNumber,
+      phoneNumber: formValue.phoneNumber,
+      status: formValue.status,
+      // userId would be set if it was an existing user from DB, for now undefined for new ones
+    };
+
+    const updatedList = [...this.selectedMembers, newMember];
+    this.selectionChange.emit(updatedList);
+    this.resetForm();
+  }
+
+  removeMember(member: ResponseTeamMember) {
+    const updatedList = this.selectedMembers.filter(
+      m => m.documentNumber !== member.documentNumber
+    );
+    this.selectionChange.emit(updatedList);
+  }
+
+  resetForm() {
+    this.userForm.reset({
+      documentType: 'CC',
+      status: 'ACTIVE'
+    });
   }
 }

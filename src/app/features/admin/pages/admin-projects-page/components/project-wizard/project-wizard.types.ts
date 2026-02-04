@@ -12,8 +12,11 @@ export interface IdentificationData {
   projectName: string;
   department: string;
   municipality: string;
-  organizationId: string;
+  // organizationId: string; // Removed for V2
   organizationName: string;
+  organizationDescription: string;
+  organizationIdentifier: string;
+  organizationAddress: string;
   startDate: string;
   endDate: string;
   submissionDeadline: string;
@@ -33,7 +36,11 @@ export interface TechnicalTableAssignment {
 }
 
 export interface ResponseTeamMember {
-  userId: string;
+  userId?: string; // Optional if new user
   userName: string;
   userEmail: string;
+  documentType: string;
+  documentNumber: string;
+  phoneNumber: string;
+  status: string; // 'ACTIVE' | 'INACTIVE'
 }
