@@ -28,7 +28,11 @@ export class LoginFormComponent {
 
   onSubmit() {
     if (this.form.valid) {
-      this.login.emit(this.form.getRawValue());
+      const rawValue = this.form.getRawValue();
+      this.login.emit({
+        email: rawValue.email.trim(),
+        password: rawValue.password // Password usually shouldn't be trimmed if it allows spaces, but standard practice often trims. I'll trim email only for safety.
+      });
     } else {
       this.form.markAllAsTouched();
     }

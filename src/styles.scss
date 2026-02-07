@@ -76,6 +76,13 @@
   --background-image-pavis-gradient-deep: linear-gradient(180deg, #0098DA 0%, #0033A0 100%);
 }
 
+@layer base {
+  input::placeholder, textarea::placeholder {
+    color: var(--color-pavis-form-placeholder) !important;
+    opacity: 1;
+  }
+}
+
 @keyframes slide-in {
   from {
     opacity: 0;

@@ -28,6 +28,7 @@
               [value]="getAssignment(axis.id)"
               (change)="onSelectAdvisor(axis.id, $event)"
               class="pl-10 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 border"
+              [class.text-gray-400]="!getAssignment(axis.id)"
             >
               <option value="" disabled selected>Seleccione un asesor...</option>
               @for (advisor of getAdvisorsForAxis(axis.id); track advisor.id) {
