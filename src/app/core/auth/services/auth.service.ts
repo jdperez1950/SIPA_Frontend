@@ -25,13 +25,13 @@ export class AuthService {
 
   private restoreSession() {
     if (isPlatformBrowser(this.platformId)) {
-      const storedUser = localStorage.getItem('sipa_user');
+      const storedUser = localStorage.getItem('pavis_user');
       if (storedUser) {
         try {
           this.#currentUser.set(JSON.parse(storedUser));
         } catch (e) {
           console.error('Error parsing stored user', e);
-          localStorage.removeItem('sipa_user');
+          localStorage.removeItem('pavis_user');
         }
       }
     }
@@ -66,7 +66,7 @@ export class AuthService {
       tap(user => {
         this.#currentUser.set(user);
         if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem('sipa_user', JSON.stringify(user));
+          localStorage.setItem('pavis_user', JSON.stringify(user));
         }
       })
     );
@@ -75,7 +75,7 @@ export class AuthService {
   logout(): void {
     this.#currentUser.set(null);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('sipa_user');
+      localStorage.removeItem('pavis_user');
     }
   }
 

@@ -1,9 +1,9 @@
 /**
- * Sistema de Color SIPA v2 - UI Kit Completo
+ * Sistema de Color PAVIS - UI Kit Completo
  * Incluye: Marca, Semáforos, Inputs, Botones, Fondos y Gráficos.
  */
 
-export const SIPA_COLORS = {
+export const PAVIS_COLORS = {
   // --- 1. MARCA INSTITUCIONAL ---
   brand: {
     primary: '#0033A0',   // Azul Gobierno (Acción Principal)
@@ -57,7 +57,7 @@ export const SIPA_COLORS = {
     inputPlaceholder: '#9CA3AF',
   },
 
-  // --- 5. SEMÁFORO DE NEGOCIO (Estados SIPA) ---
+  // --- 5. SEMÁFORO DE NEGOCIO (Estados PAVIS) ---
   status: {
     validated: '#15803D',    // Verde Oscuro (Validado)
     validatedBg: '#DCFCE7',  // Verde Claro (Fondo Badge)
@@ -98,18 +98,5 @@ export const SIPA_COLORS = {
     teal: '#14B8A6',
     cyan: '#06B6D4',
     orange: '#F97316',
-    slate: '#64748B'
   },
-
-  // --- 9. DEGRADADOS (NUEVO) ---
-  gradients: {
-    // Azul Institucional -> Azul Ligero (Para Headers y Sidebars serios)
-    institutional: 'linear-gradient(135deg, #0033A0 0%, #0044CC 100%)',
-    
-    // Azul Institucional -> Cyan (Para Botones CTA y Cards destacadas - Más moderno)
-    digital: 'linear-gradient(90deg, #0033A0 0%, #00C3E3 100%)',
-    
-    // Azul Profundo Vertical (Para el Login o Menú lateral)
-    deep: 'linear-gradient(180deg, #0098DA 0%, #0033A0 100%)',
-  }
-} as const;
+};

@@ -1,4 +1,4 @@
-# System Design: SIPA v2 (Implementation Guide)
+# System Design: PAVIS (Implementation Guide)
 
 ## 1. Alineación Arquitectónica
 Este diseño extiende la arquitectura base definida en `README.md`.

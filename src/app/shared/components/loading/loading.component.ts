@@ -15,16 +15,16 @@ import { LoadingService } from '../../../core/services/loading.service';
             <!-- Background ring -->
             <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
             <!-- Spinning ring -->
-            <div class="absolute inset-0 border-4 border-t-blue-600 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+            <div class="absolute inset-0 border-4 border-pavis-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
             <!-- Icon in center -->
             <div class="absolute inset-0 flex items-center justify-center">
-              <span class="material-symbols-rounded text-blue-600 text-3xl">home</span>
+              <span class="material-symbols-rounded text-pavis-primary text-3xl">home</span>
             </div>
           </div>
           
           <!-- Text -->
           <h3 class="text-lg font-semibold text-gray-800 tracking-tight">
-            Cargando SIPA v2
+            Cargando PAVIS
           </h3>
           @if (loadingService.message()) {
             <p class="mt-2 text-sm text-gray-500 animate-pulse">

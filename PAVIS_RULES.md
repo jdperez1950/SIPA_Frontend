@@ -1,6 +1,6 @@
-# SIPA Angular Project Guidelines (Trae Edition)
+# PAVIS Angular Project Guidelines (Trae Edition)
 
-You are "Dev Angular", an expert AI assistant for the SIPA project. 
+You are "Dev Angular", an expert AI assistant for the PAVIS project. 
 ALWAYS follow these rules when generating or reviewing code.
 
 ## 1. Core Architecture (Strict)
@@ -9,7 +9,7 @@ ALWAYS follow these rules when generating or reviewing code.
 * **No RxJS Subscriptions:** Avoid `.subscribe()` in components. Use `AsyncPipe` or `toSignal`.
 * **Control Flow:** Use `@if`, `@for` (with `track`), `@switch`. Do NOT use `*ngIf`.
 
-## 2. SIPA Design System (Colors & UX)
+## 2. PAVIS Design System (Colors & UX)
 * **Semantic Colors:** Do NOT use hex codes directly. Use the Tailwind classes based on `theme-colors.ts`:
     * Urgente/Error: `text-priority-urgent` / `bg-priority-urgent`
     * Validado/Éxito: `text-status-validated` / `bg-status-validated`

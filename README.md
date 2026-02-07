@@ -1,6 +1,6 @@
-# SIPA v2 - Frontend (Angular)
+# PAVIS - Frontend (Angular)
 
-Este repositorio contiene el código fuente del Frontend para el **Sistema de Información del Programa de Autogestión de Vivienda (SIPA)** del Ministerio de Vivienda.
+Este repositorio contiene el código fuente del Frontend para el **Sistema de Información del Programa de Autogestión de Vivienda (PAVIS)** del Ministerio de Vivienda.
 
 El proyecto está construido utilizando **Angular 17+** bajo una arquitectura orientada a características (**Feature-Based Architecture**) y utilizando los últimos estándares del framework (**Standalone Components**, **Signals**).
 
@@ -34,7 +34,7 @@ src/
     │   │   └── chat-bubble/   # Burbuja de mensaje para la bitácora de AT.
     │   └── directives/        # Directivas de utilidad (ej. *appHasRole).
     │
-    ├── features/              # MÓDULOS DE NEGOCIO: El corazón del SIPA.
+    ├── features/              # MÓDULOS DE NEGOCIO: El corazón del PAVIS.
     │   ├── dashboard/         # Landing interna, gráficas y KPIs.
     │   │
     │   ├── project-workspace/ # MÓDULO PRINCIPAL DE GESTIÓN.
@@ -59,13 +59,13 @@ src/
 El proyecto cuenta con un sistema de diseño centralizado basado en **Tailwind CSS** y componentes reutilizables.
 
 ### Paleta de Colores
-Los colores semánticos (estados, prioridades) están definidos en `src/app/core/constants/theme-colors.ts` y mapeados en `tailwind.config.js` bajo el prefijo `sipa-*`.
+Los colores semánticos (estados, prioridades) están definidos en `src/app/core/constants/theme-colors.ts` y mapeados en `tailwind.config.js` bajo el prefijo `pavis-*`.
 
-- **Estados:** `sipa-validated`, `sipa-returned`, `sipa-process`, `sipa-pending`.
-- **Prioridades:** `sipa-urgent`, `sipa-alert`, `sipa-normal`.
+- **Estados:** `pavis-validated`, `pavis-returned`, `pavis-process`, `pavis-pending`.
+- **Prioridades:** `pavis-urgent`, `pavis-alert`, `pavis-normal`.
 
 ### Componentes Base (UI Kit)
-Ubicados en `src/app/shared/ui/`, son componentes "Dumb" puros (Standalone) que implementan la identidad visual del SIPA v2.
+Ubicados en `src/app/shared/ui/`, son componentes "Dumb" puros (Standalone) que implementan la identidad visual del PAVIS.
 
 - **Status Badge:** Etiqueta visual para estados de requisitos (Validado, Devuelto, etc.).
 - **Traffic Light:** Indicador de prioridad tipo semáforo (Urgente = Rojo pulsante).
@@ -139,10 +139,10 @@ El proyecto está preparado para desplegarse en contenedores Nginx.
 
 ```bash
 # Construir imagen
-docker build -t sipa-frontend .
+docker build -t pavis-frontend .
 
 # Correr contenedor (Mapeado al puerto solicitado a infraestructura)
-docker run -d -p 8080:80 sipa-frontend
+docker run -d -p 8080:80 pavis-frontend
 ```
 
 ## 🤝 Flujo de Trabajo (Git Flow)
@@ -168,7 +168,7 @@ Este proyecto utiliza el servidor **MCP Angular CLI** para que los agentes de IA
 
 ### Despliegue (CI/CD)
 - **Entorno de Pruebas:** Despliegue automático en Vercel al hacer push a la rama `main`.
-- **URL de Acceso:** [https://sipa-frontend.vercel.app/auth/login](https://sipa-frontend.vercel.app/auth/login)
+- **URL de Acceso:** [https://pavis-frontend.vercel.app/auth/login](https://pavis-frontend.vercel.app/auth/login)
 
 ## 📝 Notas Importantes para Desarrolladores
 

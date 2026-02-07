@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "sipa_v2": {
+    "pavis": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -71,10 +71,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "sipa_v2:build:production"
+              "buildTarget": "pavis:build:production"
             },
             "development": {
-              "buildTarget": "sipa_v2:build:development"
+              "buildTarget": "pavis:build:development"
             }
           },
           "defaultConfiguration": "development"
