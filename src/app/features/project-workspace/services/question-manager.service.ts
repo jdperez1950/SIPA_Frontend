@@ -79,7 +79,7 @@ export class QuestionManagerService {
       return newMap;
     });
     // Here we would call the backend API
-    console.log('Response saved:', response);
+    // console.log('Response saved:', response); // REMOVED FOR SECURITY (A02)
   }
 
   getNextQuestionId(currentId: string): string | null {

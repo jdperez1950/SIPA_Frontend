@@ -208,7 +208,7 @@ export class QuestionPageComponent {
   }
 
   onEvidenceUpload(questionId: string, file: File) {
-    console.log(`Uploading file for question ${questionId}:`, file.name);
+    // console.log(`Uploading file for question ${questionId}:`, file.name); // REMOVED FOR SECURITY (A02)
     // Mock upload logic - would be replaced by actual service call
     const existing = this.questionManager.getResponse(questionId);
     this.questionManager.saveResponse({

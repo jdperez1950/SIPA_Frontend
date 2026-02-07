@@ -21,17 +21,47 @@ export class AuthService {
 
   constructor() {
     this.restoreSession();
+    this.setupAutoLogout();
+  }
+
+  private setupAutoLogout() {
+    if (isPlatformBrowser(this.platformId)) {
+      const resetTimer = () => {
+        if (this.isAuthenticated()) {
+          this.startInactivityTimer();
+        }
+      };
+
+      ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+        window.addEventListener(event, resetTimer);
+      });
+      
+      this.startInactivityTimer();
+    }
+  }
+
+  private logoutTimer: any;
+  private readonly INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
+
+  private startInactivityTimer() {
+    clearTimeout(this.logoutTimer);
+    if (this.isAuthenticated()) {
+      this.logoutTimer = setTimeout(() => {
+        this.logout();
+        alert('Sesión cerrada por inactividad.'); // Simple alert for now, could be better UI
+      }, this.INACTIVITY_LIMIT);
+    }
   }
 
   private restoreSession() {
     if (isPlatformBrowser(this.platformId)) {
-      const storedUser = localStorage.getItem('sipa_user');
+      const storedUser = localStorage.getItem('pavis_user');
       if (storedUser) {
         try {
           this.#currentUser.set(JSON.parse(storedUser));
         } catch (e) {
           console.error('Error parsing stored user', e);
-          localStorage.removeItem('sipa_user');
+          localStorage.removeItem('pavis_user');
         }
       }
     }
@@ -66,7 +96,8 @@ export class AuthService {
       tap(user => {
         this.#currentUser.set(user);
         if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem('sipa_user', JSON.stringify(user));
+          localStorage.setItem('pavis_user', JSON.stringify(user));
+          this.startInactivityTimer();
         }
       })
     );
@@ -74,8 +105,10 @@ export class AuthService {
 
   logout(): void {
     this.#currentUser.set(null);
+    clearTimeout(this.logoutTimer);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('sipa_user');
+      localStorage.removeItem('pavis_user');
+      sessionStorage.clear(); // Clear any session data
     }
   }
 

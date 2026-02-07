@@ -206,7 +206,7 @@ export class AdminDataService {
       userId: 'temp-user-id' // Mock linked user
     };
 
-    console.log('Uploading file:', file.name, 'Size:', file.size);
+    // console.log('Uploading file:', file.name, 'Size:', file.size); // REMOVED FOR SECURITY (A02)
     
     this.organizations.update(current => [newOrg, ...current]);
     return of(newOrg).pipe(delay(1500)); // Simulate upload delay

@@ -11,7 +11,7 @@ import { LoadingService } from './core/services/loading.service';
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  protected readonly title = signal('sipa_v2');
+  protected readonly title = signal('pavis');
   private router = inject(Router);
   private loadingService = inject(LoadingService);
 

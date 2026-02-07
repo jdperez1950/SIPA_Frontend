@@ -1,5 +1,5 @@
 {
-  "name": "sipa-v2",
+  "name": "pavis",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:sipa_v2": "node dist/sipa_v2/server/server.mjs"
+    "serve:ssr:pavis": "node dist/pavis/server/server.mjs"
   },
   "prettier": {
     "overrides": [

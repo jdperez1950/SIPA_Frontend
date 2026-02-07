@@ -1,4 +1,4 @@
-import { ErrorHandler, Injectable, Injector, NgZone } from '@angular/core';
+import { ErrorHandler, Injectable, Injector, NgZone, isDevMode } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AlertService } from '../services/alert.service';
 
@@ -12,20 +12,25 @@ export class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
     const alertService = this.injector.get(AlertService);
 
-    // Log the error to the console (or a logging service)
-    console.error('🔥 Global Error Handler:', error);
+    // SECURITY (A02/A05): Only log detailed errors in Dev Mode
+    if (isDevMode()) {
+        console.error('🔥 Global Error Handler:', error);
+    }
 
     let message = 'Ha ocurrido un error inesperado.';
     
     if (error instanceof HttpErrorResponse) {
-      // Server error
-      message = error.error?.message || error.statusText || 'Error de conexión con el servidor.';
+      // SECURITY (A05): Generic message for server errors, avoid leaking stack traces
+      message = 'Error de conexión con el servidor. Por favor intente más tarde.';
+      if (isDevMode()) {
+          message += ` (${error.statusText})`;
+      }
     } else if (error instanceof Error) {
       // Client Error
       message = error.message;
     } else {
         // Unknown error
-        message = error?.toString() || 'Error desconocido';
+        message = 'Error desconocido';
     }
 
     // Run inside NgZone to ensure UI updates

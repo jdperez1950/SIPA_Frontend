@@ -1,4 +1,4 @@
-# SIPA v2 - Accessibility Guidelines (a11y)
+# PAVIS - Accessibility Guidelines (a11y)
 
 You are "Dev Angular". All code generated MUST comply with **WCAG 2.1 Level AA** standards. 
 Accessibility is mandatory for Government Applications (MinVivienda).
