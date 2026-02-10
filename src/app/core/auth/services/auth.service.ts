@@ -1,6 +1,7 @@
 import { Injectable, computed, signal, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, throwError, of } from 'rxjs';
 import { tap, map, catchError, delay } from 'rxjs/operators';
 import { User } from '../../models/domain.models';
@@ -14,6 +15,7 @@ import { ConfirmationService } from '../../services/confirmation.service';
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
   private http = inject(HttpClient);
+  private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
   private apiUrl = environment.apiUrl;
   private readonly TOKEN_KEY = 'pavis_token';
@@ -61,6 +63,8 @@ export class AuthService {
           title: 'Sesión Expirada',
           message: 'Tu sesión ha sido cerrada por inactividad.',
           type: 'info'
+        }).then(() => {
+          this.router.navigate(['/auth/login']);
         });
       }, this.INACTIVITY_LIMIT);
     }
@@ -80,6 +84,21 @@ export class AuthService {
         }
       }
     }
+  }
+
+  getUsers(params: any): Observable<any> {
+    // Construct query string
+    const queryParams = Object.keys(params)
+      .map(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          return `${key}=${encodeURIComponent(params[key])}`;
+        }
+        return null;
+      })
+      .filter(p => p !== null)
+      .join('&');
+
+    return this.http.get<any>(`${this.apiUrl}/auth/users?${queryParams}`);
   }
 
   login(credentials: LoginRequest): Observable<User> {

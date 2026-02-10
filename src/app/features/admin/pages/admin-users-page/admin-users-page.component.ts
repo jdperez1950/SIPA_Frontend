@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } 
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
-import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO } from '../../../../core/models/domain.models';
+import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO, USER_ROLES_CONFIG } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
@@ -18,6 +18,9 @@ export class AdminUsersPageComponent implements OnInit {
   private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
   private confirmationService = inject(ConfirmationService);
+
+  // Constants
+  rolesConfig = USER_ROLES_CONFIG;
 
   // Filters State
   searchQuery = signal('');
@@ -77,38 +80,33 @@ export class AdminUsersPageComponent implements OnInit {
 
   loadUsers() {
     this.isLoading.set(true);
-    // Note: Role filtering is currently done client-side because the mock service 
-    // only supports generic text query. In a real app, pass role to backend.
-    // For now, we will fetch paginated data based on text query, 
-    // and if role filter is active, we might see fewer results per page (limitation of mixed approach)
-    // OR we update service to handle role.
-    // Let's assume the service handles the heavy lifting, but for role we might filter locally after fetch?
-    // No, pagination breaks if we filter locally after fetching 10 items.
-    // We should probably rely on the service to return what matches the query.
     
-    this.adminDataService.getUsers(this.currentPage(), this.pageSize(), this.searchQuery()).subscribe({
+    // Pass all filters to the service
+    this.adminDataService.getUsers(
+      this.currentPage(), 
+      this.pageSize(), 
+      this.searchQuery(), 
+      this.selectedRole() || null
+    ).subscribe({
       next: (response) => {
-        // Client-side role filtering adjustment (imperfect for mock, but acceptable)
-        // If we really need role filtering with pagination, we should add it to service.
-        // For this task, let's just display what we get or filter strictly if role is set
-        // But wait, if I filter by Role 'ADMIN' and page 1 has 0 admins, I see empty table?
-        // Correct approach: Update service to support role filter.
+        this.users.set(response.data);
+        this.totalItems.set(response.meta.totalItems);
         
-        // For now, let's use the data as is.
-        let data = response.data;
-        if (this.selectedRole()) {
-          data = data.filter(u => u.role === this.selectedRole());
-          // If we filter client side, pagination count is wrong. 
-          // Ignoring role filter strictness for pagination correctness in this iteration
-          // or we just accept that role filter only works on current page.
+        // If current page > total pages (e.g. after search), reset to 1
+        if (this.currentPage() > response.meta.totalPages && response.meta.totalPages > 0) {
+          this.currentPage.set(1);
+          // Reload to get correct data for page 1? Or just set page 1 and user will see?
+          // The pagination component usually handles "if page > total", but better to reload.
+          // However, to avoid loops, let's just ensure we are safe.
+          // Actually, if we are on page 5 and filter results in 2 pages, we should request page 1.
+          // This logic is better handled in onSearchChange or filter change handlers.
         }
         
-        this.users.set(data);
-        this.totalItems.set(response.meta.totalItems);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error loading users', err);
+        this.alertService.error('Error al cargar usuarios');
         this.isLoading.set(false);
       }
     });
@@ -265,13 +263,8 @@ export class AdminUsersPageComponent implements OnInit {
   }
 
   getRoleBadgeClass(role: string): string {
-    switch (role) {
-      case 'ADMIN': return 'bg-purple-50 text-purple-700 border-purple-100';
-      case 'ASESOR': return 'bg-green-50 text-green-700 border-green-100';
-      case 'SPAT': return 'bg-blue-50 text-blue-700 border-blue-100';
-      case 'CONSULTA': return 'bg-gray-50 text-gray-700 border-gray-100';
-      default: return 'bg-gray-50 text-gray-700';
-    }
+    const config = this.rolesConfig.find(r => r.value === role);
+    return config ? config.class : 'bg-gray-50 text-gray-700';
   }
 
   getWorkloadColor(current: number, max: number): string {

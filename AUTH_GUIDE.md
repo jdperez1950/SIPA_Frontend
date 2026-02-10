@@ -69,7 +69,14 @@ http://localhost:5000/api
 }
 ```
 
-**Roles válidos:** `ADMIN`, `ASESOR`, `SPAT`, `ORGANIZACION`, `CONSULTA`
+**Roles válidos (enviar como STRING/TEXTO):**
+- `ADMIN`
+- `ASESOR`
+- `SPAT`
+- `CONSULTA`
+- `ORGANIZACION`
+
+**IMPORTANTE:** El campo `role` debe enviarse como **texto/string**, no como número. Ejemplos: `"ADMIN"`, `"ASESOR"`, `"SPAT"`, etc.
 
 **Response Exitoso (200):**
 ```json
@@ -187,6 +194,104 @@ Content-Type: application/json
 
 ---
 
+### 5. Get Users (Solo ADMIN) - Con Paginación y Filtros
+
+**GET** `/auth/users`
+
+**Headers:**
+```
+Authorization: Bearer <admin-token>
+```
+
+**Query Parameters:**
+
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `page` | int | 1 | Número de página |
+| `limit` | int | 10 | Elementos por página |
+| `role` | string | null | Filtro por rol (ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION) |
+| `search` | string | null | Búsqueda en nombre o email |
+| `status` | string | null | Filtro por estado (ACTIVE, INACTIVE) |
+
+**Ejemplos de uso:**
+```bash
+# Primera página, 10 usuarios por página
+GET /api/auth/users
+
+# Segunda página, 5 usuarios por página
+GET /api/auth/users?page=2&limit=5
+
+# Filtrar por rol ASESOR
+GET /api/auth/users?role=ASESOR
+
+# Buscar usuarios que contengan "admin" en nombre o email
+GET /api/auth/users?search=admin
+
+# Combinar filtros: ASESOR, estado ACTIVE, búsqueda "juan"
+GET /api/auth/users?role=ASESOR&status=ACTIVE&search=juan&page=1&limit=20
+```
+
+**Response Exitoso (200):**
+```json
+{
+  "success": true,
+  "message": "Usuarios obtenidos exitosamente",
+  "data": {
+    "data": [
+      {
+        "id": "5e419ad8-9377-445d-af81-81dee0983fc0",
+        "name": "Administrador del Sistema",
+        "email": "admin@pavis.com",
+        "role": "ADMIN",
+        "status": "ACTIVE",
+        "avatarColor": "#EF4444",
+        "projectsAssigned": 0
+      },
+      {
+        "id": "c977505f-970e-42a2-a0bb-81060d02d433",
+        "name": "Asesor Técnico",
+        "email": "asesor@pavis.com",
+        "role": "ASESOR",
+        "status": "ACTIVE",
+        "avatarColor": "#3B82F6",
+        "projectsAssigned": 0
+      }
+    ],
+    "total": 5,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+**Campos de Response:**
+- `data[]`: Lista de usuarios en la página actual
+- `total`: Total de usuarios que coinciden con los filtros
+- `page`: Número de página actual
+- `limit`: Elementos por página
+- `totalPages`: Total de páginas disponibles
+
+**Response Error (401):**
+```json
+{
+  "success": false,
+  "message": "Usuario no autenticado",
+  "data": null
+}
+```
+
+**Response Error (403):**
+```json
+{
+  "success": false,
+  "message": "No tiene permisos para realizar esta acción",
+  "data": null
+}
+```
+
+---
+
 ## Claims del Token JWT
 
 ```json
@@ -216,6 +321,53 @@ Content-Type: application/json
 | `CONSULTA` | Usuario de solo lectura | Consultas, reportes |
 
 ---
+
+## Resumen de Endpoints
+
+| Método | Endpoint | Auth | Descripción |
+|--------|----------|------|-------------|
+| POST | `/api/auth/login` | Pública | Iniciar sesión |
+| POST | `/api/auth/register` | Pública | Registrar usuario |
+| POST | `/api/auth/validate` | Pública | Validar token |
+| POST | `/api/auth/restore-password` | AdminOnly | Restablecer contraseña |
+| GET | `/api/auth/users` | AdminOnly | Obtener usuarios (paginación y filtros) |
+
+---
+
+## Cómo Probar el Registro
+
+### Desde Swagger (http://localhost:5000/swagger)
+
+1. Navega al endpoint **POST /api/Auth/register**
+2. Haz clic en "Try it out"
+3. Envía el siguiente JSON (copia y pega):
+
+```json
+{
+  "name": "Usuario de Prueba",
+  "email": "prueba@test.com",
+  "password": "Prueba123!",
+  "role": "ASESOR"
+}
+```
+
+**IMPORTANTE:**
+- El campo `role` debe ser entre comillas: `"ASESOR"`, `"ADMIN"`, `"SPAT"`, etc.
+- **NO** enviar como número: `1`, `2`, etc.
+- **NO** enviar sin comillas: `ASESOR` (esto causará error)
+
+### Desde curl (terminal)
+
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Usuario de Prueba",
+    "email": "prueba@test.com",
+    "password": "Prueba123!",
+    "role": "ASESOR"
+  }'
+```
 
 ## Ejemplo de Integración con Angular
 

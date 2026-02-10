@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Observable, of, delay, tap } from 'rxjs';
+import { Observable, of, delay, tap, catchError, map } from 'rxjs';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
@@ -21,31 +21,56 @@ export class AdminDataService {
 
   // --- Users Methods ---
 
-  getUsers(page: number = 1, pageSize: number = 10, query: string = ''): Observable<PaginatedResponse<User>> {
-    let data = this.users();
+  getUsers(page: number = 1, pageSize: number = 10, query: string = '', role: string | null = null, status: string | null = null): Observable<PaginatedResponse<User>> {
+    let params: any = {
+      page: page,
+      limit: pageSize
+    };
 
-    // Filter
-    if (query) {
-      const q = query.toLowerCase();
-      data = data.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-    }
+    if (query) params.search = query;
+    if (role) params.role = role;
+    if (status) params.status = status;
 
-    // Pagination
-    const totalItems = data.length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const paginatedData = data.slice(startIndex, startIndex + pageSize);
-
-    return of({
-      data: paginatedData,
-      meta: {
-        totalItems,
-        itemCount: paginatedData.length,
-        itemsPerPage: pageSize,
-        totalPages,
-        currentPage: page
-      }
-    }).pipe(delay(500)); // Simulate API delay
+    return this.authService.getUsers(params).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return {
+            data: response.data.data,
+            meta: {
+              totalItems: response.data.total,
+              itemCount: response.data.data.length,
+              itemsPerPage: response.data.limit,
+              totalPages: response.data.totalPages,
+              currentPage: response.data.page
+            }
+          };
+        }
+        // Fallback to empty if fails
+        return {
+          data: [],
+          meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: pageSize,
+            totalPages: 0,
+            currentPage: page
+          }
+        };
+      }),
+      catchError(error => {
+        console.error('Error fetching users', error);
+        return of({
+          data: [],
+          meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: pageSize,
+            totalPages: 0,
+            currentPage: page
+          }
+        });
+      })
+    );
   }
 
   // Legacy support if needed, but prefer paginated
