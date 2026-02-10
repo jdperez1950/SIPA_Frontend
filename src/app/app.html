@@ -2,3 +2,13 @@
 <router-outlet />
 <app-alert-toast />
 <app-loading />
+<app-confirmation-modal
+  [isOpen]="confirmationService.isOpen()"
+  [title]="confirmationService.config().title || 'Confirmación'"
+  [message]="confirmationService.config().message"
+  [confirmText]="confirmationService.config().confirmText || 'Confirmar'"
+  [cancelText]="confirmationService.config().cancelText || 'Cancelar'"
+  [type]="confirmationService.config().type || 'warning'"
+  (confirm)="confirmationService.onConfirm()"
+  (cancel)="confirmationService.onCancel()"
+/>

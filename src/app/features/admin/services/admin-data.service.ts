@@ -1,14 +1,17 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, signal, inject } from '@angular/core';
+import { Observable, of, delay, tap } from 'rxjs';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
 import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
+import { AuthService } from '../../../core/auth/services/auth.service';
+import { RegisterRequest } from '../../../core/auth/models/auth.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminDataService {
+  private authService = inject(AuthService);
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
   private projects = signal<Project[]>(PROJECTS_MOCK);
@@ -51,15 +54,18 @@ export class AdminDataService {
   }
 
   createUser(dto: CreateUserDTO): Observable<User> {
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...dto,
-      projectsAssigned: 0,
-      avatarColor: this.getRandomAvatarColor()
+    const registerData: RegisterRequest = {
+      name: dto.name,
+      email: dto.email,
+      password: 'Password123!', // Default password for new users created by Admin
+      role: dto.role
     };
-    
-    this.users.update(current => [...current, newUser]);
-    return of(newUser).pipe(delay(500));
+
+    return this.authService.register(registerData).pipe(
+      tap(newUser => {
+        this.users.update(current => [...current, newUser]);
+      })
+    );
   }
 
   updateUser(dto: UpdateUserDTO): Observable<User> {
@@ -227,8 +233,12 @@ export class AdminDataService {
     return of(updatedOrg).pipe(delay(500));
   }
 
-  resetOrganizationPassword(id: string): Observable<boolean> {
-    return of(true).pipe(delay(1000));
+  resetOrganizationPassword(email: string): Observable<boolean> {
+    return this.authService.recoverPassword(email);
+  }
+
+  resetUserPassword(email: string): Observable<boolean> {
+    return this.authService.recoverPassword(email);
   }
 
   private getRandomAvatarColor(): string {

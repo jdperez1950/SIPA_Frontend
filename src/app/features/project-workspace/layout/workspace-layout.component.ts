@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { QuestionRibbonComponent } from './components/question-ribbon/question-ribbon.component';
 import { AuthService } from '../../../core/auth/services/auth.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-workspace-layout',
@@ -50,9 +51,19 @@ import { AuthService } from '../../../core/auth/services/auth.service';
 export class WorkspaceLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private confirmationService = inject(ConfirmationService);
 
   logout() {
-    this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    this.confirmationService.confirm({
+      title: 'Cerrar Sesión',
+      message: '¿Estás seguro de que deseas salir del sistema?',
+      type: 'warning',
+      confirmText: 'Salir'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.authService.logout();
+        this.router.navigate(['/auth/login']);
+      }
+    });
   }
 }

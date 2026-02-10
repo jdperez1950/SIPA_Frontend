@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
@@ -16,6 +17,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 export class AdminUsersPageComponent implements OnInit {
   private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
+  private confirmationService = inject(ConfirmationService);
 
   // Filters State
   searchQuery = signal('');
@@ -207,25 +209,59 @@ export class AdminUsersPageComponent implements OnInit {
     }
   }
 
-  toggleUserStatus(user: User) {
-    this.adminDataService.toggleUserStatus(user.id).subscribe({
-      next: (updatedUser) => {
-        this.users.update(users => users.map(u => 
-          u.id === updatedUser.id ? updatedUser : u
-        ));
-        const action = updatedUser.status === 'ACTIVE' ? 'activado' : 'desactivado';
-        const type = updatedUser.status === 'ACTIVE' ? 'success' : 'warning';
-        this.alertService.show(type, `Usuario ${user.name} ha sido ${action}.`);
-      },
-      error: (err) => {
-        this.alertService.error('Error al cambiar estado del usuario');
+  resetPassword(user: User) {
+    this.confirmationService.confirm({
+      title: 'Restablecer Contraseña',
+      message: `¿Estás seguro de enviar el correo de restablecimiento de contraseña a ${user.email}?`,
+      type: 'warning'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isLoading.set(true);
+        this.adminDataService.resetUserPassword(user.email).subscribe({
+          next: (success) => {
+            if (success) {
+              this.alertService.success(`Correo de restablecimiento enviado a ${user.email}.`);
+            } else {
+              this.alertService.error('No se pudo enviar el correo. Verifique que el usuario exista.');
+            }
+            this.isLoading.set(false);
+          },
+          error: (err) => {
+            console.error('Error resetting password', err);
+            this.alertService.error('Error al enviar la solicitud.');
+            this.isLoading.set(false);
+          }
+        });
       }
     });
   }
 
-  resetPassword(user: User) {
-    // Mock API call
-    this.alertService.info(`Se ha enviado un correo de restablecimiento a ${user.email}.`);
+  toggleUserStatus(user: User) {
+    const action = user.status === 'ACTIVE' ? 'desactivar' : 'activar';
+    const type = user.status === 'ACTIVE' ? 'danger' : 'info';
+    
+    this.confirmationService.confirm({
+      title: `${action.charAt(0).toUpperCase() + action.slice(1)} Usuario`,
+      message: `¿Estás seguro de ${action} el acceso para ${user.name}?`,
+      type: type,
+      confirmText: action === 'desactivar' ? 'Desactivar' : 'Activar'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.adminDataService.toggleUserStatus(user.id).subscribe({
+          next: (updatedUser) => {
+            this.users.update(users => users.map(u => 
+              u.id === updatedUser.id ? updatedUser : u
+            ));
+            const statusAction = updatedUser.status === 'ACTIVE' ? 'activado' : 'desactivado';
+            const statusType = updatedUser.status === 'ACTIVE' ? 'success' : 'warning';
+            this.alertService.show(statusType, `Usuario ${user.name} ha sido ${statusAction}.`);
+          },
+          error: (err) => {
+            this.alertService.error('Error al cambiar estado del usuario');
+          }
+        });
+      }
+    });
   }
 
   getRoleBadgeClass(role: string): string {

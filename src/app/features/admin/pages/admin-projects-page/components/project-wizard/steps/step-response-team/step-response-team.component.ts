@@ -2,6 +2,7 @@ import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular
 import { CommonModule } from '@angular/common';
 import { ResponseTeamMember } from '../../project-wizard.types';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ConfirmationService } from '../../../../../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-step-response-team',
@@ -17,6 +18,7 @@ export class StepResponseTeamComponent implements OnInit {
   @Output() selectionChange = new EventEmitter<ResponseTeamMember[]>();
 
   private fb = inject(FormBuilder);
+  private confirmationService = inject(ConfirmationService);
   userForm!: FormGroup;
   isSearching = false;
 
@@ -79,7 +81,11 @@ export class StepResponseTeamComponent implements OnInit {
     );
 
     if (exists) {
-      alert('Este usuario ya ha sido agregado al equipo.');
+      this.confirmationService.alert({
+        title: 'Usuario Existente',
+        message: 'Este usuario ya ha sido agregado al equipo.',
+        type: 'warning'
+      });
       return;
     }
 

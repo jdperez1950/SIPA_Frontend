@@ -1,14 +1,23 @@
 import { Injectable, computed, signal, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, of, throwError } from 'rxjs';
-import { delay, tap, switchMap } from 'rxjs/operators';
-import { User } from '../models/user.model';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, of } from 'rxjs';
+import { tap, map, catchError, delay } from 'rxjs/operators';
+import { User } from '../../models/domain.models';
+import { environment } from '../../../../environments/environment';
+import { AuthResponse, LoginRequest, RegisterRequest, ValidateTokenResponse } from '../models/auth.models';
+import { ConfirmationService } from '../../services/confirmation.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
+  private http = inject(HttpClient);
+  private confirmationService = inject(ConfirmationService);
+  private apiUrl = environment.apiUrl;
+  private readonly TOKEN_KEY = 'pavis_token';
+  private readonly USER_KEY = 'pavis_user';
   
   // Private signal for user state
   #currentUser = signal<User | null>(null);
@@ -48,57 +57,78 @@ export class AuthService {
     if (this.isAuthenticated()) {
       this.logoutTimer = setTimeout(() => {
         this.logout();
-        alert('Sesión cerrada por inactividad.'); // Simple alert for now, could be better UI
+        this.confirmationService.alert({
+          title: 'Sesión Expirada',
+          message: 'Tu sesión ha sido cerrada por inactividad.',
+          type: 'info'
+        });
       }, this.INACTIVITY_LIMIT);
     }
   }
 
   private restoreSession() {
     if (isPlatformBrowser(this.platformId)) {
-      const storedUser = localStorage.getItem('pavis_user');
-      if (storedUser) {
+      const storedUser = localStorage.getItem(this.USER_KEY);
+      const token = localStorage.getItem(this.TOKEN_KEY);
+      
+      if (storedUser && token) {
         try {
           this.#currentUser.set(JSON.parse(storedUser));
         } catch (e) {
           console.error('Error parsing stored user', e);
-          localStorage.removeItem('pavis_user');
+          this.logout();
         }
       }
     }
   }
 
-  login(credentials: { email: string; password: string }): Observable<User> {
-    return of(true).pipe(
-      delay(1500),
-      switchMap(() => {
-        if (credentials.email === 'demo@demo.com' && credentials.password === '123456789') {
-          const mockUser: User = { 
-            id: '1', 
-            role: 'ADMIN', 
-            name: 'Usuario Demo',
-            email: credentials.email
-          };
-          return of(mockUser);
+  login(credentials: LoginRequest): Observable<User> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          this.setToken(response.data.token);
+          return response.data.user;
         }
-        
-        if (credentials.email === 'org@demo.com' && credentials.password === '123456789') {
-          const mockOrgUser: User = { 
-            id: '2', 
-            role: 'ORGANIZACION', 
-            name: 'Organización Demo',
-            email: credentials.email
-          };
-          return of(mockOrgUser);
-        }
-
-        return throwError(() => new Error('Credenciales inválidas'));
+        throw new Error(response.message || 'Error en autenticación');
       }),
       tap(user => {
         this.#currentUser.set(user);
         if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem('pavis_user', JSON.stringify(user));
+          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this.startInactivityTimer();
         }
+      }),
+      catchError((error: HttpErrorResponse) => {
+        let errorMessage = 'Error al iniciar sesión';
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        }
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  register(data: RegisterRequest): Observable<User> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, data).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Note: We do NOT set the token here because this method might be used by an Admin
+          // to create OTHER users. If it's a self-registration, the caller should handle login.
+          // However, for standard self-registration, we might want to auto-login.
+          // For now, we return the created User. The caller can decide to use the token if needed
+          // (but we are only returning the User here).
+          // If we need the token, we should return the full AuthResponse or a wrapper.
+          // Given the Admin use case, returning just User is safer to avoid accidental session switches.
+          return response.data.user;
+        }
+        throw new Error(response.message || 'Error en el registro');
+      }),
+      catchError((error: HttpErrorResponse) => {
+        let errorMessage = 'Error al registrar usuario';
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        }
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -107,12 +137,44 @@ export class AuthService {
     this.#currentUser.set(null);
     clearTimeout(this.logoutTimer);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('pavis_user');
-      sessionStorage.clear(); // Clear any session data
+      localStorage.removeItem(this.USER_KEY);
+      localStorage.removeItem(this.TOKEN_KEY);
+      sessionStorage.clear();
+    }
+  }
+
+  getToken(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem(this.TOKEN_KEY);
+    }
+    return null;
+  }
+
+  setToken(token: string): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(this.TOKEN_KEY, token);
     }
   }
 
   recoverPassword(email: string): Observable<boolean> {
-    return of(true).pipe(delay(1500));
+    // Endpoint: /auth/restore-password (Solo ADMIN segun reglas de negocio)
+    // Requiere autenticación (token JWT de Admin)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/restore-password`, { email }).pipe(
+      map(response => response.success),
+      catchError((error) => {
+        console.error('Error restoring password:', error);
+        return of(false);
+      })
+    );
+  }
+  
+  validateToken(): Observable<boolean> {
+     const token = this.getToken();
+     if (!token) return of(false);
+     
+     return this.http.post<ValidateTokenResponse>(`${this.apiUrl}/auth/validate`, { token }).pipe(
+        map(res => res.success && res.data),
+        catchError(() => of(false))
+     );
   }
 }
