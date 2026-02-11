@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { Organization, CreateOrganizationDTO } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { AdminOrganizationCreateModalComponent } from './components/create-organization-modal/create-organization-modal.component';
@@ -17,6 +18,7 @@ import { AdminOrganizationCreateModalComponent } from './components/create-organ
 export class AdminOrganizationsPageComponent implements OnInit {
   private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
+  private confirmationService = inject(ConfirmationService);
 
   // State
   organizations = signal<Organization[]>([]);
@@ -71,20 +73,31 @@ export class AdminOrganizationsPageComponent implements OnInit {
   }
 
   resetPassword(org: Organization) {
-    if (confirm(`¿Estás seguro de enviar el restablecimiento de contraseña a ${org.email}?`)) {
-      this.isLoading.set(true);
-      this.adminDataService.resetOrganizationPassword(org.id).subscribe({
-        next: () => {
-          this.alertService.success(`Correo de restablecimiento enviado a ${org.email}`);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          console.error('Error resetting password', err);
-          this.alertService.error('Error al enviar el restablecimiento de contraseña');
-          this.isLoading.set(false);
-        }
-      });
-    }
+    this.confirmationService.confirm({
+      title: 'Restablecer Contraseña',
+      message: `¿Estás seguro de enviar el restablecimiento de contraseña a ${org.email}?`,
+      type: 'warning',
+      confirmText: 'Enviar'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isLoading.set(true);
+        this.adminDataService.resetOrganizationPassword(org.email).subscribe({
+          next: (success) => {
+            if (success) {
+              this.alertService.success(`Correo de restablecimiento enviado a ${org.email}`);
+            } else {
+              this.alertService.error('No se pudo enviar el correo.');
+            }
+            this.isLoading.set(false);
+          },
+          error: (err) => {
+            console.error('Error resetting password', err);
+            this.alertService.error('Error al enviar el restablecimiento de contraseña');
+            this.isLoading.set(false);
+          }
+        });
+      }
+    });
   }
 
   getOrganizationTypeLabel(type: string): string {

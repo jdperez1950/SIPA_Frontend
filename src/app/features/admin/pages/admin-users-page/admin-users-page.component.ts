@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
-import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO } from '../../../../core/models/domain.models';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
+import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO, USER_ROLES_CONFIG } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
@@ -16,6 +17,10 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 export class AdminUsersPageComponent implements OnInit {
   private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
+  private confirmationService = inject(ConfirmationService);
+
+  // Constants
+  rolesConfig = USER_ROLES_CONFIG;
 
   // Filters State
   searchQuery = signal('');
@@ -75,38 +80,33 @@ export class AdminUsersPageComponent implements OnInit {
 
   loadUsers() {
     this.isLoading.set(true);
-    // Note: Role filtering is currently done client-side because the mock service 
-    // only supports generic text query. In a real app, pass role to backend.
-    // For now, we will fetch paginated data based on text query, 
-    // and if role filter is active, we might see fewer results per page (limitation of mixed approach)
-    // OR we update service to handle role.
-    // Let's assume the service handles the heavy lifting, but for role we might filter locally after fetch?
-    // No, pagination breaks if we filter locally after fetching 10 items.
-    // We should probably rely on the service to return what matches the query.
     
-    this.adminDataService.getUsers(this.currentPage(), this.pageSize(), this.searchQuery()).subscribe({
+    // Pass all filters to the service
+    this.adminDataService.getUsers(
+      this.currentPage(), 
+      this.pageSize(), 
+      this.searchQuery(), 
+      this.selectedRole() || null
+    ).subscribe({
       next: (response) => {
-        // Client-side role filtering adjustment (imperfect for mock, but acceptable)
-        // If we really need role filtering with pagination, we should add it to service.
-        // For this task, let's just display what we get or filter strictly if role is set
-        // But wait, if I filter by Role 'ADMIN' and page 1 has 0 admins, I see empty table?
-        // Correct approach: Update service to support role filter.
+        this.users.set(response.data);
+        this.totalItems.set(response.meta.totalItems);
         
-        // For now, let's use the data as is.
-        let data = response.data;
-        if (this.selectedRole()) {
-          data = data.filter(u => u.role === this.selectedRole());
-          // If we filter client side, pagination count is wrong. 
-          // Ignoring role filter strictness for pagination correctness in this iteration
-          // or we just accept that role filter only works on current page.
+        // If current page > total pages (e.g. after search), reset to 1
+        if (this.currentPage() > response.meta.totalPages && response.meta.totalPages > 0) {
+          this.currentPage.set(1);
+          // Reload to get correct data for page 1? Or just set page 1 and user will see?
+          // The pagination component usually handles "if page > total", but better to reload.
+          // However, to avoid loops, let's just ensure we are safe.
+          // Actually, if we are on page 5 and filter results in 2 pages, we should request page 1.
+          // This logic is better handled in onSearchChange or filter change handlers.
         }
         
-        this.users.set(data);
-        this.totalItems.set(response.meta.totalItems);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error loading users', err);
+        this.alertService.error('Error al cargar usuarios');
         this.isLoading.set(false);
       }
     });
@@ -207,35 +207,64 @@ export class AdminUsersPageComponent implements OnInit {
     }
   }
 
-  toggleUserStatus(user: User) {
-    this.adminDataService.toggleUserStatus(user.id).subscribe({
-      next: (updatedUser) => {
-        this.users.update(users => users.map(u => 
-          u.id === updatedUser.id ? updatedUser : u
-        ));
-        const action = updatedUser.status === 'ACTIVE' ? 'activado' : 'desactivado';
-        const type = updatedUser.status === 'ACTIVE' ? 'success' : 'warning';
-        this.alertService.show(type, `Usuario ${user.name} ha sido ${action}.`);
-      },
-      error: (err) => {
-        this.alertService.error('Error al cambiar estado del usuario');
+  resetPassword(user: User) {
+    this.confirmationService.confirm({
+      title: 'Restablecer Contraseña',
+      message: `¿Estás seguro de enviar el correo de restablecimiento de contraseña a ${user.email}?`,
+      type: 'warning'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isLoading.set(true);
+        this.adminDataService.resetUserPassword(user.email).subscribe({
+          next: (success) => {
+            if (success) {
+              this.alertService.success(`Correo de restablecimiento enviado a ${user.email}.`);
+            } else {
+              this.alertService.error('No se pudo enviar el correo. Verifique que el usuario exista.');
+            }
+            this.isLoading.set(false);
+          },
+          error: (err) => {
+            console.error('Error resetting password', err);
+            this.alertService.error('Error al enviar la solicitud.');
+            this.isLoading.set(false);
+          }
+        });
       }
     });
   }
 
-  resetPassword(user: User) {
-    // Mock API call
-    this.alertService.info(`Se ha enviado un correo de restablecimiento a ${user.email}.`);
+  toggleUserStatus(user: User) {
+    const action = user.status === 'ACTIVE' ? 'desactivar' : 'activar';
+    const type = user.status === 'ACTIVE' ? 'danger' : 'info';
+    
+    this.confirmationService.confirm({
+      title: `${action.charAt(0).toUpperCase() + action.slice(1)} Usuario`,
+      message: `¿Estás seguro de ${action} el acceso para ${user.name}?`,
+      type: type,
+      confirmText: action === 'desactivar' ? 'Desactivar' : 'Activar'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.adminDataService.toggleUserStatus(user.id).subscribe({
+          next: (updatedUser) => {
+            this.users.update(users => users.map(u => 
+              u.id === updatedUser.id ? updatedUser : u
+            ));
+            const statusAction = updatedUser.status === 'ACTIVE' ? 'activado' : 'desactivado';
+            const statusType = updatedUser.status === 'ACTIVE' ? 'success' : 'warning';
+            this.alertService.show(statusType, `Usuario ${user.name} ha sido ${statusAction}.`);
+          },
+          error: (err) => {
+            this.alertService.error('Error al cambiar estado del usuario');
+          }
+        });
+      }
+    });
   }
 
   getRoleBadgeClass(role: string): string {
-    switch (role) {
-      case 'ADMIN': return 'bg-purple-50 text-purple-700 border-purple-100';
-      case 'ASESOR': return 'bg-green-50 text-green-700 border-green-100';
-      case 'SPAT': return 'bg-blue-50 text-blue-700 border-blue-100';
-      case 'CONSULTA': return 'bg-gray-50 text-gray-700 border-gray-100';
-      default: return 'bg-gray-50 text-gray-700';
-    }
+    const config = this.rolesConfig.find(r => r.value === role);
+    return config ? config.class : 'bg-gray-50 text-gray-700';
   }
 
   getWorkloadColor(current: number, max: number): string {

@@ -1,6 +1,7 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EvidenceConfig } from '../../../../core/models/question.models';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-evidence-uploader',
@@ -51,6 +52,7 @@ export class EvidenceUploaderComponent {
   config = input<EvidenceConfig | undefined>(undefined);
   upload = output<File>();
   
+  private confirmationService = inject(ConfirmationService);
   isDragging = signal(false);
 
   onDragOver(e: Event) {
@@ -81,7 +83,11 @@ export class EvidenceUploaderComponent {
   handleFile(file: File) {
     const cfg = this.config();
     if (cfg && file.size > cfg.maxSizeMb * 1024 * 1024) {
-      alert(`El archivo excede el tamaño máximo de ${cfg.maxSizeMb}MB`);
+      this.confirmationService.alert({
+        title: 'Archivo Demasiado Grande',
+        message: `El archivo excede el tamaño máximo de ${cfg.maxSizeMb}MB`,
+        type: 'warning'
+      });
       return;
     }
     this.upload.emit(file);

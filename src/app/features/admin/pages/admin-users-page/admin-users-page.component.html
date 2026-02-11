@@ -41,36 +41,16 @@
       >
         Todos
       </button>
-      <button 
-        (click)="filterByRole('ADMIN')"
-        [class.bg-purple-600]="selectedRole() === 'ADMIN'"
-        [class.text-white]="selectedRole() === 'ADMIN'"
-        [class.bg-purple-50]="selectedRole() !== 'ADMIN'"
-        [class.text-purple-700]="selectedRole() !== 'ADMIN'"
-        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-purple-100"
-      >
-        Admin
-      </button>
-      <button 
-        (click)="filterByRole('ASESOR')"
-        [class.bg-green-600]="selectedRole() === 'ASESOR'"
-        [class.text-white]="selectedRole() === 'ASESOR'"
-        [class.bg-green-50]="selectedRole() !== 'ASESOR'"
-        [class.text-green-700]="selectedRole() !== 'ASESOR'"
-        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-green-100"
-      >
-        Asesor
-      </button>
-      <button 
-        (click)="filterByRole('SPAT')"
-        [class.bg-blue-600]="selectedRole() === 'SPAT'"
-        [class.text-white]="selectedRole() === 'SPAT'"
-        [class.bg-blue-50]="selectedRole() !== 'SPAT'"
-        [class.text-blue-700]="selectedRole() !== 'SPAT'"
-        class="px-3 py-1 rounded-full text-sm font-medium transition-colors hover:bg-blue-100"
-      >
-        SPAT
-      </button>
+      
+      @for (role of rolesConfig; track role.value) {
+        <button 
+          (click)="filterByRole(role.value)"
+          [class]="selectedRole() === role.value ? role.activeClass : (role.class.replace('border-', 'hover:bg-opacity-50 '))"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-colors border-0"
+        >
+          {{ role.label }}
+        </button>
+      }
     </div>
   </div>
 
@@ -196,6 +176,8 @@
   </div>
 </div>
 
+
+
 <!-- Modal Create/Edit User -->
 @if (showModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -245,10 +227,9 @@
             formControlName="role"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
           >
-            <option value="ADMIN">Administrador</option>
-            <option value="ASESOR">Asesor</option>
-            <option value="SPAT">SPAT</option>
-            <option value="CONSULTA">Consulta</option>
+            @for (role of rolesConfig; track role.value) {
+              <option [value]="role.value">{{ role.label }}</option>
+            }
           </select>
         </div>
 

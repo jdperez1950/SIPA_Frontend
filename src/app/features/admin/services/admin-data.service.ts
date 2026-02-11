@@ -1,14 +1,17 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, signal, inject } from '@angular/core';
+import { Observable, of, delay, tap, catchError, map } from 'rxjs';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
 import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
+import { AuthService } from '../../../core/auth/services/auth.service';
+import { RegisterRequest } from '../../../core/auth/models/auth.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminDataService {
+  private authService = inject(AuthService);
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
   private projects = signal<Project[]>(PROJECTS_MOCK);
@@ -18,31 +21,56 @@ export class AdminDataService {
 
   // --- Users Methods ---
 
-  getUsers(page: number = 1, pageSize: number = 10, query: string = ''): Observable<PaginatedResponse<User>> {
-    let data = this.users();
+  getUsers(page: number = 1, pageSize: number = 10, query: string = '', role: string | null = null, status: string | null = null): Observable<PaginatedResponse<User>> {
+    let params: any = {
+      page: page,
+      limit: pageSize
+    };
 
-    // Filter
-    if (query) {
-      const q = query.toLowerCase();
-      data = data.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-    }
+    if (query) params.search = query;
+    if (role) params.role = role;
+    if (status) params.status = status;
 
-    // Pagination
-    const totalItems = data.length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const paginatedData = data.slice(startIndex, startIndex + pageSize);
-
-    return of({
-      data: paginatedData,
-      meta: {
-        totalItems,
-        itemCount: paginatedData.length,
-        itemsPerPage: pageSize,
-        totalPages,
-        currentPage: page
-      }
-    }).pipe(delay(500)); // Simulate API delay
+    return this.authService.getUsers(params).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return {
+            data: response.data.data,
+            meta: {
+              totalItems: response.data.total,
+              itemCount: response.data.data.length,
+              itemsPerPage: response.data.limit,
+              totalPages: response.data.totalPages,
+              currentPage: response.data.page
+            }
+          };
+        }
+        // Fallback to empty if fails
+        return {
+          data: [],
+          meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: pageSize,
+            totalPages: 0,
+            currentPage: page
+          }
+        };
+      }),
+      catchError(error => {
+        console.error('Error fetching users', error);
+        return of({
+          data: [],
+          meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: pageSize,
+            totalPages: 0,
+            currentPage: page
+          }
+        });
+      })
+    );
   }
 
   // Legacy support if needed, but prefer paginated
@@ -51,15 +79,18 @@ export class AdminDataService {
   }
 
   createUser(dto: CreateUserDTO): Observable<User> {
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...dto,
-      projectsAssigned: 0,
-      avatarColor: this.getRandomAvatarColor()
+    const registerData: RegisterRequest = {
+      name: dto.name,
+      email: dto.email,
+      password: 'Password123!', // Default password for new users created by Admin
+      role: dto.role
     };
-    
-    this.users.update(current => [...current, newUser]);
-    return of(newUser).pipe(delay(500));
+
+    return this.authService.register(registerData).pipe(
+      tap(newUser => {
+        this.users.update(current => [...current, newUser]);
+      })
+    );
   }
 
   updateUser(dto: UpdateUserDTO): Observable<User> {
@@ -227,8 +258,12 @@ export class AdminDataService {
     return of(updatedOrg).pipe(delay(500));
   }
 
-  resetOrganizationPassword(id: string): Observable<boolean> {
-    return of(true).pipe(delay(1000));
+  resetOrganizationPassword(email: string): Observable<boolean> {
+    return this.authService.recoverPassword(email);
+  }
+
+  resetUserPassword(email: string): Observable<boolean> {
+    return this.authService.recoverPassword(email);
   }
 
   private getRandomAvatarColor(): string {

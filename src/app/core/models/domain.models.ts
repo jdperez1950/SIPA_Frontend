@@ -15,7 +15,60 @@ export enum ViabilityScenario {
 }
 
 // User Models
-export type UserRole = 'ADMIN' | 'ASESOR' | 'SPAT' | 'CONSULTA' | 'ORGANIZACION';
+export type UserRole = 'ADMIN' | 'ASESOR' | 'SPAT' | 'CONSULTA' | 'ORGANIZACION' | 'USUARIO' | 'SISTEMA';
+
+export const USER_ROLES_CONFIG: { value: UserRole; label: string; class: string; activeClass: string; textClass: string }[] = [
+  { 
+    value: 'ADMIN', 
+    label: 'Administrador', 
+    class: 'bg-purple-50 text-purple-700 border-purple-100',
+    activeClass: 'bg-purple-600 text-white',
+    textClass: 'text-purple-700'
+  },
+  { 
+    value: 'ASESOR', 
+    label: 'Asesor', 
+    class: 'bg-green-50 text-green-700 border-green-100',
+    activeClass: 'bg-green-600 text-white',
+    textClass: 'text-green-700'
+  },
+  { 
+    value: 'SPAT', 
+    label: 'SPAT', 
+    class: 'bg-blue-50 text-blue-700 border-blue-100',
+    activeClass: 'bg-blue-600 text-white',
+    textClass: 'text-blue-700'
+  },
+  { 
+    value: 'ORGANIZACION', 
+    label: 'Organización', 
+    class: 'bg-amber-50 text-amber-700 border-amber-100',
+    activeClass: 'bg-amber-600 text-white',
+    textClass: 'text-amber-700'
+  },
+  { 
+    value: 'USUARIO', 
+    label: 'Usuario', 
+    class: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+    activeClass: 'bg-indigo-600 text-white',
+    textClass: 'text-indigo-700'
+  },
+  { 
+    value: 'CONSULTA', 
+    label: 'Consulta', 
+    class: 'bg-teal-50 text-teal-700 border-teal-100',
+    activeClass: 'bg-teal-600 text-white',
+    textClass: 'text-teal-700'
+  },
+  { 
+    value: 'SISTEMA', 
+    label: 'Sistema', 
+    class: 'bg-slate-50 text-slate-700 border-slate-100',
+    activeClass: 'bg-slate-600 text-white',
+    textClass: 'text-slate-700'
+  }
+];
+
 export type UserStatus = 'ACTIVE' | 'INACTIVE';
 
 export interface User {
