@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "http://colombiansofture.com:30199",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
