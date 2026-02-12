@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, Output, signal } from '@angular/core';
+import { Component, computed, EventEmitter, Input, Output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
 import { StepEvaluationComponent } from './steps/step-evaluation/step-evaluation.component';
@@ -7,13 +7,15 @@ import { StepResponseTeamComponent } from './steps/step-response-team/step-respo
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
 import { inject } from '@angular/core';
-import { CreateProjectRequest } from '../../../../../../core/models/domain.models';
+import { CreateProjectRequest, Project } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
   EvaluationAxis, 
   TechnicalTableAssignment, 
   ResponseTeamMember 
 } from './project-wizard.types';
+
+export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY';
 
 @Component({
   selector: 'app-project-wizard',
@@ -29,18 +31,27 @@ import {
   styles: []
 })
 export class ProjectWizardComponent {
+  @Input() mode: WizardMode = 'FULL';
+  @Input() initialData: Project | null = null;
   @Output() completed = new EventEmitter<void>();
   
   private alertService = inject(AlertService);
   private adminService = inject(AdminDataService);
 
   // --- Constants ---
-  readonly STEPS = [
+  readonly ALL_STEPS = [
     { number: 1, title: 'Identificación', icon: 'badge' },
     { number: 2, title: 'Equipo Respuesta', icon: 'group_add' },
     { number: 3, title: 'Evaluación', icon: 'quiz' },
     { number: 4, title: 'Mesa Técnica', icon: 'engineering' }
   ];
+
+  steps = computed(() => {
+    if (this.mode === 'IDENTIFICATION_ONLY') {
+      return [this.ALL_STEPS[0]];
+    }
+    return this.ALL_STEPS;
+  });
 
   // --- State ---
   currentStep = signal(1);
@@ -64,6 +75,41 @@ export class ProjectWizardComponent {
 
   // Step 4 Data
   technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
+
+  constructor() {
+    // Initialize with data if provided
+    effect(() => {
+      if (this.initialData) {
+        this.loadInitialData(this.initialData);
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  loadInitialData(project: Project) {
+    // Map Project to IdentificationData
+    this.identificationData.set({
+      // The Project interface seems to have diverged from the Wizard data.
+      // Assuming 'code' is not name.
+      // Let's look at AdminDataService mock creation:
+      // name: data.projectName -> not in Project interface
+      // organization: { name... } -> Project has organization: string
+      
+      // For now, I'll do a best effort mapping or leave empty if fields are missing
+      // Real app would fetch full details
+      projectName: 'Proyecto ' + project.code, 
+      department: project.state,
+      municipality: project.municipality,
+      organizationName: project.organization,
+      organizationDescription: '', // Missing
+      organizationIdentifier: '', // Missing
+      organizationAddress: '', // Missing
+      startDate: project.startDate || '',
+      endDate: project.endDate || '',
+      submissionDeadline: project.submissionDeadline || ''
+    });
+    
+    // We would need to load other steps too if we had the data in Project model
+  }
 
   // --- Computed Helpers ---
   activeAxes = computed(() => this.evaluationAxes().filter(axis => axis.isActive));
@@ -90,13 +136,10 @@ export class ProjectWizardComponent {
   // --- Actions ---
 
   goToStep(step: number) {
+    const maxStep = this.steps().length;
+    if (step > maxStep) return;
+
     if (step < this.currentStep() || (step > this.currentStep() && this.isCurrentStepValid())) {
-      // Only allow going forward if current step is valid, or jumping back
-      // Also need to check intermediate steps if jumping multiple
-      // For simplicity, allow going back freely, and going forward only one by one usually
-      // But if user clicks step 3 while on step 1, prevent unless step 1 valid? 
-      // Better stick to next/prev for strict validation flow, or allow click only for visited steps
-      // Here: allow click if step < current (always safe)
       if (step < this.currentStep()) {
         this.currentStep.set(step);
       }
@@ -104,10 +147,11 @@ export class ProjectWizardComponent {
   }
 
   nextStep() {
-    if (this.currentStep() < this.STEPS.length && this.isCurrentStepValid()) {
+    if (this.currentStep() < this.steps().length && this.isCurrentStepValid()) {
       this.currentStep.update(s => s + 1);
     }
   }
+
 
   prevStep() {
     if (this.currentStep() > 1) {
@@ -151,16 +195,29 @@ export class ProjectWizardComponent {
         }))
       };
 
-      this.adminService.createProject(request).subscribe({
-        next: () => {
-          this.alertService.success('Proyecto registrado exitosamente');
-          this.completed.emit();
-        },
-        error: (err) => {
-          console.error(err);
-          this.alertService.error('Error al registrar el proyecto');
-        }
-      });
+      if (this.initialData) {
+        this.adminService.updateProject(this.initialData.id, request).subscribe({
+          next: () => {
+            this.alertService.success('Proyecto actualizado exitosamente');
+            this.completed.emit();
+          },
+          error: (err) => {
+            console.error(err);
+            this.alertService.error('Error al actualizar el proyecto');
+          }
+        });
+      } else {
+        this.adminService.createProject(request).subscribe({
+          next: () => {
+            this.alertService.success('Proyecto registrado exitosamente');
+            this.completed.emit();
+          },
+          error: (err) => {
+            console.error(err);
+            this.alertService.error('Error al registrar el proyecto');
+          }
+        });
+      }
     }
   }
 

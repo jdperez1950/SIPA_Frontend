@@ -87,8 +87,19 @@ export class AdminProjectsPageComponent implements OnInit {
     this.showWizard.set(show);
     if (!show) {
       // Refresh list when wizard closes (in case new project was added)
+      this.selectedProject.set(null); // Clear selection
       this.loadProjects();
     }
+  }
+
+  createProject() {
+    this.selectedProject.set(null);
+    this.toggleWizard(true);
+  }
+
+  editProject(project: Project) {
+    this.selectedProject.set(project);
+    this.toggleWizard(true);
   }
 
   filterByStatus(status: ProjectStatus | null) {

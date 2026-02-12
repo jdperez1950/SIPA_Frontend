@@ -3,7 +3,7 @@
   <div class="bg-gray-50 border-b border-gray-200 p-6 flex-none">
     <div class="flex items-center justify-end mb-6">
       <div class="text-sm text-gray-500">
-        Paso <span class="font-bold text-blue-600">{{ currentStep() }}</span> de {{ STEPS.length }}
+        Paso <span class="font-bold text-blue-600">{{ currentStep() }}</span> de {{ steps().length }}
       </div>
     </div>
 
@@ -13,11 +13,11 @@
       <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-0 transform -translate-y-1/2 rounded-full"></div>
       <div 
         class="absolute top-1/2 left-0 h-1 bg-blue-600 -z-0 transform -translate-y-1/2 rounded-full transition-all duration-500"
-        [style.width.%]="((currentStep() - 1) / (STEPS.length - 1)) * 100"
+        [style.width.%]="((currentStep() - 1) / (steps().length - 1)) * 100"
       ></div>
 
       <!-- Steps -->
-      @for (step of STEPS; track step.number) {
+      @for (step of steps(); track step.number) {
         <div class="relative z-10 flex flex-col items-center group cursor-pointer" 
              (click)="goToStep(step.number)">
           <div 
@@ -96,7 +96,7 @@
       Anterior
     </button>
 
-    @if (currentStep() < 4) {
+    @if (currentStep() < steps().length) {
       <button 
         (click)="nextStep()" 
         [disabled]="!isCurrentStepValid()"
@@ -112,7 +112,7 @@
         class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
       >
         <span class="material-symbols-rounded">check_circle</span>
-        Finalizar Alta
+        Finalizar {{ mode === 'IDENTIFICATION_ONLY' ? 'Registro' : 'Alta' }}
       </button>
     }
   </div>

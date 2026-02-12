@@ -30,6 +30,8 @@ export class LoginPageComponent {
           this.router.navigate(['/admin/dashboard']);
         } else if (user.role === 'ORGANIZACION') {
           this.router.navigate(['/workspace']);
+        } else if (user.role === 'CONSULTA') {
+          this.router.navigate(['/consultant/dashboard']);
         } else {
           this.router.navigate(['/dashboard']);
         }
