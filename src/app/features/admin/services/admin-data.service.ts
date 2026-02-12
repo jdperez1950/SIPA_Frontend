@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Observable, of, delay, tap, catchError, map } from 'rxjs';
+import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
@@ -165,6 +165,35 @@ export class AdminDataService {
 
     this.projects.update(current => [newProject, ...current]);
     return of(newProject).pipe(delay(1000));
+  }
+
+  updateProject(id: string, request: CreateProjectRequest): Observable<Project> {
+    console.log('Updating Project:', id, request);
+    
+    // In a real app, this would patch the project
+    // For mock, we'll just return the found project (updated)
+    const projectIndex = this.projects().findIndex(p => p.id === id);
+    if (projectIndex === -1) return throwError(() => new Error('Project not found'));
+
+    const currentProject = this.projects()[projectIndex];
+    const updatedProject: Project = {
+      ...currentProject,
+      organization: request.organization.name,
+      municipality: request.municipality,
+      state: request.department,
+      startDate: request.dates.start,
+      endDate: request.dates.end,
+      submissionDeadline: request.dates.submissionDeadline
+      // In a real app we would update other fields too
+    };
+
+    this.projects.update(current => {
+      const updated = [...current];
+      updated[projectIndex] = updatedProject;
+      return updated;
+    });
+
+    return of(updatedProject).pipe(delay(1000));
   }
 
   assignAdvisor(projectId: string, advisor: { id: string; name: string }): Observable<Project> {

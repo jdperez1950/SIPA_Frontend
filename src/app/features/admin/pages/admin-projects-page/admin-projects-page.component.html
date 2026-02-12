@@ -5,7 +5,7 @@
       <!-- Modal Header -->
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-none">
         <h3 class="font-bold text-gray-800 text-lg">
-          Alta Integral de Proyecto
+          {{ selectedProject() ? 'Completar/Editar Proyecto' : 'Alta Integral de Proyecto' }}
         </h3>
         <button 
           (click)="toggleWizard(false)" 
@@ -16,7 +16,11 @@
         </button>
       </div>
 
-      <app-project-wizard (completed)="toggleWizard(false)" class="flex-1 w-full overflow-hidden"></app-project-wizard>
+      <app-project-wizard 
+        [initialData]="selectedProject()"
+        (completed)="toggleWizard(false)" 
+        class="flex-1 w-full overflow-hidden"
+      ></app-project-wizard>
     </div>
     </div>
   }
@@ -29,7 +33,7 @@
         <p class="text-gray-500">Supervisa el avance y asignación de proyectos de vivienda</p>
       </div>
       <button 
-        (click)="toggleWizard(true)"
+        (click)="createProject()"
         class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
       >
         <span class="material-symbols-rounded text-sm">add</span>
@@ -165,6 +169,13 @@
               }
             </div>
 
+            <button 
+              (click)="editProject(project)"
+              class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-1"
+            >
+              <span class="material-symbols-rounded text-base">edit</span>
+              Editar
+            </button>
             <button 
               (click)="openAssignModal(project)"
               class="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
