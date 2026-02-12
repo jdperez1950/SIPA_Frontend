@@ -6,11 +6,12 @@ import { AdminDataService } from '../../services/admin-data.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO, USER_ROLES_CONFIG } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 
 @Component({
   selector: 'app-admin-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent, LoadingComponent],
   templateUrl: './admin-users-page.component.html',
   styles: []
 })
@@ -245,7 +246,7 @@ export class AdminUsersPageComponent implements OnInit {
       confirmText: action === 'desactivar' ? 'Desactivar' : 'Activar'
     }).then(confirmed => {
       if (confirmed) {
-        this.adminDataService.toggleUserStatus(user.id).subscribe({
+        this.adminDataService.toggleUserStatus(user.id, user.status).subscribe({
           next: (updatedUser) => {
             this.users.update(users => users.map(u => 
               u.id === updatedUser.id ? updatedUser : u

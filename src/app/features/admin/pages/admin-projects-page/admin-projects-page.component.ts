@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { AdminDataService } from '../../services/admin-data.service';
 import { Project, ProjectStatus, AdvisorCandidate } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { ProjectWizardComponent } from './components/project-wizard/project-wizard.component';
 
 @Component({
   selector: 'app-admin-projects-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent, LoadingComponent],
   templateUrl: './admin-projects-page.component.html',
   styles: []
 })

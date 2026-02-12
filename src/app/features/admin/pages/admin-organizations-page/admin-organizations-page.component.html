@@ -46,9 +46,8 @@
         <tbody class="divide-y divide-gray-100">
           @if (isLoading()) {
             <tr>
-              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                <span class="material-symbols-rounded animate-spin text-3xl">progress_activity</span>
-                <p class="mt-2">Cargando organizaciones...</p>
+              <td colspan="5" class="px-6 py-0 border-0">
+                <app-loading mode="embedded" [isLoading]="true" message="Cargando organizaciones..."></app-loading>
               </td>
             </tr>
           } @else if (organizations().length === 0) {
