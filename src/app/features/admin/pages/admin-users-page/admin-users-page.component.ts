@@ -246,7 +246,7 @@ export class AdminUsersPageComponent implements OnInit {
       confirmText: action === 'desactivar' ? 'Desactivar' : 'Activar'
     }).then(confirmed => {
       if (confirmed) {
-        this.adminDataService.toggleUserStatus(user.id).subscribe({
+        this.adminDataService.toggleUserStatus(user.id, user.status).subscribe({
           next: (updatedUser) => {
             this.users.update(users => users.map(u => 
               u.id === updatedUser.id ? updatedUser : u

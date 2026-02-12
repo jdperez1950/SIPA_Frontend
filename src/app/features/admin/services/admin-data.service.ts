@@ -94,33 +94,20 @@ export class AdminDataService {
   }
 
   updateUser(dto: UpdateUserDTO): Observable<User> {
-    let updatedUser: User | undefined;
-    
-    this.users.update(current => current.map(u => {
-      if (u.id === dto.id) {
-        updatedUser = { ...u, ...dto };
-        return updatedUser;
-      }
-      return u;
-    }));
-
-    if (!updatedUser) throw new Error('User not found');
-    return of(updatedUser).pipe(delay(500));
+    return this.authService.updateUser(dto).pipe(
+      tap(updatedUser => {
+        this.users.update(current => current.map(u => u.id === dto.id ? updatedUser : u));
+      })
+    );
   }
 
-  toggleUserStatus(id: string): Observable<User> {
-    let updatedUser: User | undefined;
-    
-    this.users.update(current => current.map(u => {
-      if (u.id === id) {
-        updatedUser = { ...u, status: u.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' };
-        return updatedUser;
-      }
-      return u;
-    }));
-
-    if (!updatedUser) throw new Error('User not found');
-    return of(updatedUser).pipe(delay(300));
+  toggleUserStatus(id: string, currentStatus: string): Observable<User> {
+    const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    return this.authService.toggleUserStatus(id, newStatus).pipe(
+      tap(updatedUser => {
+        this.users.update(current => current.map(u => u.id === id ? updatedUser : u));
+      })
+    );
   }
 
   getAdvisors(): Observable<User[]> {

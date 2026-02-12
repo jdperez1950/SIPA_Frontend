@@ -1,237 +1,29 @@
-# Guía de Integración - Autenticación JWT (Angular)
+# API de Gestión de Usuarios - PAVIS
 
-## Base URL
+## Endpoints Disponibles (Solo ADMIN)
 
-```
-http://localhost:5000/api
-```
+### 1. Obtener Lista de Usuarios
 
----
+**Endpoint:** `GET /api/auth/users`
 
-## Endpoints de Autenticación
-
-### 1. Login
-
-**POST** `/auth/login`
-
-**Request:**
-```json
-{
-  "email": "admin@pavis.com",
-  "password": "Admin123!"
-}
-```
-
-**Response Exitoso (200):**
-```json
-{
-  "success": true,
-  "message": "Login exitoso",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "name": "Administrador del Sistema",
-      "email": "admin@pavis.com",
-      "role": "ADMIN",
-      "status": "ACTIVE",
-      "avatarColor": "#EF4444",
-      "projectsAssigned": 0
-    }
-  }
-}
-```
-
-**Response Error (401):**
-```json
-{
-  "success": false,
-  "message": "Contraseña incorrecta",
-  "data": null
-}
-```
-
----
-
-### 2. Register
-
-**POST** `/auth/register`
-
-**Headers:** Ninguno (endpoint público)
-
-**Request:**
-```json
-{
-  "name": "Nuevo Usuario",
-  "email": "nuevo@pavis.com",
-  "password": "Password123!",
-  "role": "ASESOR"
-}
-```
-
-**Roles válidos (enviar como STRING/TEXTO):**
-- `ADMIN`
-- `ASESOR`
-- `SPAT`
-- `CONSULTA`
-- `ORGANIZACION`
-
-**IMPORTANTE:** El campo `role` debe enviarse como **texto/string**, no como número. Ejemplos: `"ADMIN"`, `"ASESOR"`, `"SPAT"`, etc.
-
-**Response Exitoso (200):**
-```json
-{
-  "success": true,
-  "message": "Usuario registrado exitosamente",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "name": "Nuevo Usuario",
-      "email": "nuevo@pavis.com",
-      "role": "ASESOR",
-      "status": "ACTIVE",
-      "avatarColor": "#3B82F6",
-      "projectsAssigned": 0
-    }
-  }
-}
-```
-
-**Response Error (400):**
-```json
-{
-  "success": false,
-  "message": "El email ya está registrado",
-  "data": null
-}
-```
-
----
-
-### 3. Validate Token
-
-**POST** `/auth/validate`
-
-**Headers:** Ninguno (endpoint público)
-
-**Request:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**Response Exitoso (200):**
-```json
-{
-  "success": true,
-  "message": "Token válido",
-  "data": true
-}
-```
-
-**Response Error (200 pero data=false):**
-```json
-{
-  "success": true,
-  "message": "Token inválido",
-  "data": false
-}
-```
-
----
-
-### 4. Restore Password (Solo ADMIN)
-
-**POST** `/auth/restore-password`
-
-**Headers:**
-```
-Authorization: Bearer <admin-token>
-Content-Type: application/json
-```
-
-**Request:**
-```json
-{
-  "email": "asesor@pavis.com"
-}
-```
-
-**Response Exitoso (200):**
-```json
-{
-  "success": true,
-  "message": "Contraseña restaurada exitosamente",
-  "data": {
-    "email": "asesor@pavis.com",
-    "temporaryPassword": "$^H9fJ%mZB0i",
-    "message": "Se ha enviado un correo a asesor@pavis.com con la contraseña temporal."
-  }
-}
-```
-
-**Nota:** En desarrollo, el correo se captura en MailHog (http://localhost:8025). En producción, el usuario recibirá el correo real.
-
-**Response Error (401):**
-```json
-{
-  "success": false,
-  "message": "Usuario no encontrado o inactivo",
-  "data": null
-}
-```
-
-**Response Error (403):**
-```json
-{
-  "success": false,
-  "message": "No tiene permisos para realizar esta acción",
-  "data": null
-}
-```
-
----
-
-### 5. Get Users (Solo ADMIN) - Con Paginación y Filtros
-
-**GET** `/auth/users`
-
-**Headers:**
-```
-Authorization: Bearer <admin-token>
-```
+**Autenticación:** Requiere token JWT con rol ADMIN
 
 **Query Parameters:**
+| Parámetro | Tipo | Requerido | Default | Descripción |
+|-----------|------|-----------|---------|-------------|
+| `page` | number | No | 1 | Número de página |
+| `limit` | number | No | 10 | Elementos por página |
+| `role` | string | No | null | Filtrar por rol (ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION) |
+| `search` | string | No | null | Buscar por nombre o email |
+| `status` | string | No | null | Filtrar por estado (ACTIVE, INACTIVE) |
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `page` | int | 1 | Número de página |
-| `limit` | int | 10 | Elementos por página |
-| `role` | string | null | Filtro por rol (ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION) |
-| `search` | string | null | Búsqueda en nombre o email |
-| `status` | string | null | Filtro por estado (ACTIVE, INACTIVE) |
-
-**Ejemplos de uso:**
-```bash
-# Primera página, 10 usuarios por página
-GET /api/auth/users
-
-# Segunda página, 5 usuarios por página
-GET /api/auth/users?page=2&limit=5
-
-# Filtrar por rol ASESOR
-GET /api/auth/users?role=ASESOR
-
-# Buscar usuarios que contengan "admin" en nombre o email
-GET /api/auth/users?search=admin
-
-# Combinar filtros: ASESOR, estado ACTIVE, búsqueda "juan"
-GET /api/auth/users?role=ASESOR&status=ACTIVE&search=juan&page=1&limit=20
+**Ejemplo de Request:**
+```http
+GET /api/auth/users?page=1&limit=10&role=ASESOR&status=ACTIVE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-**Response Exitoso (200):**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -239,451 +31,349 @@ GET /api/auth/users?role=ASESOR&status=ACTIVE&search=juan&page=1&limit=20
   "data": {
     "data": [
       {
-        "id": "5e419ad8-9377-445d-af81-81dee0983fc0",
-        "name": "Administrador del Sistema",
-        "email": "admin@pavis.com",
-        "role": "ADMIN",
-        "status": "ACTIVE",
-        "avatarColor": "#EF4444",
-        "projectsAssigned": 0
-      },
-      {
-        "id": "c977505f-970e-42a2-a0bb-81060d02d433",
-        "name": "Asesor Técnico",
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "name": "Juan Pérez",
         "email": "asesor@pavis.com",
         "role": "ASESOR",
         "status": "ACTIVE",
-        "avatarColor": "#3B82F6",
-        "projectsAssigned": 0
+        "avatarColor": "bg-blue-500",
+        "projectsAssigned": 5
       }
     ],
-    "total": 5,
+    "total": 15,
     "page": 1,
-    "limit": 10,
-    "totalPages": 1
+    "limit": 10
   }
 }
 ```
 
-**Campos de Response:**
-- `data[]`: Lista de usuarios en la página actual
-- `total`: Total de usuarios que coinciden con los filtros
-- `page`: Número de página actual
-- `limit`: Elementos por página
-- `totalPages`: Total de páginas disponibles
+---
 
-**Response Error (401):**
-```json
-{
-  "success": false,
-  "message": "Usuario no autenticado",
-  "data": null
+### 2. Actualizar Usuario
+
+**Endpoint:** `PATCH /api/auth/users`
+
+**Autenticación:** Requiere token JWT con rol ADMIN
+
+**Request Body:**
+```typescript
+interface UpdateUserRequest {
+  id: string;                  // UUID del usuario (obligatorio)
+  name?: string;               // Nombre completo (opcional)
+  email?: string;              // Email (opcional, debe ser único)
+  role?: string;               // Rol: ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION
+  avatarColor?: string;        // Color del avatar para UI (ej: 'bg-blue-500')
 }
 ```
 
-**Response Error (403):**
-```json
+**Ejemplo de Request:**
+```http
+PATCH /api/auth/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
 {
-  "success": false,
-  "message": "No tiene permisos para realizar esta acción",
-  "data": null
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "Juan Pérez García",
+  "email": "juan.perez@pavis.com",
+  "role": "ASESOR",
+  "avatarColor": "bg-green-500"
 }
 ```
 
----
-
-## Claims del Token JWT
-
+**Response (200 OK):**
 ```json
 {
-  "sub": "user-uuid",
-  "email": "user@email.com",
-  "unique_name": "User Name",
-  "role": "ADMIN",
-  "jti": "token-id",
-  "iat": 1234567890,
-  "exp": 1234567890,
-  "iss": "Pavis.Api",
-  "aud": "Pavis.Client"
+  "success": true,
+  "message": "Usuario actualizado exitosamente",
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "message": "Usuario actualizado exitosamente",
+    "user": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "name": "Juan Pérez García",
+      "email": "juan.perez@pavis.com",
+      "role": "ASESOR",
+      "status": "ACTIVE",
+      "avatarColor": "bg-green-500",
+      "projectsAssigned": 5
+    }
+  }
 }
 ```
 
----
-
-## Roles y Permisos
-
-| Rol | Descripción | Acceso |
-|-----|-------------|--------|
-| `ADMIN` | Administrador del Sistema | Todos los endpoints |
-| `ASESOR` | Asesor Técnico | Proyectos asignados, evaluaciones |
-| `SPAT` | Equipo SPAT | Gestión de proyectos SPAT |
-| `ORGANIZACION` | Organización/Comunidad | Solo sus proyectos |
-| `CONSULTA` | Usuario de solo lectura | Consultas, reportes |
+**Errores:**
+- `400 Bad Request`: Datos inválidos o email duplicado
+- `401 Unauthorized`: Token inválido o expirado
+- `403 Forbidden`: Usuario no es ADMIN
+- `500 Internal Server Error`: Error del servidor
 
 ---
 
-## Resumen de Endpoints
+### 3. Activar/Desactivar Usuario
 
-| Método | Endpoint | Auth | Descripción |
-|--------|----------|------|-------------|
-| POST | `/api/auth/login` | Pública | Iniciar sesión |
-| POST | `/api/auth/register` | Pública | Registrar usuario |
-| POST | `/api/auth/validate` | Pública | Validar token |
-| POST | `/api/auth/restore-password` | AdminOnly | Restablecer contraseña |
-| GET | `/api/auth/users` | AdminOnly | Obtener usuarios (paginación y filtros) |
+**Endpoint:** `PATCH /api/auth/users/status`
 
----
+**Autenticación:** Requiere token JWT con rol ADMIN
 
-## Cómo Probar el Registro
-
-### Desde Swagger (http://localhost:5000/swagger)
-
-1. Navega al endpoint **POST /api/Auth/register**
-2. Haz clic en "Try it out"
-3. Envía el siguiente JSON (copia y pega):
-
-```json
-{
-  "name": "Usuario de Prueba",
-  "email": "prueba@test.com",
-  "password": "Prueba123!",
-  "role": "ASESOR"
+**Request Body:**
+```typescript
+interface ToggleUserStatusRequest {
+  id: string;        // UUID del usuario (obligatorio)
+  status: string;    // Estado: ACTIVE o INACTIVE (obligatorio)
 }
 ```
 
-**IMPORTANTE:**
-- El campo `role` debe ser entre comillas: `"ASESOR"`, `"ADMIN"`, `"SPAT"`, etc.
-- **NO** enviar como número: `1`, `2`, etc.
-- **NO** enviar sin comillas: `ASESOR` (esto causará error)
+**Ejemplo de Request (Desactivar):**
+```http
+PATCH /api/auth/users/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
 
-### Desde curl (terminal)
-
-```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Usuario de Prueba",
-    "email": "prueba@test.com",
-    "password": "Prueba123!",
-    "role": "ASESOR"
-  }'
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "status": "INACTIVE"
+}
 ```
 
-## Ejemplo de Integración con Angular
+**Ejemplo de Request (Activar):**
+```http
+PATCH /api/auth/users/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
 
-### Servicio de Autenticación
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "status": "ACTIVE"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Usuario inactive exitosamente",
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "message": "Usuario inactive exitosamente",
+    "user": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "name": "Juan Pérez",
+      "email": "asesor@pavis.com",
+      "role": "ASESOR",
+      "status": "INACTIVE",
+      "avatarColor": "bg-blue-500",
+      "projectsAssigned": 5
+    }
+  }
+}
+```
+
+**Errores:**
+- `400 Bad Request`: Datos inválidos
+- `401 Unauthorized`: Token inválido o expirado
+- `403 Forbidden`: Usuario no es ADMIN o intenta desactivarse a sí mismo
+- `500 Internal Server Error`: Error del servidor
+
+---
+
+## Importante para el Frontend
+
+### Comportamiento de Usuario INACTIVE
+
+- **Un usuario con estado INACTIVE NO puede iniciar sesión**
+- El login fallará con el mensaje: "Usuario no encontrado o inactivo"
+
+### Reglas de Negocio
+
+1. **Solo el ADMIN puede editar usuarios**
+2. **Solo el ADMIN puede activar/desactivar usuarios**
+3. **Un ADMIN no puede desactivarse a sí mismo**
+4. **El email debe ser único en el sistema**
+5. **Todos los campos en UPDATE son opcionales** (excepto el ID)
+
+### Roles Disponibles
+
+| Rol | Descripción |
+|-----|-------------|
+| ADMIN | Administrador del sistema |
+| ASESOR | Asesor técnico/jurídico/financiero/social |
+| SPAT | Supervisor de proyectos |
+| CONSULTA | Solo lectura |
+| ORGANIZACION | Entidad externa |
+
+### Estados de Usuario
+
+| Estado | Descripción |
+|--------|-------------|
+| ACTIVE | Usuario puede iniciar sesión |
+| INACTIVE | Usuario bloqueado, no puede iniciar sesión |
+
+---
+
+## Ejemplos de Implementación en Angular
+
+### Servicio de Usuarios (user.service.ts)
 
 ```typescript
-// auth.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  data: {
-    token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      role: string;
-      status: string;
-      avatarColor: string;
-      projectsAssigned: number;
-    }
-  };
-}
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
-  private apiUrl = 'http://localhost:5000/api/auth';
-  private tokenKey = 'pavis_token';
-  private currentUserSubject = new BehaviorSubject<any>(null);
-  
-  constructor(private http: HttpClient) {
-    // Cargar usuario del localStorage al iniciar
-    const token = this.getToken();
-    if (token) {
-      this.currentUserSubject.next(this.decodeToken(token));
-    }
-  }
+export class UserService {
+  private apiUrl = 'http://localhost:5000/api/auth/users';
+  private statusUrl = 'http://localhost:5000/api/auth/users/status';
 
-  login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { email, password })
-      .pipe(
-        tap(response => {
-          if (response.success) {
-            this.setToken(response.data.token);
-            this.currentUserSubject.next(response.data.user);
-          }
-        })
-      );
-  }
+  constructor(private http: HttpClient) {}
 
-  register(name: string, email: string, password: string, role: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/register`, {
-      name, email, password, role
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     });
   }
 
-  validateToken(token: string): Observable<{ success: boolean; data: boolean }> {
-    return this.http.post<{ success: boolean; data: boolean }>(
-      `${this.apiUrl}/validate`, 
-      { token }
-    );
+  // Obtener usuarios con filtros
+  getUsers(params: {
+    page?: number;
+    limit?: number;
+    role?: string;
+    search?: string;
+    status?: string;
+  }): Observable<any> {
+    return this.http.get(this.apiUrl, {
+      headers: this.getHeaders(),
+      params
+    });
   }
 
-  restorePassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/restore-password`, { email });
+  // Actualizar usuario
+  updateUser(user: {
+    id: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    avatarColor?: string;
+  }): Observable<any> {
+    return this.http.patch(this.apiUrl, user, {
+      headers: this.getHeaders()
+    });
   }
 
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    this.currentUserSubject.next(null);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
-  }
-
-  setToken(token: string): void {
-    localStorage.setItem(this.tokenKey, token);
-  }
-
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-    
-    // Verificar expiración
-    const decoded = this.decodeToken(token);
-    if (!decoded) return false;
-    
-    return decoded.exp * 1000 > Date.now();
-  }
-
-  getUserRole(): string | null {
-    const token = this.getToken();
-    if (!token) return null;
-    const decoded = this.decodeToken(token);
-    return decoded?.role || null;
-  }
-
-  hasRole(role: string): boolean {
-    return this.getUserRole() === role;
-  }
-
-  isAdmin(): boolean {
-    return this.getUserRole() === 'ADMIN';
-  }
-
-  private decodeToken(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      return JSON.parse(window.atob(base64));
-    } catch (e) {
-      return null;
-    }
+  // Activar/Desactivar usuario
+  toggleUserStatus(userId: string, status: 'ACTIVE' | 'INACTIVE'): Observable<any> {
+    return this.http.patch(this.statusUrl, {
+      id: userId,
+      status: status
+    }, {
+      headers: this.getHeaders()
+    });
   }
 }
 ```
 
-### Interceptor de HTTP
+### Ejemplo de Uso en Componente
 
 ```typescript
-// auth.interceptor.ts
-import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
-
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
-
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.authService.getToken();
-    
-    if (token) {
-      req = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-    }
-    
-    return next.handle(req);
-  }
-}
-```
-
-### Guard de Autenticación
-
-```typescript
-// auth.guard.ts
-import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
-import { AuthService } from './auth.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
-
-  canActivate(): boolean {
-    if (this.authService.isAuthenticated()) {
-      return true;
-    }
-    
-    this.router.navigate(['/login']);
-    return false;
-  }
-}
-```
-
-### Guard de Roles
-
-```typescript
-// role.guard.ts
-import { Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
-import { AuthService } from './auth.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class RoleGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
-
-  canActivate(route: ActivatedRouteSnapshot): boolean {
-    const requiredRoles = route.data['roles'] as string[];
-    const userRole = this.authService.getUserRole();
-    
-    if (!userRole) {
-      this.router.navigate(['/login']);
-      return false;
-    }
-    
-    if (requiredRoles.includes(userRole)) {
-      return true;
-    }
-    
-    this.router.navigate(['/unauthorized']);
-    return false;
-  }
-}
-```
-
-### Uso en Componentes
-
-```typescript
-// login.component.ts
-import { Component } from '@angular/core';
-import { AuthService } from './auth.service';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { UserService } from './user.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-user-management',
   template: `
-    <form (ngSubmit)="login()">
-      <input type="email" [(ngModel)]="email" name="email" required>
-      <input type="password" [(ngModel)]="password" name="password" required>
-      <button type="submit">Login</button>
-    </form>
+    <div *ngIf="loading">Cargando usuarios...</div>
     <div *ngIf="error" class="error">{{ error }}</div>
+
+    <table *ngIf="!loading && !error">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>
+            <span [class.active]="user.status === 'ACTIVE'"
+                  [class.inactive]="user.status === 'INACTIVE'">
+              {{ user.status }}
+            </span>
+          </td>
+          <td>
+            <button (click)="editUser(user)">Editar</button>
+            <button (click)="toggleStatus(user)"
+                    *ngIf="user.status === 'ACTIVE'">Desactivar</button>
+            <button (click)="toggleStatus(user)"
+                    *ngIf="user.status === 'INACTIVE'">Activar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   `
 })
-export class LoginComponent {
-  email = '';
-  password = '';
+export class UserManagementComponent implements OnInit {
+  users: any[] = [];
+  loading = false;
   error = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private userService: UserService) {}
 
-  login() {
-    this.authService.login(this.email, this.password).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.router.navigate(['/dashboard']);
-        }
+  ngOnInit() {
+    this.loadUsers();
+  }
+
+  loadUsers() {
+    this.loading = true;
+    this.userService.getUsers({ page: 1, limit: 10 }).subscribe({
+      next: (response: any) => {
+        this.users = response.data.data;
+        this.loading = false;
       },
       error: (err) => {
-        this.error = err.error?.message || 'Error al iniciar sesión';
+        this.error = 'Error al cargar usuarios';
+        this.loading = false;
+      }
+    });
+  }
+
+  editUser(user: any) {
+    // Abrir modal de edición
+    console.log('Editar usuario:', user);
+  }
+
+  toggleStatus(user: any) {
+    const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    this.userService.toggleUserStatus(user.id, newStatus).subscribe({
+      next: () => {
+        user.status = newStatus;
+      },
+      error: (err) => {
+        alert('Error al cambiar estado: ' + err.error.message);
       }
     });
   }
 }
 ```
 
-### Configuración de Rutas
-
-```typescript
-// app-routing.module.ts
-const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { 
-    path: 'dashboard', 
-    component: DashboardComponent, 
-    canActivate: [AuthGuard] 
-  },
-  { 
-    path: 'admin', 
-    component: AdminComponent, 
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['ADMIN'] }
-  },
-  { 
-    path: 'projects', 
-    component: ProjectsComponent, 
-    canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['ADMIN', 'ASESOR', 'SPAT'] }
-  }
-];
-```
-
 ---
 
-## Seguridad
+## URL Base
 
-- **Contraseñas:** Hasheadas con BCrypt
-- **Token:** Expira en 15 minutos
-- **Clave Secreta:** Mínimo 32 caracteres
-- **Validación:** En cada request protegido
-- **HTTPS:** Requerido en producción
+- **API:** `http://localhost:5000`
+- **Swagger UI:** `http://localhost:5000/swagger/index.html`
 
----
+## Credenciales de Prueba
 
-## Códigos de Estado HTTP
-
-| Código | Significado |
-|--------|-------------|
-| 200 | Éxito |
-| 400 | Bad Request (datos inválidos) |
-| 401 | Unauthorized (no autenticado) |
-| 403 | Forbidden (no tiene permisos) |
-| 404 | Not Found |
-| 500 | Error interno del servidor |
-
----
-
-## Usuarios de Prueba
-
-Ver archivo: `TEST_USERS.md`
-
-| Email | Contraseña | Rol |
-|-------|------------|-----|
-| admin@pavis.com | Admin123! | ADMIN |
-| asesor@pavis.com | Asesor123! | ASESOR |
-| spat@pavis.com | Spat123! | SPAT |
-| org@pavis.com | Org123! | ORGANIZACION |
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Admin | admin@pavis.com | Admin123! |

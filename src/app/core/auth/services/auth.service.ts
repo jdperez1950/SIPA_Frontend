@@ -186,6 +186,28 @@ export class AuthService {
       })
     );
   }
+
+  updateUser(user: Partial<User>): Observable<User> {
+    return this.http.patch<AuthResponse>(`${this.apiUrl}/auth/users`, user).pipe(
+      map(response => {
+        if (response.success && response.data && response.data.user) {
+          return response.data.user;
+        }
+        throw new Error(response.message || 'Error al actualizar usuario');
+      })
+    );
+  }
+
+  toggleUserStatus(id: string, status: string): Observable<User> {
+    return this.http.patch<AuthResponse>(`${this.apiUrl}/auth/users/status`, { id, status }).pipe(
+      map(response => {
+        if (response.success && response.data && response.data.user) {
+          return response.data.user;
+        }
+        throw new Error(response.message || 'Error al cambiar estado de usuario');
+      })
+    );
+  }
   
   validateToken(): Observable<boolean> {
      const token = this.getToken();
