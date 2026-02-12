@@ -119,6 +119,19 @@
         >
       </div>
 
+      <!-- Organization Type -->
+      <div class="space-y-2">
+        <label for="organizationType" class="block text-sm font-medium text-gray-700">Tipo de Organización</label>
+        <select 
+          id="organizationType"
+          formControlName="organizationType"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+        >
+          <option value="COMPANY">Empresa / Jurídica</option>
+          <option value="PERSON">Persona Natural</option>
+        </select>
+      </div>
+
       <!-- Organization Identifier -->
       <div class="space-y-2">
         <label for="organizationIdentifier" class="block text-sm font-medium text-gray-700">Identificación (NIT/Código)</label>
@@ -128,6 +141,18 @@
           formControlName="organizationIdentifier"
           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Ej. 899.999.000-1"
+        >
+      </div>
+
+      <!-- Organization Email -->
+      <div class="space-y-2">
+        <label for="organizationEmail" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+        <input 
+          type="email" 
+          id="organizationEmail"
+          formControlName="organizationEmail"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="contacto@organizacion.com"
         >
       </div>
     </div>

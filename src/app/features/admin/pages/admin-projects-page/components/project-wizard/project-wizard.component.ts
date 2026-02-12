@@ -7,7 +7,7 @@ import { StepResponseTeamComponent } from './steps/step-response-team/step-respo
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
 import { inject } from '@angular/core';
-import { CreateProjectRequest, Project } from '../../../../../../core/models/domain.models';
+import { CreateProjectRequest, Project, UpdateProjectRequest } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
   EvaluationAxis, 
@@ -87,22 +87,18 @@ export class ProjectWizardComponent {
 
   loadInitialData(project: Project) {
     // Map Project to IdentificationData
+    const org = project.organizationData;
+    
     this.identificationData.set({
-      // The Project interface seems to have diverged from the Wizard data.
-      // Assuming 'code' is not name.
-      // Let's look at AdminDataService mock creation:
-      // name: data.projectName -> not in Project interface
-      // organization: { name... } -> Project has organization: string
-      
-      // For now, I'll do a best effort mapping or leave empty if fields are missing
-      // Real app would fetch full details
-      projectName: 'Proyecto ' + project.code, 
+      projectName: project.code.startsWith('PROJ-') ? 'Proyecto ' + project.code : project.code, 
       department: project.state,
       municipality: project.municipality,
-      organizationName: project.organization,
-      organizationDescription: '', // Missing
-      organizationIdentifier: '', // Missing
-      organizationAddress: '', // Missing
+      organizationName: org?.name || project.organization,
+      organizationType: org?.type || 'COMPANY',
+      organizationIdentifier: org?.identifier || '',
+      organizationEmail: org?.email || '',
+      organizationDescription: org?.description || '',
+      organizationAddress: org?.address || '',
       startDate: project.startDate || '',
       endDate: project.endDate || '',
       submissionDeadline: project.submissionDeadline || ''
@@ -148,10 +144,69 @@ export class ProjectWizardComponent {
 
   nextStep() {
     if (this.currentStep() < this.steps().length && this.isCurrentStepValid()) {
-      this.currentStep.update(s => s + 1);
+      if (this.currentStep() === 1) {
+        this.saveStep1AndProceed();
+      } else {
+        this.currentStep.update(s => s + 1);
+      }
     }
   }
 
+  saveStep1AndProceed() {
+    const data = this.identificationData();
+    if (!data) return;
+
+    // Build Request
+    const createRequest: CreateProjectRequest = {
+      name: data.projectName,
+      department: data.department,
+      municipality: data.municipality,
+      organization: {
+        name: data.organizationName,
+        type: data.organizationType,
+        identifier: data.organizationIdentifier,
+        email: data.organizationEmail,
+        description: data.organizationDescription,
+        address: data.organizationAddress,
+        municipality: data.municipality,
+        region: data.department
+      },
+      dates: {
+        start: data.startDate,
+        end: data.endDate,
+        submissionDeadline: data.submissionDeadline
+      },
+      responseTeam: []
+    };
+
+    if (this.initialData) {
+      // Already exists -> Update (Step 1 fields)
+      const updateRequest: UpdateProjectRequest = {
+        id: this.initialData.id,
+        name: createRequest.name,
+        dates: createRequest.dates
+      };
+
+      this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
+        next: (project) => {
+          this.initialData = project; // Refresh data
+          this.alertService.success('Datos actualizados');
+          this.currentStep.update(s => s + 1);
+        },
+        error: () => this.alertService.error('Error al actualizar el proyecto')
+      });
+    } else {
+      // New Project -> Create
+      this.adminService.createProject(createRequest).subscribe({
+        next: (project) => {
+          this.initialData = project; // Set initialData so next steps are Updates
+          this.alertService.success('Proyecto inicializado');
+          this.currentStep.update(s => s + 1);
+        },
+        error: () => this.alertService.error('Error al crear el proyecto')
+      });
+    }
+  }
 
   prevStep() {
     if (this.currentStep() > 1) {
@@ -164,58 +219,69 @@ export class ProjectWizardComponent {
       const data = this.identificationData();
       if (!data) return;
 
-      const request: CreateProjectRequest = {
-        name: data.projectName,
-        department: data.department,
-        municipality: data.municipality,
-        organization: {
-          name: data.organizationName,
-          description: data.organizationDescription,
-          identifier: data.organizationIdentifier,
-          address: data.organizationAddress
-        },
-        dates: {
-          start: data.startDate,
-          end: data.endDate,
-          submissionDeadline: data.submissionDeadline
-        },
-        responseTeam: this.responseTeam().map(m => ({
-          userId: m.userId,
-          userName: m.userName,
-          userEmail: m.userEmail,
-          documentType: m.documentType,
-          documentNumber: m.documentNumber,
-          phoneNumber: m.phoneNumber,
-          status: m.status
-        })),
-        activeAxes: this.activeAxes().map(a => a.id),
-        technicalTable: this.technicalTableAssignments().map(a => ({
-          axisId: a.axisId,
-          advisorId: a.advisorId
-        }))
-      };
-
       if (this.initialData) {
-        this.adminService.updateProject(this.initialData.id, request).subscribe({
+        // Edit Mode or Admin Finish -> Use UpdateProjectRequest
+        const updateRequest: UpdateProjectRequest = {
+          id: this.initialData.id,
+          name: data.projectName,
+          dates: {
+            start: data.startDate,
+            end: data.endDate,
+            submissionDeadline: data.submissionDeadline
+          },
+          activeAxes: this.activeAxes().map(a => a.id),
+          technicalTable: this.technicalTableAssignments().map(a => ({
+            axisId: a.axisId,
+            advisorId: a.advisorId
+          })),
+          responseTeam: this.responseTeam().map(m => ({
+            userId: m.userId,
+            userName: m.userName,
+            userEmail: m.userEmail,
+            documentType: m.documentType,
+            documentNumber: m.documentNumber,
+            phoneNumber: m.phoneNumber,
+            status: m.status
+          }))
+        };
+
+        this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
           next: () => {
-            this.alertService.success('Proyecto actualizado exitosamente');
+            this.alertService.success('Proyecto finalizado exitosamente');
             this.completed.emit();
           },
-          error: (err) => {
-            console.error(err);
-            this.alertService.error('Error al actualizar el proyecto');
-          }
+          error: () => this.alertService.error('Error al finalizar el proyecto')
         });
       } else {
-        this.adminService.createProject(request).subscribe({
-          next: () => {
-            this.alertService.success('Proyecto registrado exitosamente');
+        // Create Mode (Consultant Step 1 Finish only)
+        const createRequest: CreateProjectRequest = {
+          name: data.projectName,
+          department: data.department,
+          municipality: data.municipality,
+          organization: {
+            name: data.organizationName,
+            type: data.organizationType,
+            identifier: data.organizationIdentifier,
+            email: data.organizationEmail,
+            description: data.organizationDescription,
+            address: data.organizationAddress,
+            municipality: data.municipality,
+            region: data.department
+          },
+          dates: {
+            start: data.startDate,
+            end: data.endDate,
+            submissionDeadline: data.submissionDeadline
+          },
+          responseTeam: []
+        };
+
+        this.adminService.createProject(createRequest).subscribe({
+          next: (project) => {
+            this.alertService.success('Proyecto creado exitosamente');
             this.completed.emit();
           },
-          error: (err) => {
-            console.error(err);
-            this.alertService.error('Error al registrar el proyecto');
-          }
+          error: () => this.alertService.error('Error al crear el proyecto')
         });
       }
     }

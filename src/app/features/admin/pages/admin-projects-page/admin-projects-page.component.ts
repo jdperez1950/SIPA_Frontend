@@ -65,14 +65,19 @@ export class AdminProjectsPageComponent implements OnInit {
       this.searchQuery(),
       this.selectedStatus()
     ).subscribe({
-      next: (response) => {
-        this.projects.set(response.data);
-        this.totalItems.set(response.meta.totalItems);
+      next: (response: any) => {
+        // Handle various response shapes (Paginated vs Array vs Empty)
+        const projects = Array.isArray(response) ? response : (response?.data || []);
+        const total = response?.meta?.totalItems || projects.length;
+        
+        this.projects.set(projects);
+        this.totalItems.set(total);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error loading projects', err);
         this.isLoading.set(false);
+        this.projects.set([]); // Ensure empty state on error
       }
     });
   }

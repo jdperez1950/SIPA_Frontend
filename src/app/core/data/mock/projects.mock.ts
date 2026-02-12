@@ -53,5 +53,30 @@ export const PROJECTS_MOCK: Project[] = [
     status: 'ACTIVE',
     viabilityStatus: ViabilityScenario.PRE_ENABLED,
     progress: { technical: 1, legal: 0, financial: 0, social: 0 }
+  },
+  {
+    id: '6',
+    code: 'PRJ-2024-006',
+    organization: 'Fundación Nuevos Horizontes',
+    municipality: 'Soacha',
+    state: 'Cundinamarca',
+    status: 'ACTIVE',
+    viabilityStatus: ViabilityScenario.PRE_ENABLED,
+    // Sin asesor asignado aún
+    progress: { technical: 0, legal: 0, financial: 0, social: 0 },
+    startDate: '2024-03-01',
+    submissionDeadline: '2024-04-15',
+    organizationData: {
+      id: 'org-6',
+      name: 'Fundación Nuevos Horizontes',
+      type: 'COMPANY',
+      identifier: '900.123.456-7',
+      email: 'contacto@nuevoshorizontes.org',
+      status: 'ACTIVE',
+      municipality: 'Soacha',
+      region: 'Cundinamarca',
+      description: 'Fundación dedicada al desarrollo social sostenible.',
+      address: 'Calle 10 # 5-20'
+    }
   }
 ];

@@ -14,8 +14,10 @@ export interface IdentificationData {
   municipality: string;
   // organizationId: string; // Removed for V2
   organizationName: string;
-  organizationDescription: string;
+  organizationType: 'COMPANY' | 'PERSON';
   organizationIdentifier: string;
+  organizationEmail: string;
+  organizationDescription: string;
   organizationAddress: string;
   startDate: string;
   endDate: string;
