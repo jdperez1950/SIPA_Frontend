@@ -87,7 +87,6 @@ export class AdminDataService {
     const registerData: RegisterRequest = {
       name: dto.name,
       email: dto.email,
-      password: 'Password123!', // Default password for new users created by Admin
       role: dto.role
     };
 
