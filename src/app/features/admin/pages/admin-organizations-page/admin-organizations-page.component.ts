@@ -6,12 +6,13 @@ import { AdminDataService } from '../../services/admin-data.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { Organization, CreateOrganizationDTO } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { AdminOrganizationCreateModalComponent } from './components/create-organization-modal/create-organization-modal.component';
 
 @Component({
   selector: 'app-admin-organizations-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, AdminOrganizationCreateModalComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, AdminOrganizationCreateModalComponent, LoadingComponent],
   templateUrl: './admin-organizations-page.component.html',
   styles: []
 })

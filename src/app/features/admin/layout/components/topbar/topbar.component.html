@@ -27,11 +27,11 @@
         aria-label="Menú de usuario"
       >
         <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold" aria-hidden="true">
-          AD
+          {{ userInitials() }}
         </div>
         <div class="hidden md:block text-left">
-          <p class="text-sm font-medium text-gray-700">Admin User</p>
-          <p class="text-xs text-gray-500">Super Admin</p>
+          <p class="text-sm font-medium text-gray-700">{{ authService.currentUser()?.name }}</p>
+          <p class="text-xs text-gray-500">{{ userRoleLabel() }}</p>
         </div>
         <span class="material-symbols-rounded text-gray-400 transition-transform duration-200"
           [class.rotate-180]="isProfileMenuOpen()" aria-hidden="true">
@@ -42,9 +42,9 @@
       <!-- Dropdown Menu -->
       @if (isProfileMenuOpen()) {
         <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1" role="menu">
-          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Perfil</a>
-          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Configuración</a>
-          <div class="border-t border-gray-100 my-1" role="separator"></div>
+          <!-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Perfil</a> -->
+          <!-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Configuración</a> -->
+          <!-- <div class="border-t border-gray-100 my-1" role="separator"></div> -->
           <button (click)="logout()" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:bg-red-50" role="menuitem" type="button">
             <span class="material-symbols-rounded text-lg" aria-hidden="true">logout</span>
             Cerrar Sesión

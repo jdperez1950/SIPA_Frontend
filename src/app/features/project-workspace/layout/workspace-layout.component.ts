@@ -45,6 +45,22 @@ import { ConfirmationService } from '../../../core/services/confirmation.service
       <main id="main-content" class="flex-1 w-full max-w-5xl mx-auto px-6 py-8" tabindex="-1">
         <router-outlet></router-outlet>
       </main>
+
+      <!-- Footer -->
+      <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+        <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500 gap-4">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-gray-700">PAVIS</span>
+            <span class="text-gray-300">|</span>
+            <span>&copy; {{ currentYear }} Todos los derechos reservados.</span>
+          </div>
+          <div class="flex gap-6">
+            <a href="#" class="hover:text-blue-600 transition-colors">Términos</a>
+            <a href="#" class="hover:text-blue-600 transition-colors">Privacidad</a>
+            <a href="#" class="hover:text-blue-600 transition-colors">Soporte</a>
+          </div>
+        </div>
+      </footer>
     </div>
   `
 })
@@ -52,6 +68,8 @@ export class WorkspaceLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
+  
+  currentYear = new Date().getFullYear();
 
   logout() {
     this.confirmationService.confirm({

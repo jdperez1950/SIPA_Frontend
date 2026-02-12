@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminLayoutService } from '../../../services/admin-layout.service';
 import { AuthService } from '../../../../../core/auth/services/auth.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { Router } from '@angular/router';
+import { USER_ROLES_CONFIG } from '../../../../../core/models/domain.models';
 
 @Component({
   selector: 'app-topbar',
@@ -19,6 +20,26 @@ export class TopbarComponent {
   router = inject(Router);
   
   isProfileMenuOpen = signal(false);
+
+  userInitials = computed(() => {
+    const user = this.authService.currentUser();
+    if (!user || !user.name) return 'U';
+    
+    return user.name
+      .split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  });
+
+  userRoleLabel = computed(() => {
+    const user = this.authService.currentUser();
+    if (!user) return '';
+    
+    const roleConfig = USER_ROLES_CONFIG.find(r => r.value === user.role);
+    return roleConfig ? roleConfig.label : user.role;
+  });
 
   toggleProfileMenu() {
     this.isProfileMenuOpen.update(v => !v);
