@@ -117,19 +117,84 @@ export interface ProjectProgress {
 export interface Project {
   id: string;
   code: string;
-  organization: string;
+  name?: string; // Project Name (e.g., "vivienda el santander")
+  organization: string | any; // Supports string (legacy/mock) or object (API)
+  organizationName?: string; // API Organization Name
   municipality: string;
   state: string;
   status: ProjectStatus;
   viabilityStatus: ViabilityScenario;
   advisor?: ProjectAdvisor;
   progress: ProjectProgress;
+  organizationData?: Organization; // Full organization details (Detail View)
   startDate?: string;
   endDate?: string;
   submissionDeadline?: string;
-  correctionDeadline?: string; // New field for correction period
+  correctionDeadline?: string;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export type OrganizationType = 'COMPANY' | 'PERSON';
+
+export interface OrganizationRequest {
+  name: string;
+  type: OrganizationType;
+  identifier: string;
+  email: string;
+  municipality: string;
+  region: string;
+  description?: string;
+  address?: string;
+}
+
+export interface DatesRequest {
+  start: string;
+  end: string;
+  submissionDeadline: string;
+}
+
+export interface ProjectResponseTeamMember {
+  userId?: string;
+  userName: string;
+  userEmail: string;
+  documentType?: string; // Made optional to match API flexibility
+  documentNumber: string;
+  phoneNumber?: string; // Made optional
+  status?: string;
+}
+
+export interface CreateProjectRequest {
+  name?: string;
+  organization: OrganizationRequest;
+  department: string;
+  municipality: string;
+  dates: DatesRequest;
+  responseTeam?: ProjectResponseTeamMember[];
+}
+
+export interface TechnicalTableMember {
+  axisId: string;
+  advisorId: string;
+}
+
+export interface UpdateProjectRequest {
+  id: string;
+  name?: string;
+  status?: ProjectStatus;
+  viabilityStatus?: ViabilityScenario;
+  advisorId?: string;
+  activeAxes?: string[];
+  technicalTable?: TechnicalTableMember[];
+  responseTeam?: ProjectResponseTeamMember[];
+  dates?: DatesRequest;
+}
+
+// Deprecated or Legacy DTOs (kept for compatibility if needed, but prefer Requests above)
 export interface CreateProjectDTO {
   organization: string;
   municipality: string;
@@ -142,58 +207,10 @@ export interface CreateProjectDTO {
 }
 
 // --- New V2 Project Creation Models ---
+// (Replaced by Requests above)
 
-export interface ProjectOrganizationData {
-  name: string;
-  description: string;
-  identifier: string;
-  address: string;
-}
-
-export interface ProjectResponseTeamMember {
-  userId?: string;
-  userName: string;
-  userEmail: string;
-  documentType: string;
-  documentNumber: string;
-  phoneNumber: string;
-  status: string;
-}
-
-export interface ProjectTechnicalAssignment {
-  axisId: string;
-  advisorId: string;
-}
-
-export interface CreateProjectRequest {
-  // Identification
-  name: string;
-  department: string;
-  municipality: string;
-  organization: ProjectOrganizationData;
-  dates: {
-    start: string;
-    end: string;
-    submissionDeadline: string;
-  };
-  
-  // Response Team
-  responseTeam: ProjectResponseTeamMember[];
-  
-  // Evaluation
-  activeAxes: string[]; // IDs of active axes
-  
-  // Technical Table
-  technicalTable: ProjectTechnicalAssignment[];
-}
-
-export interface UpdateProjectDTO extends Partial<CreateProjectDTO> {
-  id: string;
-  advisorId?: string;
-}
 
 // Organization Models
-export type OrganizationType = 'COMPANY' | 'PERSON';
 export type OrganizationStatus = 'ACTIVE' | 'INACTIVE';
 
 export interface Organization {
@@ -206,6 +223,8 @@ export interface Organization {
   contactName?: string;
   municipality: string;
   region: string;
+  description?: string;
+  address?: string;
   userId?: string; // Linked user account
 }
 

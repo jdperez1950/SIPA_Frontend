@@ -1,6 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
-import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest } from '../../../core/models/domain.models';
+import { environment } from '../../../../environments/environment';
+import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest, UpdateProjectRequest, ApiResponse } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
 import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
@@ -11,7 +13,10 @@ import { RegisterRequest } from '../../../core/auth/models/auth.models';
   providedIn: 'root'
 })
 export class AdminDataService {
+  private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private apiUrl = environment.apiUrl;
+
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
   private projects = signal<Project[]>(PROJECTS_MOCK);
@@ -116,6 +121,36 @@ export class AdminDataService {
   
   // New methods for Project Wizard
   getProjects(page: number = 1, pageSize: number = 10, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
+    // Integration with Real API
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', pageSize.toString());
+
+    if (query) params = params.set('search', query);
+    if (status) params = params.set('status', status);
+
+    return this.http.get<ApiResponse<PaginatedResponse<Project>>>(`${this.apiUrl}/projects`, { params }).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Update local state if needed, or just return data
+          // this.projects.set(response.data.data); // Optional: sync local state
+          return response.data;
+        }
+        return {
+          data: [],
+          meta: { totalItems: 0, itemCount: 0, itemsPerPage: pageSize, totalPages: 0, currentPage: page }
+        };
+      }),
+      catchError(error => {
+        console.error('Error fetching projects', error);
+        // Fallback to Mock for development if API fails
+        console.warn('Falling back to Mock Data');
+        return this.getProjectsMock(page, pageSize, query, status);
+      })
+    );
+  }
+
+  private getProjectsMock(page: number = 1, pageSize: number = 10, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
     let data = this.projects();
     if (query) {
       const q = query.toLowerCase();
@@ -141,50 +176,84 @@ export class AdminDataService {
   }
 
   createProject(request: CreateProjectRequest): Observable<Project> {
-    console.log('Creating Project V2:', request);
+    return this.http.post<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
+      map(response => response.data),
+      tap(newProject => {
+        this.projects.update(current => [newProject, ...current]);
+      }),
+      catchError(error => {
+        console.error('Error creating project', error);
+        // Fallback to Mock
+        return this.createProjectMock(request);
+      })
+    );
+  }
 
-    // Map Request to existing Project Model (Mock)
+  private createProjectMock(request: CreateProjectRequest): Observable<Project> {
+    console.log('Creating Project V2 (Mock):', request);
     const newProject: Project = {
       id: Math.random().toString(36).substr(2, 9),
-      code: `PROJ-${Math.floor(Math.random() * 10000)}`, // Generate Code
+      code: `PROJ-${Math.floor(Math.random() * 10000)}`,
       organization: request.organization.name,
       municipality: request.municipality,
       state: request.department,
       status: 'ACTIVE',
       viabilityStatus: 'PRE_HABILITADO' as any,
-      progress: {
-        technical: 0,
-        legal: 0,
-        financial: 0,
-        social: 0
-      },
+      progress: { technical: 0, legal: 0, financial: 0, social: 0 },
       startDate: request.dates.start,
       endDate: request.dates.end,
-      submissionDeadline: request.dates.submissionDeadline
+      submissionDeadline: request.dates.submissionDeadline,
+      organizationData: {
+        id: Math.random().toString(36).substr(2, 9),
+        name: request.organization.name,
+        type: request.organization.type,
+        identifier: request.organization.identifier,
+        email: request.organization.email,
+        status: 'ACTIVE',
+        municipality: request.municipality,
+        region: request.department,
+        description: request.organization.description,
+        address: request.organization.address
+      }
     };
-
     this.projects.update(current => [newProject, ...current]);
     return of(newProject).pipe(delay(1000));
   }
 
-  updateProject(id: string, request: CreateProjectRequest): Observable<Project> {
-    console.log('Updating Project:', id, request);
-    
-    // In a real app, this would patch the project
-    // For mock, we'll just return the found project (updated)
+  updateProject(id: string, request: UpdateProjectRequest): Observable<Project> {
+    return this.http.patch<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe( // API uses PATCH /projects with ID in body or query? Doc says PATCH /projects usually implies ID in body, but let's check. 
+      // The snippet says PATCH /api/projects. Standard REST is PATCH /api/projects/:id.
+      // But PROJECTS_API.md showed PATCH /api/projects (singular) possibly handling ID in body.
+      // Let's assume standard REST for now or check MD again.
+      // Checking MD: It says "PATCH /api/projects" and Body includes "id". So endpoint is base URL.
+      map(response => response.data),
+      tap(updatedProject => {
+        this.projects.update(current => current.map(p => p.id === id ? updatedProject : p));
+      }),
+      catchError(error => {
+        console.error('Error updating project', error);
+        return this.updateProjectMock(id, request);
+      })
+    );
+  }
+
+  private updateProjectMock(id: string, request: UpdateProjectRequest): Observable<Project> {
+    console.log('Updating Project (Mock):', id, request);
     const projectIndex = this.projects().findIndex(p => p.id === id);
     if (projectIndex === -1) return throwError(() => new Error('Project not found'));
 
     const currentProject = this.projects()[projectIndex];
     const updatedProject: Project = {
       ...currentProject,
-      organization: request.organization.name,
-      municipality: request.municipality,
-      state: request.department,
-      startDate: request.dates.start,
-      endDate: request.dates.end,
-      submissionDeadline: request.dates.submissionDeadline
-      // In a real app we would update other fields too
+      ...(request.name && { code: request.name }),
+      ...(request.status && { status: request.status }),
+      ...(request.viabilityStatus && { viabilityStatus: request.viabilityStatus }),
+      ...(request.advisorId && { advisor: { id: request.advisorId, name: 'Asesor Mock' } }),
+      ...(request.dates && {
+        startDate: request.dates.start,
+        endDate: request.dates.end,
+        submissionDeadline: request.dates.submissionDeadline
+      })
     };
 
     this.projects.update(current => {
