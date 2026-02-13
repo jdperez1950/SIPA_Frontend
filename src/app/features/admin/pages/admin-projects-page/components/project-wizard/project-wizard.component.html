@@ -17,7 +17,8 @@
       ></div>
 
       <!-- Steps -->
-      @for (step of steps(); track step.number) {
+    @for (step of steps(); track step.number) {
+      @if (step.number <= 2) {
         <div class="relative z-10 flex flex-col items-center group cursor-pointer" 
              (click)="goToStep(step.number)">
           <div 
@@ -45,6 +46,7 @@
           </span>
         </div>
       }
+    }
     </div>
   </div>
 
@@ -96,23 +98,26 @@
       Anterior
     </button>
 
-    @if (currentStep() < steps().length) {
+    @if (currentStep() <= 2) {
       <button 
-        (click)="nextStep()" 
+        (click)="nextStep()"
         [disabled]="!isCurrentStepValid()"
-        class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
+        class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors flex items-center gap-2"
       >
-        Siguiente
-        <span class="material-symbols-rounded">arrow_forward</span>
+        {{ currentStep() === 2 ? 'Finalizar y Guardar' : 'Siguiente' }}
+        <span class="material-symbols-rounded">
+          {{ currentStep() === 2 ? 'save' : 'arrow_forward' }}
+        </span>
       </button>
     } @else {
+      <!-- Previous logic for later steps (currently unreachable via UI logic) -->
       <button 
-        (click)="finishWizard()" 
+        (click)="finishWizard()"
         [disabled]="!isCurrentStepValid()"
-        class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
+        class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors flex items-center gap-2"
       >
-        <span class="material-symbols-rounded">check_circle</span>
-        Finalizar {{ mode === 'IDENTIFICATION_ONLY' ? 'Registro' : 'Alta' }}
+        Finalizar
+        <span class="material-symbols-rounded">check</span>
       </button>
     }
   </div>

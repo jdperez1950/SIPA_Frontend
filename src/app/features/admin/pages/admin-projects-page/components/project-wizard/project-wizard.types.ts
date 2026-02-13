@@ -41,6 +41,7 @@ export interface ResponseTeamMember {
   userId?: string; // Optional if new user
   userName: string;
   userEmail: string;
+  roleInProject: string;
   documentType: string;
   documentNumber: string;
   phoneNumber: string;
