@@ -30,6 +30,15 @@ export class StepResponseTeamComponent implements OnInit {
     { value: 'PAS', label: 'Pasaporte' }
   ];
 
+  // Project Roles
+  projectRoles = [
+    { value: 'Líder Técnico', label: 'Líder Técnico' },
+    { value: 'Apoyo Jurídico', label: 'Apoyo Jurídico' },
+    { value: 'Responsable Financiero', label: 'Responsable Financiero' },
+    { value: 'Coordinador Social', label: 'Coordinador Social' },
+    { value: 'Otro', label: 'Otro' }
+  ];
+
   ngOnInit() {
     this.initForm();
   }
@@ -39,6 +48,7 @@ export class StepResponseTeamComponent implements OnInit {
       documentType: ['CC', Validators.required],
       documentNumber: ['', [Validators.required, Validators.minLength(5)]],
       name: ['', [Validators.required, Validators.minLength(3)]],
+      // roleInProject removed from UI, defaulted to 'Otro' in logic
       email: ['', [Validators.required, Validators.email]],
       phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       status: ['ACTIVE', Validators.required]
@@ -92,6 +102,7 @@ export class StepResponseTeamComponent implements OnInit {
     const newMember: ResponseTeamMember = {
       userName: formValue.name,
       userEmail: formValue.email,
+      roleInProject: 'Otro', // Default role to 'Otro' as UI control was removed
       documentType: formValue.documentType,
       documentNumber: formValue.documentNumber,
       phoneNumber: formValue.phoneNumber,

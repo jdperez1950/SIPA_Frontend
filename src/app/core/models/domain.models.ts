@@ -160,11 +160,12 @@ export interface DatesRequest {
 
 export interface ProjectResponseTeamMember {
   userId?: string;
-  userName: string;
-  userEmail: string;
-  documentType?: string; // Made optional to match API flexibility
+  name: string;        // Changed from userName to match Backend
+  email: string;       // Changed from userEmail to match Backend
+  roleInProject: string;
+  documentType?: string;
   documentNumber: string;
-  phoneNumber?: string; // Made optional
+  phone?: string;      // Changed from phoneNumber to match Backend
   status?: string;
 }
 

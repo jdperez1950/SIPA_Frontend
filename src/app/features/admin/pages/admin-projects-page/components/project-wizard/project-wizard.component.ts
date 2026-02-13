@@ -143,9 +143,18 @@ export class ProjectWizardComponent {
   }
 
   nextStep() {
-    if (this.currentStep() < this.steps().length && this.isCurrentStepValid()) {
+    if (this.isCurrentStepValid()) {
       if (this.currentStep() === 1) {
-        this.saveStep1AndProceed();
+        // If it's a new project, we don't save yet, just proceed to Step 2 to collect Team
+        if (!this.initialData) {
+          this.currentStep.update(s => s + 1);
+        } else {
+          // If editing existing project, save Step 1 changes
+          this.saveStep1AndProceed();
+        }
+      } else if (this.currentStep() === 2) {
+        // Finalize (Create or Update)
+        this.finishWizard();
       } else {
         this.currentStep.update(s => s + 1);
       }
@@ -154,58 +163,39 @@ export class ProjectWizardComponent {
 
   saveStep1AndProceed() {
     const data = this.identificationData();
-    if (!data) return;
+    if (!data || !this.initialData) return;
 
-    // Build Request
-    const createRequest: CreateProjectRequest = {
+    // Already exists -> Update (Step 1 fields) but preserve others from Signals
+    const updateRequest: UpdateProjectRequest = {
+      id: this.initialData.id,
       name: data.projectName,
-      department: data.department,
-      municipality: data.municipality,
-      organization: {
-        name: data.organizationName,
-        type: data.organizationType,
-        identifier: data.organizationIdentifier,
-        email: data.organizationEmail,
-        description: data.organizationDescription,
-        address: data.organizationAddress,
-        municipality: data.municipality,
-        region: data.department
-      },
       dates: {
         start: data.startDate,
         end: data.endDate,
         submissionDeadline: data.submissionDeadline
       },
-      responseTeam: []
+      activeAxes: this.activeAxes().map(a => a.id),
+      technicalTable: this.technicalTableAssignments().map(a => ({ axisId: a.axisId, advisorId: a.advisorId })),
+      responseTeam: this.responseTeam().map(m => ({
+        userId: m.userId,
+        name: m.userName,
+        email: m.userEmail,
+        roleInProject: m.roleInProject,
+        documentType: m.documentType,
+        documentNumber: m.documentNumber,
+        phone: m.phoneNumber,
+        status: m.status
+      }))
     };
 
-    if (this.initialData) {
-      // Already exists -> Update (Step 1 fields)
-      const updateRequest: UpdateProjectRequest = {
-        id: this.initialData.id,
-        name: createRequest.name,
-        dates: createRequest.dates
-      };
-
-      this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
-        next: (project) => {
-          this.initialData = project; // Refresh data
-          this.alertService.success('Datos actualizados');
-          this.currentStep.update(s => s + 1);
-        },
-        error: () => this.alertService.error('Error al actualizar el proyecto')
-      });
-    } else {
-      // New Project -> Create
-      this.adminService.createProject(createRequest).subscribe({
-        next: (project) => {
-          this.initialData = project; // Set initialData so next steps are Updates
-          this.alertService.success('Proyecto inicializado');
-          this.currentStep.update(s => s + 1);
-        },
-        error: () => this.alertService.error('Error al crear el proyecto')
-      });
-    }
+    this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
+      next: (project) => {
+        this.initialData = project; 
+        this.alertService.success('Datos actualizados');
+        this.currentStep.update(s => s + 1);
+      },
+      error: () => this.alertService.error('Error al actualizar el proyecto')
+    });
   }
 
   prevStep() {
@@ -220,7 +210,7 @@ export class ProjectWizardComponent {
       if (!data) return;
 
       if (this.initialData) {
-        // Edit Mode or Admin Finish -> Use UpdateProjectRequest
+        // Edit Mode -> Update
         const updateRequest: UpdateProjectRequest = {
           id: this.initialData.id,
           name: data.projectName,
@@ -236,24 +226,25 @@ export class ProjectWizardComponent {
           })),
           responseTeam: this.responseTeam().map(m => ({
             userId: m.userId,
-            userName: m.userName,
-            userEmail: m.userEmail,
+            name: m.userName,
+            email: m.userEmail,
+            roleInProject: m.roleInProject,
             documentType: m.documentType,
             documentNumber: m.documentNumber,
-            phoneNumber: m.phoneNumber,
+            phone: m.phoneNumber,
             status: m.status
           }))
         };
 
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
           next: () => {
-            this.alertService.success('Proyecto finalizado exitosamente');
+            this.alertService.success('Proyecto actualizado exitosamente');
             this.completed.emit();
           },
-          error: () => this.alertService.error('Error al finalizar el proyecto')
+          error: () => this.alertService.error('Error al actualizar el proyecto')
         });
       } else {
-        // Create Mode (Consultant Step 1 Finish only)
+        // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
         const createRequest: CreateProjectRequest = {
           name: data.projectName,
           department: data.department,
@@ -273,7 +264,16 @@ export class ProjectWizardComponent {
             end: data.endDate,
             submissionDeadline: data.submissionDeadline
           },
-          responseTeam: []
+          // Send the collected Response Team immediately!
+          responseTeam: this.responseTeam().map(m => ({
+            name: m.userName,
+            email: m.userEmail,
+            roleInProject: m.roleInProject,
+            documentType: m.documentType,
+            documentNumber: m.documentNumber,
+            phone: m.phoneNumber,
+            status: m.status
+          }))
         };
 
         this.adminService.createProject(createRequest).subscribe({
@@ -326,5 +326,49 @@ export class ProjectWizardComponent {
 
   updateResponseTeam(members: ResponseTeamMember[]) {
     this.responseTeam.set(members);
+    
+    // Auto-save changes immediately when members are updated (added/removed)
+    if (this.initialData) {
+      this.saveResponseTeam();
+    }
+  }
+
+  saveResponseTeam() {
+    const data = this.identificationData();
+    if (!data || !this.initialData) return;
+
+    const updateRequest: UpdateProjectRequest = {
+      id: this.initialData.id,
+      name: data.projectName,
+      dates: {
+        start: data.startDate,
+        end: data.endDate,
+        submissionDeadline: data.submissionDeadline
+      },
+      // Preserve other fields if they exist in state, otherwise map from initialData or empty
+      activeAxes: this.activeAxes().map(a => a.id), 
+      technicalTable: this.technicalTableAssignments().map(a => ({
+        axisId: a.axisId,
+        advisorId: a.advisorId
+      })),
+      responseTeam: this.responseTeam().map(m => ({
+        userId: m.userId,
+        name: m.userName,
+        email: m.userEmail,
+        roleInProject: m.roleInProject,
+        documentType: m.documentType,
+        documentNumber: m.documentNumber,
+        phone: m.phoneNumber,
+        status: m.status
+      }))
+    };
+
+    this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
+      next: (project) => {
+        this.initialData = project; 
+        this.alertService.success('Equipo actualizado correctamente');
+      },
+      error: () => this.alertService.error('Error al actualizar el equipo')
+    });
   }
 }
