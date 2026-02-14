@@ -6,7 +6,7 @@
       "destination": "http://colombiansofture.com:30199/api/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
