@@ -6,7 +6,11 @@
       "destination": "http://colombiansofture.com:30199/api/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*\\.(js|css|png|jpg|svg|ico|json|woff2))$",
+      "destination": "/$1"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
