@@ -2,13 +2,12 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "http://colombiansofture.com:30199/api/$1"
+      "source": "/api/:path*",
+      "destination": "http://colombiansofture.com:30199/api/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
 }
-
