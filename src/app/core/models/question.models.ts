@@ -22,20 +22,36 @@ export interface EvidenceConfig {
   requiresExpirationDate: boolean;
 }
 
+export interface QuestionDocumentRequirement {
+  id: string;
+  name: string;
+  description?: string;
+  required: boolean;
+  multiple: boolean;
+}
+
 export interface QuestionDefinition {
   id: string;
   axisId: string; // 'SOCIAL', 'FINANCIERO', etc.
   order: number;
+  code: string; // New: 'HAB', etc.
   text: string;
+  description?: string; // New: Contexto legal/técnico
+  category?: string; // New: "Viabilidad / Norma urbanística"
+  subcategory?: string; // New: "Uso de vivienda"
   helpText?: string;
   controlType: QuestionControlType;
   options?: QuestionOption[];
   requiresEvidence: boolean;
+  requiredDocuments?: QuestionDocumentRequirement[]; // New: Lista de documentos específicos
   evidenceConfig?: EvidenceConfig;
+  evidenceText?: string; // Deprecated in favor of requiredDocuments, kept for backward compat
+  feedback?: { matchValue: any; text: string }[]; // New: "Según si respuesta, considere"
   dependencies?: QuestionDependency[];
 }
 
 export interface EvidenceUpload {
+  requirementId?: string; // New: ID del requisito específico (opcional para retrocompatibilidad)
   fileUrl: string;
   fileName: string;
   uploadDate: string;
@@ -47,7 +63,8 @@ export type EvaluationStatus = 'PENDING' | 'VALIDATED' | 'RETURNED' | 'IN_PROCES
 export interface QuestionResponse {
   questionId: string;
   value: any;
-  evidence?: EvidenceUpload;
+  observation?: string; // New: Campo "Descripción / Observaciones" del usuario
+  evidence?: EvidenceUpload[]; // Changed: Array de evidencias
   evaluationStatus?: EvaluationStatus;
   evaluatorObservation?: string;
   lastUpdated: string;

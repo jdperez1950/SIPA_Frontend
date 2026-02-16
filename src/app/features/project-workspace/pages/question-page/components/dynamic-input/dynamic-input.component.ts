@@ -76,9 +76,8 @@ export class DynamicInputComponent {
   constructor() {
     effect(() => {
       const val = this.initialValue();
-      if (val !== null && val !== undefined) {
-        this.control.setValue(val, { emitEvent: false });
-      }
+      // Reset control value when question changes or initialValue updates
+      this.control.setValue(val || null, { emitEvent: false });
     });
 
     this.control.valueChanges.subscribe(val => {

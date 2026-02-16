@@ -78,8 +78,24 @@ export class QuestionManagerService {
       newMap.set(response.questionId, response);
       return newMap;
     });
-    // Here we would call the backend API
-    // console.log('Response saved:', response); // REMOVED FOR SECURITY (A02)
+  }
+
+  submitResponse(response: QuestionResponse): void {
+    // This is where we would call the backend API to persist the response
+    // For now, we just log the data as requested
+    console.log('--- ENVIANDO RESPUESTA AL BACKEND ---');
+    console.log('Payload:', {
+      questionId: response.questionId,
+      value: response.value,
+      observation: response.observation,
+      evidenceCount: response.evidence?.length || 0,
+      evidence: response.evidence?.map(e => ({
+        requirementId: e.requirementId,
+        fileName: e.fileName
+      })),
+      timestamp: new Date().toISOString()
+    });
+    console.log('-------------------------------------');
   }
 
   getNextQuestionId(currentId: string): string | null {
