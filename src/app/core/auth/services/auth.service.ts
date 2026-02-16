@@ -58,7 +58,10 @@ export class AuthService {
     clearTimeout(this.logoutTimer);
     if (this.isAuthenticated()) {
       this.logoutTimer = setTimeout(() => {
+        // Force logout first to prevent loops
         this.logout();
+        
+        // Then show alert and redirect
         this.confirmationService.alert({
           title: 'Sesión Expirada',
           message: 'Tu sesión ha sido cerrada por inactividad.',
@@ -77,7 +80,22 @@ export class AuthService {
       
       if (storedUser && token) {
         try {
-          this.#currentUser.set(JSON.parse(storedUser));
+          // Primero seteamos el usuario localmente para no bloquear la UI
+          const parsedUser = JSON.parse(storedUser);
+          this.#currentUser.set(parsedUser);
+
+          // Validamos el token en background
+          this.validateToken().subscribe(isValid => {
+            if (!isValid) {
+              console.warn('Token inválido o expirado al restaurar sesión');
+              this.logout();
+              this.router.navigate(['/auth/login']);
+            } else {
+              // Si es válido, reiniciamos el timer de inactividad
+              this.startInactivityTimer();
+            }
+          });
+
         } catch (e) {
           console.error('Error parsing stored user', e);
           this.logout();
@@ -210,12 +228,14 @@ export class AuthService {
   }
   
   validateToken(): Observable<boolean> {
-     const token = this.getToken();
-     if (!token) return of(false);
-     
-     return this.http.post<ValidateTokenResponse>(`${this.apiUrl}/auth/validate`, { token }).pipe(
-        map(res => res.success && res.data),
-        catchError(() => of(false))
-     );
+    const token = this.getToken();
+    if (!token) return of(false);
+    
+    // Asumimos que el backend tiene un endpoint /auth/validate o similar
+    // Si no existe, usamos /auth/me o cualquier endpoint protegido liviano
+    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/validate`).pipe(
+      map(response => response.success),
+      catchError(() => of(false))
+    );
   }
 }

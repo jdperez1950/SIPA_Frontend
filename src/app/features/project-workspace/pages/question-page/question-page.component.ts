@@ -7,120 +7,194 @@ import { QuestionManagerService } from '../../services/question-manager.service'
 import { QuestionDefinition } from '../../../../core/models/question.models';
 import { DynamicInputComponent } from './components/dynamic-input/dynamic-input.component';
 import { EvidenceUploaderComponent } from '../../components/evidence-uploader/evidence-uploader.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-question-page',
   standalone: true,
-  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent],
+  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, FormsModule],
   template: `
     @if (currentQuestion(); as question) {
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         
-        <!-- Question Header -->
-        <div class="p-8 pb-6">
-          <div class="flex items-center gap-3 mb-4">
-            <span [class]="getAxisColorText(question.axisId)" class="font-bold text-sm uppercase tracking-wider bg-opacity-10 px-3 py-1 rounded-full bg-gray-100">
-              Eje {{ question.axisId }}
-            </span>
-            <span class="text-gray-300 text-sm">|</span>
-            <span class="text-gray-500 text-sm font-medium">Pregunta {{ question.order }}</span>
+        <!-- Header con Eje y Código -->
+        <div class="bg-sky-500 text-white p-6 flex items-start gap-4">
+          <div class="flex-shrink-0 bg-white/20 w-12 h-12 flex items-center justify-center text-xl font-bold rounded">
+            {{ question.order }}
           </div>
-          
-          <div class="flex gap-6 items-start">
-            <div class="flex-shrink-0 mt-1">
-               <div [class]="getAxisBgClass(question.axisId)" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
-                 {{ question.order }}
-               </div>
-            </div>
-            
-            <div class="flex-1">
-              <h2 class="text-xl font-medium text-gray-800 leading-relaxed">
-                {{ question.text }}
-              </h2>
-              @if (question.helpText) {
-                <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800 flex gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-blue-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                  </svg>
-                  <p class="italic">{{ question.helpText }}</p>
-                </div>
-              }
-            </div>
+          <div>
+            <div class="text-sky-100 text-sm font-medium mb-1">Descripción del requisito:</div>
+            <h2 class="text-xl font-medium leading-tight">
+              {{ question.text }}
+            </h2>
           </div>
+          @if (question.code) {
+             <div class="ml-auto flex-shrink-0">
+               <span class="text-3xl font-bold opacity-50">{{ question.code }}</span>
+             </div>
+          }
         </div>
 
-        <!-- Dynamic Input Area -->
-        <div class="px-8 py-6 bg-gray-50 border-y border-gray-100">
-           <div class="max-w-3xl ml-16">
-              <div class="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                <app-dynamic-input 
+        <!-- Grid Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+          
+          <!-- Columna Izquierda: Contexto + Respuesta + Feedback -->
+          <div class="lg:col-span-5 p-6 space-y-8">
+            <!-- Contexto Legal/Técnico -->
+            @if (question.description) {
+              <div class="text-gray-600 text-sm leading-relaxed text-justify">
+                {{ question.description }}
+              </div>
+            }
+
+            <!-- Área de Respuesta -->
+            <div>
+              <div class="text-sky-500 text-sm font-medium mb-2 italic">Responda si cumple con el requisito:</div>
+              <app-dynamic-input 
                   [question]="question"
                   [initialValue]="getCurrentValue(question.id)"
                   (valueChange)="onValueChange(question.id, $event)"
-                ></app-dynamic-input>
-              </div>
-           </div>
-        </div>
-        
-        <!-- Status & Feedback Widget (Based on mockup) -->
-        <div class="px-8 py-6 flex items-center justify-between ml-16 mr-8 border-b border-gray-100">
-           <div class="flex items-center gap-4">
-             <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-md">
-                <div class="w-6 h-6 bg-white rounded-full animate-pulse"></div>
-             </div>
-             <div>
-               <div class="text-3xl font-light text-gray-400">En proceso</div>
-               <div class="text-sm text-gray-500 italic">Conoce el requisito y lo está gestionando</div>
-             </div>
-           </div>
-           
-           <div class="px-6 py-3 bg-gray-200 text-gray-500 rounded-lg font-bold text-lg uppercase tracking-wide cursor-not-allowed">
-             Sin validar
-           </div>
-        </div>
-
-        <!-- Evidence Section -->
-        @if (question.requiresEvidence) {
-          <div class="px-8 py-8 ml-16">
-            <h3 class="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">Evidencia requerida</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-               <div class="md:col-span-5">
-                 <div class="font-medium text-gray-800">Soporte documental</div>
-                 <div class="text-sm text-gray-500 mt-1">Documento o soporte técnico que acredite la respuesta seleccionada.</div>
-               </div>
-               
-               <div class="md:col-span-4 flex flex-col gap-2">
-                 <!-- Evidence Uploader Component -->
-                 <app-evidence-uploader
-                   [config]="question.evidenceConfig"
-                   (upload)="onEvidenceUpload(question.id, $event)"
-                 ></app-evidence-uploader>
-               </div>
-               
-               <div class="md:col-span-3 flex items-center justify-center">
-                 @if (getCurrentValue(question.id)?.evidence) {
-                   <div class="text-green-600 flex items-center gap-2">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                     </svg>
-                     <span class="text-sm font-medium">Cargado</span>
-                   </div>
-                 }
-               </div>
+              ></app-dynamic-input>
+              
+              <!-- Estado Visual de Cumplimiento -->
+              @if (getCurrentValue(question.id) === 'SI') {
+                 <div class="mt-4 p-3 bg-white border border-gray-200 text-center text-gray-500 text-sm rounded">
+                   Cumple con el requisito
+                 </div>
+              }
             </div>
-          </div>
-        }
 
-        <!-- Navigation Buttons -->
+            <!-- Feedback Condicional -->
+            @if (getFeedbackText(question)) {
+              <div>
+                <div class="text-sky-500 text-sm font-medium mb-2 italic">Según si respuesta, considere:</div>
+                <div class="p-4 border border-gray-200 rounded text-gray-600 text-sm bg-gray-50 min-h-[100px]">
+                  {{ getFeedbackText(question) }}
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Columna Central: Clasificación + Evidencias -->
+          <div class="lg:col-span-4 p-6 space-y-8">
+            <!-- Clasificación -->
+            <div>
+              <div class="text-sky-500 text-sm font-medium mb-2 italic">Clasificación del requisito:</div>
+              <div class="border border-gray-200 rounded overflow-hidden">
+                <div class="p-3 border-b border-gray-200 text-gray-700 bg-gray-50">
+                  {{ question.category || 'General' }}
+                </div>
+                <div class="p-3 text-gray-600 bg-white">
+                  {{ question.subcategory || '-' }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Evidencias -->
+            @if (question.requiresEvidence && getCurrentValue(question.id) === 'SI') {
+              <div>
+                <div class="text-sky-500 text-sm font-medium mb-2 italic">Evidencias para adjuntar:</div>
+                <div class="border border-gray-200 rounded p-4 min-h-[200px] max-h-[500px] overflow-y-auto custom-scrollbar">
+                  <div class="space-y-6">
+                  @if (question.requiredDocuments?.length) {
+                    <!-- Lista de Documentos Requeridos -->
+                    @for (req of question.requiredDocuments; track req.id) {
+                      <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                        <div class="flex justify-between items-start mb-2">
+                          <div>
+                            <div class="font-medium text-gray-800 text-sm flex items-center gap-2">
+                              {{ req.name }}
+                              @if (req.required) {
+                                <span class="text-red-500 text-xs" title="Obligatorio">*</span>
+                              }
+                            </div>
+                            @if (req.description) {
+                              <div class="text-xs text-gray-500 mt-1">{{ req.description }}</div>
+                            }
+                          </div>
+                          
+                          <!-- Botón de carga si no hay archivo o si permite múltiples -->
+                          @if (!getEvidenceForRequirement(question.id, req.id).length || req.multiple) {
+                            <app-evidence-uploader
+                              [config]="question.evidenceConfig"
+                              [compact]="true"
+                              (upload)="onEvidenceUpload(question.id, $event, req.id)"
+                            ></app-evidence-uploader>
+                          }
+                        </div>
+
+                        <!-- Lista de archivos cargados para este requisito -->
+                        <div class="space-y-2 mt-3">
+                          @for (file of getEvidenceForRequirement(question.id, req.id); track file.fileName) {
+                            <div class="flex items-center justify-between bg-white p-2 rounded border border-gray-200 shadow-sm">
+                              <div class="flex items-center gap-2 overflow-hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="text-xs text-gray-700 truncate" [title]="file.fileName">{{ file.fileName }}</span>
+                              </div>
+                              <button 
+                                (click)="removeEvidence(question.id, file.fileName)"
+                                class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                title="Eliminar archivo"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <!-- Fallback para comportamiento anterior (sin requisitos específicos) -->
+                    <div class="italic text-gray-400 text-xs mb-4">Adjunte los documentos que soporten su respuesta.</div>
+                    <app-evidence-uploader
+                      [config]="question.evidenceConfig"
+                      (upload)="onEvidenceUpload(question.id, $event)"
+                    ></app-evidence-uploader>
+                    
+                    <!-- Lista general de archivos -->
+                    <div class="space-y-2 mt-4">
+                      @for (file of getCurrentValue(question.id)?.evidence || []; track file.fileName) {
+                         <div class="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded text-xs font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Archivo cargado: {{ file.fileName }}
+                         </div>
+                      }
+                    </div>
+                  }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Columna Derecha: Observaciones -->
+          <div class="lg:col-span-3 p-6">
+             <div class="text-sky-500 text-sm font-medium mb-2 italic">Descripción / Observaciones</div>
+             <textarea 
+               [ngModel]="getObservation(question.id)"
+               (ngModelChange)="onObservationChange(question.id, $event)"
+               [disabled]="!isObservationEnabled(question.id)"
+               class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
+               placeholder="Escriba aquí sus observaciones..."
+             ></textarea>
+          </div>
+        </div>
+
+        <!-- Footer Navegación -->
         <div class="bg-gray-50 px-8 py-4 border-t border-gray-200 flex justify-between">
            <button 
              type="button"
              (click)="prevQuestion(question.id)"
              [disabled]="!questionManager.getPreviousQuestionId(question.id)"
-             class="px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-lg"
+             class="px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
            >
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
              </svg>
              Anterior
@@ -130,24 +204,30 @@ import { EvidenceUploaderComponent } from '../../components/evidence-uploader/ev
              type="button"
              (click)="nextQuestion(question.id)"
              [disabled]="!questionManager.getNextQuestionId(question.id)"
-             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+             class="px-6 py-2 text-sky-600 bg-white border border-sky-600 hover:bg-sky-50 rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
            >
              Siguiente
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
              </svg>
+           </button>
+
+           <button 
+             type="button"
+             (click)="sendAndNext(question.id)"
+             class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+             [disabled]="!canSend(question.id)"
+           >
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+             </svg>
+             Enviar y Siguiente
            </button>
         </div>
       </div>
     } @else {
       <div class="flex flex-col items-center justify-center h-64 text-center">
-        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-           </svg>
-        </div>
-        <h3 class="text-lg font-medium text-gray-900">Pregunta no encontrada</h3>
-        <p class="text-gray-500 mt-2">Seleccione una pregunta del menú superior.</p>
+         <p class="text-gray-500">Seleccione una pregunta.</p>
       </div>
     }
   `
@@ -190,36 +270,96 @@ export class QuestionPageComponent {
      return resp ? resp.value : null;
    }
 
-   getEvaluationStatus(questionId: string) {
-     const resp = this.questionManager.getResponse(questionId);
-     return resp?.evaluationStatus;
-   }
- 
-   onValueChange(questionId: string, value: any) {
+  getEvaluationStatus(questionId: string) {
+    const resp = this.questionManager.getResponse(questionId);
+    return resp?.evaluationStatus;
+  }
+
+  getFeedbackText(question: QuestionDefinition): string | null {
+    if (!question.feedback) return null;
+    const currentValue = this.getCurrentValue(question.id);
+    const match = question.feedback.find(f => f.matchValue === currentValue);
+    return match ? match.text : null;
+  }
+
+  getObservation(questionId: string): string {
+    const resp = this.questionManager.getResponse(questionId);
+    return resp?.observation || '';
+  }
+
+  isObservationEnabled(questionId: string): boolean {
+    // Enable observation only if a response has been selected
+    const val = this.getCurrentValue(questionId);
+    return val !== null && val !== undefined && val !== '';
+  }
+
+  onValueChange(questionId: string, value: any) {
     // Construct partial response
     const existing = this.questionManager.getResponse(questionId);
     this.questionManager.saveResponse({
       questionId,
       value,
       evidence: existing?.evidence,
+      observation: existing?.observation, // Preserve observation
       evaluationStatus: existing?.evaluationStatus || 'PENDING',
       lastUpdated: new Date().toISOString()
     });
   }
 
-  onEvidenceUpload(questionId: string, file: File) {
-    // console.log(`Uploading file for question ${questionId}:`, file.name); // REMOVED FOR SECURITY (A02)
-    // Mock upload logic - would be replaced by actual service call
+  onObservationChange(questionId: string, observation: string) {
     const existing = this.questionManager.getResponse(questionId);
     this.questionManager.saveResponse({
       questionId,
       value: existing?.value,
-      evidence: {
-        fileUrl: 'mock-url/' + file.name,
-        fileName: file.name,
-        uploadDate: new Date().toISOString()
-      },
+      evidence: existing?.evidence,
+      observation: observation,
+      evaluationStatus: existing?.evaluationStatus || 'PENDING',
+      lastUpdated: new Date().toISOString()
+    });
+  }
+
+  onEvidenceUpload(questionId: string, file: File, requirementId?: string) {
+    const existing = this.questionManager.getResponse(questionId);
+    
+    // Create new evidence item
+    const newEvidence = {
+      requirementId: requirementId,
+      fileUrl: 'mock-url/' + file.name,
+      fileName: file.name,
+      uploadDate: new Date().toISOString()
+    };
+
+    // Append to existing evidence array or create new one
+    const currentEvidence = existing?.evidence || [];
+    
+    // If requirementId exists and multiple is false, replace existing
+    // Logic to be refined based on requirement config, but for now simple append
+    
+    this.questionManager.saveResponse({
+      questionId,
+      value: existing?.value,
+      observation: existing?.observation,
+      evidence: [...currentEvidence, newEvidence],
       evaluationStatus: 'PENDING',
+      lastUpdated: new Date().toISOString()
+    });
+  }
+
+  getEvidenceForRequirement(questionId: string, requirementId: string) {
+    const evidence = this.getCurrentValue(questionId)?.evidence || [];
+    // @ts-ignore
+    return evidence.filter(e => e.requirementId === requirementId);
+  }
+
+  removeEvidence(questionId: string, fileName: string) {
+    const existing = this.questionManager.getResponse(questionId);
+    if (!existing || !existing.evidence) return;
+
+    const newEvidence = existing.evidence.filter(e => e.fileName !== fileName);
+
+    this.questionManager.saveResponse({
+      ...existing,
+      evidence: newEvidence,
       lastUpdated: new Date().toISOString()
     });
   }
@@ -235,6 +375,21 @@ export class QuestionPageComponent {
     const prevId = this.questionManager.getPreviousQuestionId(currentId);
     if (prevId) {
       this.router.navigate(['../../question', prevId], { relativeTo: this.route });
+    }
+  }
+
+  canSend(questionId: string): boolean {
+    const response = this.questionManager.getResponse(questionId);
+    // Basic validation: needs a value.
+    // If evidence is required, logic could be stricter here.
+    return !!response && response.value !== null && response.value !== undefined && response.value !== '';
+  }
+
+  sendAndNext(questionId: string) {
+    const response = this.questionManager.getResponse(questionId);
+    if (response) {
+      this.questionManager.submitResponse(response);
+      this.nextQuestion(questionId);
     }
   }
 }
