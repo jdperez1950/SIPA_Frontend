@@ -1,7 +1,7 @@
 <form [formGroup]="form" class="space-y-6 max-w-3xl mx-auto">
   <!-- Project Name -->
   <div class="space-y-2">
-    <label for="projectName" class="block text-sm font-medium text-gray-700">Nombre del Proyecto</label>
+    <label for="projectName" class="block text-sm font-medium text-gray-700">Nombre del Proyecto <span class="text-red-500">*</span></label>
     <div class="relative">
       <input 
         type="text" 
@@ -23,7 +23,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- Department -->
     <div class="space-y-2">
-      <label for="department" class="block text-sm font-medium text-gray-700">Departamento</label>
+      <label for="department" class="block text-sm font-medium text-gray-700">Departamento <span class="text-red-500">*</span></label>
       <select 
         id="department"
         formControlName="department"
@@ -39,7 +39,7 @@
 
     <!-- Municipality -->
     <div class="space-y-2">
-      <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio</label>
+      <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
       <select 
         id="municipality"
         formControlName="municipality"
@@ -59,7 +59,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Start Date -->
     <div class="space-y-2">
-      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio <span class="text-red-500">*</span></label>
       <input 
         type="date" 
         id="startDate"
@@ -70,7 +70,7 @@
 
     <!-- Submission Deadline -->
     <div class="space-y-2">
-      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas</label>
+      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas <span class="text-red-500">*</span></label>
       <input 
         type="date" 
         id="submissionDeadline"
@@ -85,7 +85,7 @@
 
     <!-- End Date -->
     <div class="space-y-2">
-      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización</label>
+      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización <span class="text-red-500">*</span></label>
       <input 
         type="date" 
         id="endDate"
@@ -109,19 +109,28 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <!-- Organization Name -->
       <div class="space-y-2">
-        <label for="organizationName" class="block text-sm font-medium text-gray-700">Nombre de la Organización</label>
-        <input 
-          type="text" 
-          id="organizationName"
-          formControlName="organizationName"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Ej. Alcaldía de..."
-        >
+        <label for="organizationName" class="block text-sm font-medium text-gray-700">Nombre de la Organización <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="organizationName"
+            formControlName="organizationName"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Ej. Alcaldía de..."
+            [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationName')?.invalid && form.get('organizationName')?.touched}"
+          >
+          @if (form.get('organizationName')?.invalid && form.get('organizationName')?.touched) {
+            <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+          }
+        </div>
+        @if (form.get('organizationName')?.errors?.['minlength']) {
+          <p class="text-xs text-red-500 mt-1">El nombre debe tener al menos 3 caracteres.</p>
+        }
       </div>
 
       <!-- Organization Type -->
       <div class="space-y-2">
-        <label for="organizationType" class="block text-sm font-medium text-gray-700">Tipo de Organización</label>
+        <label for="organizationType" class="block text-sm font-medium text-gray-700">Tipo de Organización <span class="text-red-500">*</span></label>
         <select 
           id="organizationType"
           formControlName="organizationType"
@@ -134,32 +143,47 @@
 
       <!-- Organization Identifier -->
       <div class="space-y-2">
-        <label for="organizationIdentifier" class="block text-sm font-medium text-gray-700">Identificación (NIT/Código)</label>
-        <input 
-          type="text" 
-          id="organizationIdentifier"
-          formControlName="organizationIdentifier"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Ej. 899.999.000-1"
-        >
+        <label for="organizationIdentifier" class="block text-sm font-medium text-gray-700">Identificación (NIT/Código) <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="organizationIdentifier"
+            formControlName="organizationIdentifier"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Ej. 899.999.000-1"
+            [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched}"
+          >
+          @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
+            <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+          }
+        </div>
       </div>
 
       <!-- Organization Email -->
       <div class="space-y-2">
-        <label for="organizationEmail" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-        <input 
-          type="email" 
-          id="organizationEmail"
-          formControlName="organizationEmail"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="contacto@organizacion.com"
-        >
+        <label for="organizationEmail" class="block text-sm font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <input 
+            type="email" 
+            id="organizationEmail"
+            formControlName="organizationEmail"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="contacto@organizacion.com"
+            [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationEmail')?.invalid && form.get('organizationEmail')?.touched}"
+          >
+          @if (form.get('organizationEmail')?.invalid && form.get('organizationEmail')?.touched) {
+            <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+          }
+        </div>
+        @if (form.get('organizationEmail')?.errors?.['email']) {
+          <p class="text-xs text-red-500 mt-1">Ingrese un correo electrónico válido.</p>
+        }
       </div>
     </div>
 
     <!-- Organization Address -->
     <div class="space-y-2 mb-6">
-      <label for="organizationAddress" class="block text-sm font-medium text-gray-700">Dirección</label>
+      <label for="organizationAddress" class="block text-sm font-medium text-gray-700">Dirección <span class="text-red-500">*</span></label>
       <input 
         type="text" 
         id="organizationAddress"

@@ -63,7 +63,7 @@ export class StepIdentificationComponent implements OnInit {
       organizationType: [this.initialData?.organizationType || 'COMPANY', Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', Validators.required],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
-      organizationDescription: [this.initialData?.organizationDescription || '', [Validators.required, Validators.minLength(10)]],
+      organizationDescription: [this.initialData?.organizationDescription || '', [Validators.minLength(10)]],
       organizationAddress: [this.initialData?.organizationAddress || '', Validators.required],
       startDate: [this.initialData?.startDate || '', Validators.required],
       endDate: [this.initialData?.endDate || '', Validators.required],
