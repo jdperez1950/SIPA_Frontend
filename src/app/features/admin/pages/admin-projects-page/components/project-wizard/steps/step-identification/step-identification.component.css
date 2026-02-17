@@ -1,0 +1,53 @@
+/* Custom styles for ng-select to match input fields */
+:host ::ng-deep .ng-select .ng-select-container {
+  min-height: 48px; /* Matches py-3 + border */
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.5rem; /* rounded-lg */
+  padding-left: 0.5rem;
+  background-color: #fff;
+  transition: all 0.15s ease-in-out;
+}
+
+:host ::ng-deep .ng-select.ng-select-focused .ng-select-container {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* ring-2 ring-blue-500 */
+}
+
+:host ::ng-deep .ng-select.is-invalid .ng-select-container {
+  border-color: #fca5a5; /* red-300 */
+}
+
+:host ::ng-deep .ng-select.is-invalid.ng-select-focused .ng-select-container {
+  box-shadow: 0 0 0 2px #fecaca; /* ring-red-200 */
+}
+
+:host ::ng-deep .ng-select .ng-placeholder {
+  color: #9ca3af; /* text-gray-400 placeholder color */
+  top: 14px; /* Center vertically */
+}
+
+:host ::ng-deep .ng-select .ng-value-container {
+  padding-top: 0;
+}
+
+/* Match the exact padding and appearance of input fields */
+:host ::ng-deep .ng-select .ng-select-container .ng-value-container {
+  padding: 0.75rem 1rem; /* px-4 py-3 */
+}
+
+:host ::ng-deep .ng-select .ng-select-container .ng-value-container .ng-input > input {
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Ensure the dropdown arrow matches the style */
+:host ::ng-deep .ng-select .ng-arrow-wrapper {
+  padding-right: 0.5rem;
+}
+
+/* Style for selected items to match input text */
+:host ::ng-deep .ng-select .ng-value {
+  font-size: inherit;
+  line-height: inherit;
+}

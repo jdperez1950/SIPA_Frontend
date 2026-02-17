@@ -1,0 +1,52 @@
+<div class="custom-dropdown-container" #dropdownTrigger>
+  <div 
+    class="custom-dropdown-trigger"
+    [class.is-open]="isOpen"
+    [class.is-disabled]="disabled"
+    [class.is-invalid]="invalid"
+    (click)="toggleDropdown()"
+  >
+    <span class="custom-dropdown-value" *ngIf="displayValue">
+      {{ displayValue }}
+    </span>
+    <span class="custom-dropdown-placeholder" *ngIf="!displayValue">
+      {{ placeholder }}
+    </span>
+    <span class="custom-dropdown-clear" *ngIf="displayValue && !disabled" (click)="clearSelection($event)">
+      ×
+    </span>
+    <span class="custom-dropdown-arrow" *ngIf="!displayValue || disabled">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </div>
+
+  <div class="custom-dropdown-menu" *ngIf="isOpen && !disabled">
+    <div class="custom-dropdown-search" *ngIf="enableSearch">
+      <input
+        #searchInput
+        type="text"
+        class="custom-dropdown-search-input"
+        [placeholder]="'Buscar...'"
+        [(ngModel)]="searchQuery"
+        (keydown.escape)="isOpen = false"
+      />
+    </div>
+
+    <div class="custom-dropdown-items" *ngIf="filteredItems.length > 0">
+      <div
+        class="custom-dropdown-item"
+        *ngFor="let item of filteredItems"
+        [class.is-selected]="selectedItem?.id === item.id"
+        (click)="selectItem(item)"
+      >
+        {{ item.nombre }}
+      </div>
+    </div>
+
+    <div class="custom-dropdown-no-results" *ngIf="filteredItems.length === 0">
+      No se encontraron resultados
+    </div>
+  </div>
+</div>

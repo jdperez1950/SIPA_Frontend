@@ -24,37 +24,36 @@
     <!-- Department -->
     <div class="space-y-2">
       <label for="department" class="block text-sm font-medium text-gray-700">Departamento <span class="text-red-500">*</span></label>
-      <div class="relative">
-        <input 
-          type="text" 
-          id="department"
-          formControlName="department"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          placeholder="Ej. Cundinamarca"
-          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('department')?.invalid && form.get('department')?.touched}"
-        >
-        @if (form.get('department')?.invalid && form.get('department')?.touched) {
-          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
-        }
-      </div>
+      <app-custom-dropdown
+        id="department"
+        [items]="divipolaService.departamentos()"
+        placeholder="Seleccione..."
+        [invalid]="!!(form.get('department')?.invalid && form.get('department')?.touched)"
+        [selectedValue]="form.get('department')?.value || ''"
+        [enableSearch]="false"
+        (valueChange)="onDepartmentChange($event)"
+      ></app-custom-dropdown>
+      @if (form.get('department')?.invalid && form.get('department')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Este campo es requerido.</p>
+      }
     </div>
 
     <!-- Municipality -->
     <div class="space-y-2">
       <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
-      <div class="relative">
-        <input 
-          type="text" 
-          id="municipality"
-          formControlName="municipality"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          placeholder="Ej. Bogotá"
-          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('municipality')?.invalid && form.get('municipality')?.touched}"
-        >
-        @if (form.get('municipality')?.invalid && form.get('municipality')?.touched) {
-          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
-        }
-      </div>
+      <app-custom-dropdown
+        id="municipality"
+        [items]="municipios"
+        placeholder="Seleccione..."
+        [disabled]="!form.get('department')?.value"
+        [invalid]="!!(form.get('municipality')?.invalid && form.get('municipality')?.touched)"
+        [selectedValue]="form.get('municipality')?.value || ''"
+        [enableSearch]="true"
+        (valueChange)="onMunicipalityChange($event)"
+      ></app-custom-dropdown>
+      @if (form.get('municipality')?.invalid && form.get('municipality')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Este campo es requerido.</p>
+      }
     </div>
   </div>
 

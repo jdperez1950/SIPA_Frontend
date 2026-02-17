@@ -58,6 +58,20 @@ export interface EvidenceUpload {
   expirationDate?: string;
 }
 
+export interface AssistanceLogEntry {
+  id: string;
+  date: string;
+  advisorName: string;
+  advisorMessage: string;
+  priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
+  validityPeriod: string; // e.g. "Pv" (Periodo Vigente)
+  response?: {
+    responderName: string;
+    responseDate: string;
+    message: string;
+  };
+}
+
 export type EvaluationStatus = 'PENDING' | 'VALIDATED' | 'RETURNED' | 'IN_PROCESS';
 
 export interface QuestionResponse {
@@ -67,5 +81,6 @@ export interface QuestionResponse {
   evidence?: EvidenceUpload[]; // Changed: Array de evidencias
   evaluationStatus?: EvaluationStatus;
   evaluatorObservation?: string;
+  assistanceLog?: AssistanceLogEntry[]; // New: Bitácora de asistencia
   lastUpdated: string;
 }

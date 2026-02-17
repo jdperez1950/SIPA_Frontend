@@ -4,246 +4,79 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 import { QuestionManagerService } from '../../services/question-manager.service';
-import { QuestionDefinition } from '../../../../core/models/question.models';
+import { AssistanceLogEntry, QuestionDefinition } from '../../../../core/models/question.models';
 import { DynamicInputComponent } from './components/dynamic-input/dynamic-input.component';
 import { EvidenceUploaderComponent } from '../../components/evidence-uploader/evidence-uploader.component';
 import { FormsModule } from '@angular/forms';
+import { TechnicalAssistanceLogComponent } from '../../components/technical-assistance-log/technical-assistance-log.component';
 
 @Component({
   selector: 'app-question-page',
   standalone: true,
-  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, FormsModule],
-  template: `
-    @if (currentQuestion(); as question) {
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        
-        <!-- Header con Eje y Código -->
-        <div class="bg-sky-500 text-white p-6 flex items-start gap-4">
-          <div class="flex-shrink-0 bg-white/20 w-12 h-12 flex items-center justify-center text-xl font-bold rounded">
-            {{ question.order }}
-          </div>
-          <div>
-            <div class="text-sky-100 text-sm font-medium mb-1">Descripción del requisito:</div>
-            <h2 class="text-xl font-medium leading-tight">
-              {{ question.text }}
-            </h2>
-          </div>
-          @if (question.code) {
-             <div class="ml-auto flex-shrink-0">
-               <span class="text-3xl font-bold opacity-50">{{ question.code }}</span>
-             </div>
-          }
-        </div>
-
-        <!-- Grid Principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
-          
-          <!-- Columna Izquierda: Contexto + Respuesta + Feedback -->
-          <div class="lg:col-span-5 p-6 space-y-8">
-            <!-- Contexto Legal/Técnico -->
-            @if (question.description) {
-              <div class="text-gray-600 text-sm leading-relaxed text-justify">
-                {{ question.description }}
-              </div>
-            }
-
-            <!-- Área de Respuesta -->
-            <div>
-              <div class="text-sky-500 text-sm font-medium mb-2 italic">Responda si cumple con el requisito:</div>
-              <app-dynamic-input 
-                  [question]="question"
-                  [initialValue]="getCurrentValue(question.id)"
-                  (valueChange)="onValueChange(question.id, $event)"
-              ></app-dynamic-input>
-              
-              <!-- Estado Visual de Cumplimiento -->
-              @if (getCurrentValue(question.id) === 'SI') {
-                 <div class="mt-4 p-3 bg-white border border-gray-200 text-center text-gray-500 text-sm rounded">
-                   Cumple con el requisito
-                 </div>
-              }
-            </div>
-
-            <!-- Feedback Condicional -->
-            @if (getFeedbackText(question)) {
-              <div>
-                <div class="text-sky-500 text-sm font-medium mb-2 italic">Según si respuesta, considere:</div>
-                <div class="p-4 border border-gray-200 rounded text-gray-600 text-sm bg-gray-50 min-h-[100px]">
-                  {{ getFeedbackText(question) }}
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Columna Central: Clasificación + Evidencias -->
-          <div class="lg:col-span-4 p-6 space-y-8">
-            <!-- Clasificación -->
-            <div>
-              <div class="text-sky-500 text-sm font-medium mb-2 italic">Clasificación del requisito:</div>
-              <div class="border border-gray-200 rounded overflow-hidden">
-                <div class="p-3 border-b border-gray-200 text-gray-700 bg-gray-50">
-                  {{ question.category || 'General' }}
-                </div>
-                <div class="p-3 text-gray-600 bg-white">
-                  {{ question.subcategory || '-' }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Evidencias -->
-            @if (question.requiresEvidence && getCurrentValue(question.id) === 'SI') {
-              <div>
-                <div class="text-sky-500 text-sm font-medium mb-2 italic">Evidencias para adjuntar:</div>
-                <div class="border border-gray-200 rounded p-4 min-h-[200px] max-h-[500px] overflow-y-auto custom-scrollbar">
-                  <div class="space-y-6">
-                  @if (question.requiredDocuments?.length) {
-                    <!-- Lista de Documentos Requeridos -->
-                    @for (req of question.requiredDocuments; track req.id) {
-                      <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                        <div class="flex justify-between items-start mb-2">
-                          <div>
-                            <div class="font-medium text-gray-800 text-sm flex items-center gap-2">
-                              {{ req.name }}
-                              @if (req.required) {
-                                <span class="text-red-500 text-xs" title="Obligatorio">*</span>
-                              }
-                            </div>
-                            @if (req.description) {
-                              <div class="text-xs text-gray-500 mt-1">{{ req.description }}</div>
-                            }
-                          </div>
-                          
-                          <!-- Botón de carga si no hay archivo o si permite múltiples -->
-                          @if (!getEvidenceForRequirement(question.id, req.id).length || req.multiple) {
-                            <app-evidence-uploader
-                              [config]="question.evidenceConfig"
-                              [compact]="true"
-                              (upload)="onEvidenceUpload(question.id, $event, req.id)"
-                            ></app-evidence-uploader>
-                          }
-                        </div>
-
-                        <!-- Lista de archivos cargados para este requisito -->
-                        <div class="space-y-2 mt-3">
-                          @for (file of getEvidenceForRequirement(question.id, req.id); track file.fileName) {
-                            <div class="flex items-center justify-between bg-white p-2 rounded border border-gray-200 shadow-sm">
-                              <div class="flex items-center gap-2 overflow-hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="text-xs text-gray-700 truncate" [title]="file.fileName">{{ file.fileName }}</span>
-                              </div>
-                              <button 
-                                (click)="removeEvidence(question.id, file.fileName)"
-                                class="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                title="Eliminar archivo"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
-                          }
-                        </div>
-                      </div>
-                    }
-                  } @else {
-                    <!-- Fallback para comportamiento anterior (sin requisitos específicos) -->
-                    <div class="italic text-gray-400 text-xs mb-4">Adjunte los documentos que soporten su respuesta.</div>
-                    <app-evidence-uploader
-                      [config]="question.evidenceConfig"
-                      (upload)="onEvidenceUpload(question.id, $event)"
-                    ></app-evidence-uploader>
-                    
-                    <!-- Lista general de archivos -->
-                    <div class="space-y-2 mt-4">
-                      @for (file of getCurrentValue(question.id)?.evidence || []; track file.fileName) {
-                         <div class="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded text-xs font-medium">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                            Archivo cargado: {{ file.fileName }}
-                         </div>
-                      }
-                    </div>
-                  }
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Columna Derecha: Observaciones -->
-          <div class="lg:col-span-3 p-6">
-             <div class="text-sky-500 text-sm font-medium mb-2 italic">Descripción / Observaciones</div>
-             <textarea 
-               [ngModel]="getObservation(question.id)"
-               (ngModelChange)="onObservationChange(question.id, $event)"
-               [disabled]="!isObservationEnabled(question.id)"
-               class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
-               placeholder="Escriba aquí sus observaciones..."
-             ></textarea>
-          </div>
-        </div>
-
-        <!-- Footer Navegación -->
-        <div class="bg-gray-50 px-8 py-4 border-t border-gray-200 flex justify-between">
-           <button 
-             type="button"
-             (click)="prevQuestion(question.id)"
-             [disabled]="!questionManager.getPreviousQuestionId(question.id)"
-             class="px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-           >
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-             </svg>
-             Anterior
-           </button>
-           
-           <button 
-             type="button"
-             (click)="nextQuestion(question.id)"
-             [disabled]="!questionManager.getNextQuestionId(question.id)"
-             class="px-6 py-2 text-sky-600 bg-white border border-sky-600 hover:bg-sky-50 rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-           >
-             Siguiente
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-             </svg>
-           </button>
-
-           <button 
-             type="button"
-             (click)="sendAndNext(question.id)"
-             class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-             [disabled]="!canSend(question.id)"
-           >
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-             </svg>
-             Enviar y Siguiente
-           </button>
-        </div>
-      </div>
-    } @else {
-      <div class="flex flex-col items-center justify-center h-64 text-center">
-         <p class="text-gray-500">Seleccione una pregunta.</p>
-      </div>
-    }
-  `
+  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, TechnicalAssistanceLogComponent, FormsModule],
+  templateUrl: './question-page.component.html'
 })
 export class QuestionPageComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   questionManager = inject(QuestionManagerService);
 
-  // Reactive current question based on route param
-  currentQuestion = toSignal(
+  currentQuestionId = toSignal(
     this.route.paramMap.pipe(
-      map(params => params.get('id')),
-      map(id => id ? this.questionManager.getQuestion(id) : undefined)
+      map(params => {
+        const id = params.get('id'); // Parameter name in routes is 'id', not 'questionId'
+        console.log('Route param id:', id);
+        return id;
+      })
     )
   );
+
+  currentQuestion = computed(() => {
+    const id = this.currentQuestionId();
+    console.log('Computing currentQuestion for ID:', id);
+    if (!id) return null;
+    const q = this.questionManager.getQuestion(id);
+    console.log('Found question:', q);
+    return q;
+  });
+
+  getAssistanceLog(questionId: string): AssistanceLogEntry[] {
+    const response = this.questionManager.getResponse(questionId);
+    // console.log(`Getting logs for ${questionId}:`, response?.assistanceLog); // Debug log
+    return response?.assistanceLog || [];
+  }
+
+  onAssistanceResponse(questionId: string, event: { entryId: string, message: string }) {
+    console.log(`Respuesta a bitácora en pregunta ${questionId}:`, event);
+    
+    // Aquí actualizamos el estado local (optimistic update)
+    // En una implementación real, llamaríamos al servicio
+    const currentResponse = this.questionManager.getResponse(questionId);
+    if (currentResponse && currentResponse.assistanceLog) {
+      const updatedLog = currentResponse.assistanceLog.map(entry => {
+        if (entry.id === event.entryId) {
+          return {
+            ...entry,
+            response: {
+              responderName: 'Usuario Actual', // Tomar del AuthService
+              responseDate: new Date().toISOString(),
+              message: event.message
+            }
+          };
+        }
+        return entry;
+      });
+
+      this.questionManager.saveResponse({
+        ...currentResponse,
+        assistanceLog: updatedLog
+      });
+    }
+  }
+
+  getEvidenceConfig(question: QuestionDefinition) {
+    return question.evidenceConfig;
+  }
 
   getAxisColorText(axisId: string): string {
     switch (axisId) {
