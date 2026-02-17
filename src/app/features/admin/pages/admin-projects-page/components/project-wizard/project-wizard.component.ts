@@ -55,6 +55,7 @@ export class ProjectWizardComponent {
 
   // --- State ---
   currentStep = signal(1);
+  isSaving = signal(false);
   
   // Step 1 Data
   identificationData = signal<IdentificationData | null>(null);
@@ -184,7 +185,9 @@ export class ProjectWizardComponent {
 
   saveStep1AndProceed() {
     const data = this.identificationData();
-    if (!data || !this.initialData) return;
+    if (!data || !this.initialData || this.isSaving()) return;
+
+    this.isSaving.set(true);
 
     // Already exists -> Update (Step 1 fields) but preserve others from Signals
     const updateRequest: UpdateProjectRequest = {
@@ -214,8 +217,12 @@ export class ProjectWizardComponent {
         this.initialData = project; 
         this.alertService.success('Datos actualizados');
         this.currentStep.update(s => s + 1);
+        this.isSaving.set(false);
       },
-      error: () => this.alertService.error('Error al actualizar el proyecto')
+      error: () => {
+        this.alertService.error('Error al actualizar el proyecto');
+        this.isSaving.set(false);
+      }
     });
   }
 
@@ -232,8 +239,12 @@ export class ProjectWizardComponent {
       return;
     }
 
+    if (this.isSaving()) return;
+
     const data = this.identificationData();
     if (!data) return;
+
+    this.isSaving.set(true);
 
       if (this.initialData) {
         // Edit Mode -> Update
@@ -266,8 +277,12 @@ export class ProjectWizardComponent {
           next: () => {
             this.alertService.success('Proyecto actualizado exitosamente');
             this.completed.emit();
+            this.isSaving.set(false);
           },
-          error: () => this.alertService.error('Error al actualizar el proyecto')
+          error: () => {
+            this.alertService.error('Error al actualizar el proyecto');
+            this.isSaving.set(false);
+          }
         });
       } else {
         // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
@@ -306,8 +321,12 @@ export class ProjectWizardComponent {
           next: (project) => {
             this.alertService.success('Proyecto creado exitosamente');
             this.completed.emit();
+            this.isSaving.set(false);
           },
-          error: () => this.alertService.error('Error al crear el proyecto')
+          error: () => {
+            this.alertService.error('Error al crear el proyecto');
+            this.isSaving.set(false);
+          }
         });
       }
   }
