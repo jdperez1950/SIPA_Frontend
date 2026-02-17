@@ -91,7 +91,7 @@
   <div class="bg-gray-50 p-4 border-t border-gray-200 flex items-center justify-between">
     <button 
       (click)="prevStep()" 
-      [disabled]="currentStep() === 1"
+      [disabled]="currentStep() === 1 || isSaving()"
       class="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
     >
       <span class="material-symbols-rounded">arrow_back</span>
@@ -101,12 +101,18 @@
     @if (currentStep() <= 2) {
       <button 
         (click)="nextStep()"
-        class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2"
+        [disabled]="isSaving()"
+        class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {{ currentStep() === 2 ? 'Finalizar y Guardar' : 'Siguiente' }}
-        <span class="material-symbols-rounded">
-          {{ currentStep() === 2 ? 'save' : 'arrow_forward' }}
-        </span>
+        @if (isSaving()) {
+          <span class="material-symbols-rounded animate-spin">refresh</span>
+          {{ currentStep() === 2 ? 'Guardando...' : 'Procesando...' }}
+        } @else {
+          {{ currentStep() === 2 ? 'Finalizar y Guardar' : 'Siguiente' }}
+          <span class="material-symbols-rounded">
+            {{ currentStep() === 2 ? 'save' : 'arrow_forward' }}
+          </span>
+        }
       </button>
     } @else {
       <!-- Previous logic for later steps (currently unreachable via UI logic) -->
