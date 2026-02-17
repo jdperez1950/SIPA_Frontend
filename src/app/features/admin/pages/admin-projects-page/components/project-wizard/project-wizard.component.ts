@@ -82,7 +82,7 @@ export class ProjectWizardComponent {
       if (this.initialData) {
         this.loadInitialData(this.initialData);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   loadInitialData(project: Project) {
@@ -143,21 +143,25 @@ export class ProjectWizardComponent {
   }
 
   nextStep() {
-    if (this.isCurrentStepValid()) {
-      if (this.currentStep() === 1) {
-        // If it's a new project, we don't save yet, just proceed to Step 2 to collect Team
-        if (!this.initialData) {
-          this.currentStep.update(s => s + 1);
-        } else {
-          // If editing existing project, save Step 1 changes
-          this.saveStep1AndProceed();
-        }
-      } else if (this.currentStep() === 2) {
-        // Finalize (Create or Update)
-        this.finishWizard();
-      } else {
+    if (!this.isCurrentStepValid()) {
+      this.alertService.error('Por favor complete todos los campos obligatorios del paso actual.');
+      this.markStepAsTouched();
+      return;
+    }
+
+    if (this.currentStep() === 1) {
+      // If it's a new project, we don't save yet, just proceed to Step 2 to collect Team
+      if (!this.initialData) {
         this.currentStep.update(s => s + 1);
+      } else {
+        // If editing existing project, save Step 1 changes
+        this.saveStep1AndProceed();
       }
+    } else if (this.currentStep() === 2) {
+      // Finalize (Create or Update)
+      this.finishWizard();
+    } else {
+      this.currentStep.update(s => s + 1);
     }
   }
 
@@ -205,9 +209,14 @@ export class ProjectWizardComponent {
   }
 
   finishWizard() {
-    if (this.isCurrentStepValid()) {
-      const data = this.identificationData();
-      if (!data) return;
+    if (!this.isCurrentStepValid()) {
+      this.alertService.error('Por favor complete todos los campos requeridos antes de finalizar.');
+      this.markStepAsTouched();
+      return;
+    }
+
+    const data = this.identificationData();
+    if (!data) return;
 
       if (this.initialData) {
         // Edit Mode -> Update
@@ -284,7 +293,14 @@ export class ProjectWizardComponent {
           error: () => this.alertService.error('Error al crear el proyecto')
         });
       }
-    }
+  }
+
+  markStepAsTouched() {
+    // This method would trigger form validation display in child components
+    // Since we are using Signals and separate components, we might need a mechanism 
+    // to broadcast "validate now" or rely on the fact that users have likely interacted.
+    // For a robust solution, we could emit an event to the active step component.
+    console.log('Marking step as touched for validation');
   }
 
   // --- Data Updates ---

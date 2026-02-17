@@ -44,6 +44,7 @@ export const MOCK_QUESTIONS: QuestionDefinition[] = [
         description: 'Según la norma del POT, PBOT e EOT. Debe incluir clasificación del suelo.', // Descripción o instrucciones para este documento
         required: true, // Si es obligatorio subir este documento específico para completar la pregunta
         multiple: false // Si permite subir múltiples archivos para este mismo requisito (ej. planos)
+        
       },
       {
         id: 'doc_norma_edificabilidad',

@@ -6,9 +6,35 @@ import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
+  // Use explicit injection to avoid circular dependency
+  // But AuthService is needed for getToken().
+  // The circular dependency happens because AuthService uses HttpClient, which uses this Interceptor, which injects AuthService.
+  
+  // To break the cycle, we can:
+  // 1. Manually get token from localStorage (if platform is browser)
+  // 2. Or use Injector to get AuthService lazily (but HttpInterceptorFn is a function)
+  
+  // Let's try the manual localStorage approach for the token, as it's simpler and breaks the dependency chain for getToken().
+  // However, for logout() we still need AuthService or Router.
+  
+  // Better approach: Use a separate TokenService or simple helper.
+  // Or: Just use localStorage directly here since we know the key.
+  
+  let token: string | null = null;
+  
+  try {
+    // Check if running in browser
+    if (typeof localStorage !== 'undefined') {
+      token = localStorage.getItem('pavis_token');
+    }
+  } catch (e) {
+    // Ignore error in SSR or if localStorage is not available
+  }
+
   const router = inject(Router);
-  const token = authService.getToken();
+  // We can't inject AuthService directly here if it causes circular dep.
+  // But we need it for logout logic.
+  // Let's inject it lazily inside the error block if possible, or just use Router and clear storage manually.
 
   let request = req;
 
@@ -22,7 +48,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Auto-logout on 401 Unauthorized
       if (error.status === 401) {
-        authService.logout();
+        // Manually clear session to avoid circular dep with AuthService.logout()
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('pavis_user');
+          localStorage.removeItem('pavis_token');
+          sessionStorage.clear();
+        }
         router.navigate(['/auth/login']);
       }
       return throwError(() => error);

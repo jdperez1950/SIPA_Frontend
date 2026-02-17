@@ -181,9 +181,9 @@ export class AdminDataService {
         this.projects.update(current => [newProject, ...current]);
       }),
       catchError(error => {
-        console.error('Error creating project', error);
-        // Fallback to Mock
-        return this.createProjectMock(request);
+        console.error('Error creating project (API)', error);
+        // NO mock fallback - Propagate error to UI
+        return throwError(() => error);
       })
     );
   }
@@ -221,10 +221,6 @@ export class AdminDataService {
 
   updateProject(id: string, request: UpdateProjectRequest): Observable<Project> {
     return this.http.patch<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe( // API uses PATCH /projects with ID in body or query? Doc says PATCH /projects usually implies ID in body, but let's check. 
-      // The snippet says PATCH /api/projects. Standard REST is PATCH /api/projects/:id.
-      // But PROJECTS_API.md showed PATCH /api/projects (singular) possibly handling ID in body.
-      // Let's assume standard REST for now or check MD again.
-      // Checking MD: It says "PATCH /api/projects" and Body includes "id". So endpoint is base URL.
       map(response => response.data),
       tap(updatedProject => {
         this.projects.update(current => current.map(p => p.id === id ? updatedProject : p));

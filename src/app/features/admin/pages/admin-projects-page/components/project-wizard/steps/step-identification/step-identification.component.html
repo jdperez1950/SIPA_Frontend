@@ -24,42 +24,45 @@
     <!-- Department -->
     <div class="space-y-2">
       <label for="department" class="block text-sm font-medium text-gray-700">Departamento <span class="text-red-500">*</span></label>
-      <select 
-        id="department"
-        formControlName="department"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-        [class.text-gray-400]="!form.get('department')?.value"
-      >
-        <option value="">Seleccione...</option>
-        @for (dept of departments; track dept) {
-          <option [value]="dept">{{ dept }}</option>
+      <div class="relative">
+        <input 
+          type="text" 
+          id="department"
+          formControlName="department"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Ej. Cundinamarca"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('department')?.invalid && form.get('department')?.touched}"
+        >
+        @if (form.get('department')?.invalid && form.get('department')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
         }
-      </select>
+      </div>
     </div>
 
     <!-- Municipality -->
     <div class="space-y-2">
       <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
-      <select 
-        id="municipality"
-        formControlName="municipality"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-        [attr.disabled]="!form.get('department')?.value ? '' : null"
-        [class.text-gray-400]="!form.get('municipality')?.value"
-      >
-        <option value="">Seleccione...</option>
-        @for (mun of availableMunicipalities; track mun) {
-          <option [value]="mun">{{ mun }}</option>
+      <div class="relative">
+        <input 
+          type="text" 
+          id="municipality"
+          formControlName="municipality"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Ej. Bogotá"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('municipality')?.invalid && form.get('municipality')?.touched}"
+        >
+        @if (form.get('municipality')?.invalid && form.get('municipality')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
         }
-      </select>
+      </div>
     </div>
   </div>
 
-  <!-- Dates Section -->
+  <!-- Dates Section (Hidden - Auto-filled) -->
+  <!-- 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Start Date -->
     <div class="space-y-2">
-      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio <span class="text-red-500">*</span></label>
+      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
       <input 
         type="date" 
         id="startDate"
@@ -68,9 +71,8 @@
       >
     </div>
 
-    <!-- Submission Deadline -->
     <div class="space-y-2">
-      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas <span class="text-red-500">*</span></label>
+      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas</label>
       <input 
         type="date" 
         id="submissionDeadline"
@@ -83,9 +85,8 @@
       }
     </div>
 
-    <!-- End Date -->
     <div class="space-y-2">
-      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización <span class="text-red-500">*</span></label>
+      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización</label>
       <input 
         type="date" 
         id="endDate"
@@ -98,6 +99,7 @@
       }
     </div>
   </div>
+  -->
 
   <!-- Organization Details Section -->
   <div class="pt-6 border-t border-gray-200">
@@ -184,13 +186,19 @@
     <!-- Organization Address -->
     <div class="space-y-2 mb-6">
       <label for="organizationAddress" class="block text-sm font-medium text-gray-700">Dirección <span class="text-red-500">*</span></label>
-      <input 
-        type="text" 
-        id="organizationAddress"
-        formControlName="organizationAddress"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Ej. Calle 123 # 45-67"
-      >
+      <div class="relative">
+        <input 
+          type="text" 
+          id="organizationAddress"
+          formControlName="organizationAddress"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Ej. Calle 123 # 45-67"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationAddress')?.invalid && form.get('organizationAddress')?.touched}"
+        >
+        @if (form.get('organizationAddress')?.invalid && form.get('organizationAddress')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+      </div>
     </div>
 
     <!-- Organization Description -->

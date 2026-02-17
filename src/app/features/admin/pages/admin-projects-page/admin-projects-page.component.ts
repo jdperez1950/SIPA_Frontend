@@ -50,7 +50,7 @@ export class AdminProjectsPageComponent implements OnInit {
       // We set page to 1 when filters change
       this.currentPage.set(1);
       this.loadProjects();
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnInit() {

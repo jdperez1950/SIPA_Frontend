@@ -85,7 +85,9 @@ export class AuthService {
           this.#currentUser.set(parsedUser);
 
           // Validamos el token en background
+          console.log('Restaurando sesión, validando token...');
           this.validateToken().subscribe(isValid => {
+            console.log('Resultado validación token:', isValid);
             if (!isValid) {
               console.warn('Token inválido o expirado al restaurar sesión');
               this.logout();
@@ -231,11 +233,15 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return of(false);
     
-    // Asumimos que el backend tiene un endpoint /auth/validate o similar
-    // Si no existe, usamos /auth/me o cualquier endpoint protegido liviano
-    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/validate`).pipe(
-      map(response => response.success),
-      catchError(() => of(false))
+    // El endpoint de validación es POST y requiere el token en el body o header
+    // Asumimos que el backend espera { token: string } en el body si es POST
+    return this.http.post<ValidateTokenResponse>(`${this.apiUrl}/auth/validate`, { token }).pipe(
+      tap(res => console.log('Respuesta validateToken API:', res)),
+      map(response => response.success && response.data),
+      catchError((err) => {
+        console.error('Error validateToken API:', err);
+        return of(false);
+      })
     );
   }
 }
