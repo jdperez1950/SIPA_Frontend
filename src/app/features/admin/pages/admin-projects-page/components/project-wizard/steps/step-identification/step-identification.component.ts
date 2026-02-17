@@ -1,32 +1,46 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
 import { IdentificationData } from '../../project-wizard.types';
+import { DivipolaService } from '../../../../../../../../core/services/divipola.service';
 
 @Component({
   selector: 'app-step-identification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomDropdownComponent],
   templateUrl: './step-identification.component.html',
-  styles: []
+  styleUrls: ['./step-identification.component.css']
 })
 export class StepIdentificationComponent implements OnInit {
   @Input() initialData: IdentificationData | null = null;
   @Output() dataChange = new EventEmitter<IdentificationData>();
 
   private fb = inject(FormBuilder);
+  public divipolaService = inject(DivipolaService);
 
   form!: FormGroup;
   
-  // Mock locations (Should ideally come from a service)
-  departments = ['Cundinamarca', 'Antioquia', 'Valle del Cauca', 'Atlántico', 'Santander'];
-  municipalities: Record<string, string[]> = {
-    'Cundinamarca': ['Bogotá', 'Soacha', 'Zipaquirá', 'Chía'],
-    'Antioquia': ['Medellín', 'Bello', 'Envigado', 'Itagüí'],
-    'Valle del Cauca': ['Cali', 'Palmira', 'Buenaventura', 'Tuluá'],
-    'Atlántico': ['Barranquilla', 'Soledad', 'Malambo'],
-    'Santander': ['Bucaramanga', 'Floridablanca', 'Girón']
-  };
+  // Lists for selects
+  municipios: CustomDropdownItem[] = [];
+
+  constructor() {
+    // Effect to handle initial data loading when service is ready
+    effect(() => {
+      const depts = this.divipolaService.departamentos();
+      const initialName = this.initialData?.department;
+      
+      // If form has no department ID but we have an initial name, try to map it now
+      // Check that form exists before accessing it
+      if (depts.length > 0 && initialName && this.form && !this.form.get('department')?.value) {
+          const found = depts.find(d => d.nombre === initialName);
+          if (found) {
+              this.form.patchValue({ department: found.id }, { emitEvent: true });
+              // Municipality will be loaded by valueChanges subscription
+          }
+      }
+    });
+  }
 
   ngOnInit() {
     this.initForm();
@@ -35,23 +49,21 @@ export class StepIdentificationComponent implements OnInit {
     this.form.valueChanges.subscribe(value => {
       // Debug form state
       if (this.form.invalid) {
-        const errors: any = {};
-        Object.keys(this.form.controls).forEach(key => {
-          const controlErrors = this.form.get(key)?.errors;
-          if (controlErrors) {
-            errors[key] = controlErrors;
-          }
-        });
-        if (this.form.errors) {
-          errors['formGroup'] = this.form.errors;
-        }
-        console.log('Form INVALID. Errors:', errors);
+        // ... (debug code)
       }
       
       if (this.form.valid) {
+        // Find department and municipality names for emission if needed
+        const deptId = value.department;
+        const deptName = this.divipolaService.departamentos().find(d => d.id === deptId)?.nombre || deptId;
+        
+        // Municipality is already bound to name in ng-select (bindValue="nombre")
+        // But if we change it to bindValue="id", we would need mapping here.
+        // Currently HTML uses bindValue="nombre" for municipality, so value.municipality is the name.
+        
         this.dataChange.emit({
           projectName: value.projectName,
-          department: value.department,
+          department: deptName, // Emit NAME for backend compatibility
           municipality: value.municipality,
           organizationName: value.organizationName,
           organizationType: value.organizationType,
@@ -77,33 +89,59 @@ export class StepIdentificationComponent implements OnInit {
 
   private initForm() {
     const today = new Date().toISOString().split('T')[0];
-    // Hardcoded dates as requested for testing
     const defaultStart = today;
     const defaultDeadline = '2026-12-24';
     const defaultEnd = '2026-12-31';
 
+    // Map initial department NAME to ID if possible
+    let initialDeptId = null;
+    const initialDeptName = this.initialData?.department;
+    
+    if (initialDeptName) {
+        // Try to find ID from loaded departments (might be empty initially)
+        // We rely on the effect below to update it when data arrives
+        const found = this.divipolaService.departamentos().find(d => d.nombre === initialDeptName);
+        initialDeptId = found ? found.id : null;
+    }
+
     this.form = this.fb.group({
       projectName: [this.initialData?.projectName || '', [Validators.required, Validators.minLength(5)]],
-      department: [this.initialData?.department || '', Validators.required],
-      municipality: [this.initialData?.municipality || '', Validators.required],
+      department: [initialDeptId, Validators.required], // Bind to ID
+      municipality: [this.initialData?.municipality || null, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       organizationType: [this.initialData?.organizationType || 'COMPANY', Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', Validators.required],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
-      // Description optional, only minLength if provided
       organizationDescription: [this.initialData?.organizationDescription || ''],
       organizationAddress: [this.initialData?.organizationAddress || '', Validators.required],
-      // Dates auto-filled
       startDate: [this.initialData?.startDate || defaultStart],
       endDate: [this.initialData?.endDate || defaultEnd],
       submissionDeadline: [this.initialData?.submissionDeadline || defaultDeadline]
     }, { validators: [this.dateRangeValidator] });
 
-    // Reset municipality when department changes
-    this.form.get('department')?.valueChanges.subscribe(() => {
-      this.form.get('municipality')?.setValue('');
+    // Handle department changes to load municipalities
+    this.form.get('department')?.valueChanges.subscribe((deptId) => {
+      // Only reset if changed by user (dirty), or if we want to enforce it.
+      // Careful with initial load.
+      const currentMunicipality = this.form.get('municipality')?.value;
+      
+      if (deptId) {
+        this.municipios = this.divipolaService.getMunicipiosPorDepto(deptId);
+        
+        // If current municipality is not in the new list, reset it
+        const exists = this.municipios.some(m => m.nombre === currentMunicipality);
+        if (!exists && this.form.get('department')?.dirty) {
+             this.form.get('municipality')?.setValue(null);
+        }
+      } else {
+        this.municipios = [];
+        this.form.get('municipality')?.setValue(null);
+      }
     });
   }
+
+  // Remove duplicated and old listener
+  // private resetMunicipality() { ... }
 
   private dateRangeValidator(group: FormGroup) {
     // Si las fechas son opcionales o auto-llenadas, esta validación podría estar fallando 
@@ -150,9 +188,19 @@ export class StepIdentificationComponent implements OnInit {
     */
   }
 
-  // Helper for template
-  get availableMunicipalities(): string[] {
-    const dept = this.form.get('department')?.value;
-    return dept ? this.municipalities[dept] || [] : [];
+  onDepartmentChange(deptId: string) {
+    this.form.get('department')?.setValue(deptId, { emitEvent: true });
+    
+    if (deptId) {
+      this.municipios = this.divipolaService.getMunicipiosPorDepto(deptId);
+      this.form.get('municipality')?.setValue(null);
+    } else {
+      this.municipios = [];
+      this.form.get('municipality')?.setValue(null);
+    }
+  }
+
+  onMunicipalityChange(municipalityName: string) {
+    this.form.get('municipality')?.setValue(municipalityName, { emitEvent: true });
   }
 }
