@@ -55,9 +55,9 @@ import { ConfirmationService } from '../../../core/services/confirmation.service
             <span>&copy; {{ currentYear }} Todos los derechos reservados.</span>
           </div>
           <div class="flex gap-6">
-            <a href="#" class="hover:text-blue-600 transition-colors">Términos</a>
-            <a href="#" class="hover:text-blue-600 transition-colors">Privacidad</a>
-            <a href="#" class="hover:text-blue-600 transition-colors">Soporte</a>
+            <button (click)="openModal('Términos')" class="hover:text-blue-600 transition-colors bg-transparent border-0 cursor-pointer">Términos</button>
+            <button (click)="openModal('Privacidad')" class="hover:text-blue-600 transition-colors bg-transparent border-0 cursor-pointer">Privacidad</button>
+            <button (click)="openModal('Soporte')" class="hover:text-blue-600 transition-colors bg-transparent border-0 cursor-pointer">Soporte</button>
           </div>
         </div>
       </footer>
@@ -82,6 +82,15 @@ export class WorkspaceLayoutComponent {
         this.authService.logout();
         this.router.navigate(['/auth/login']);
       }
+    });
+  }
+
+  openModal(title: string) {
+    this.confirmationService.alert({
+      title: title,
+      message: `Aquí la entidad colocará la información relacionada con ${title}.`,
+      type: 'info',
+      confirmText: 'Entendido'
     });
   }
 }

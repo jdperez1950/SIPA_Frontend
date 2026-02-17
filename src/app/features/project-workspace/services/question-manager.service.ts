@@ -38,6 +38,44 @@ export class QuestionManagerService {
   constructor() {
     // Mock data for development
     this.loadMockQuestions();
+    
+    // Initialize some responses with mock data for bitacora testing
+    this.responses.update(map => {
+      const newMap = new Map(map);
+      
+      // Mock log for Question 1
+      newMap.set('q1', {
+        questionId: 'q1',
+        value: 'SI',
+        lastUpdated: new Date().toISOString(),
+        evaluationStatus: 'IN_PROCESS',
+        assistanceLog: [
+          {
+            id: 'log1',
+            date: '2025-12-15',
+            advisorName: 'ID 12345',
+            advisorMessage: 'La oficina de planeación municipal o distrital o la dependencia que haga sus veces aprobó el proyecto de plan parcial, mediante acto administrativo u ocurrió el silencio administrativo.',
+            priority: 'IMPORTANT',
+            validityPeriod: 'Pv'
+          },
+          {
+            id: 'log2',
+            date: '2025-12-05',
+            advisorName: 'ID 67890',
+            advisorMessage: 'Se requiere adjuntar el certificado de libertad y tradición actualizado.',
+            priority: 'URGENT',
+            validityPeriod: 'Pv',
+            response: {
+              responderName: 'Responsable Proyecto',
+              responseDate: '2025-12-10',
+              message: 'Adjunto el certificado solicitado en la sección de evidencias.'
+            }
+          }
+        ]
+      });
+      
+      return newMap;
+    });
   }
 
   /**
