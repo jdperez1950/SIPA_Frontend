@@ -86,25 +86,42 @@ export class ProjectWizardComponent {
   }
 
   loadInitialData(project: Project) {
+    // Backend response structure:
+    // project.name -> Nombre real del proyecto (Ej: "CosiPet")
+    // project.code -> Código del proyecto (Ej: "PRJ-2026-0029")
+    // project.organization -> Objeto completo con la info de la organización
+    // project.organizationName -> Nombre de la organización (string)
+    
     // Map Project to IdentificationData
-    const org = project.organizationData;
+    // The 'organization' field in the backend response is actually the full object, 
+    // but our frontend interface definition might be typed as string | OrganizationData.
+    // Let's handle it safely.
     
+    const orgData = project.organizationData || (typeof project.organization === 'object' ? project.organization : null);
+    
+    // Helper to safely get string
+    const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
+
     this.identificationData.set({
-      projectName: project.code.startsWith('PROJ-') ? 'Proyecto ' + project.code : project.code, 
-      department: project.state,
-      municipality: project.municipality,
-      organizationName: org?.name || project.organization,
-      organizationType: org?.type || 'COMPANY',
-      organizationIdentifier: org?.identifier || '',
-      organizationEmail: org?.email || '',
-      organizationDescription: org?.description || '',
-      organizationAddress: org?.address || '',
-      startDate: project.startDate || '',
-      endDate: project.endDate || '',
-      submissionDeadline: project.submissionDeadline || ''
+      // Use 'name' for the project name input, fallback to 'code' if name is missing
+      projectName: safeStr(project.name) || safeStr(project.code),
+      
+      department: project.state || orgData?.region || '',
+      municipality: project.municipality || orgData?.municipality || '',
+      
+      // Organization details
+      organizationName: safeStr(project.organizationName) || orgData?.name || '',
+      organizationType: orgData?.type || 'COMPANY',
+      organizationIdentifier: orgData?.identifier || '',
+      organizationEmail: orgData?.email || '',
+      organizationDescription: orgData?.description || '',
+      organizationAddress: orgData?.address || '',
+      
+      // Dates - strip time part if present (YYYY-MM-DD)
+      startDate: safeStr(project.startDate).split('T')[0],
+      endDate: safeStr(project.endDate).split('T')[0],
+      submissionDeadline: safeStr(project.submissionDeadline).split('T')[0]
     });
-    
-    // We would need to load other steps too if we had the data in Project model
   }
 
   // --- Computed Helpers ---
