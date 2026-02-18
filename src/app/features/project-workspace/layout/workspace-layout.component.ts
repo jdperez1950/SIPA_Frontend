@@ -3,11 +3,13 @@ import { Router, RouterOutlet } from '@angular/router';
 import { QuestionRibbonComponent } from './components/question-ribbon/question-ribbon.component';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
+import { FooterComponent } from '../../../shared/components/footer/footer.component';
+
 
 @Component({
   selector: 'app-workspace-layout',
   standalone: true,
-  imports: [RouterOutlet, QuestionRibbonComponent],
+  imports: [RouterOutlet, QuestionRibbonComponent, FooterComponent],
   template: `
     <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
       <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:p-4 focus:bg-white focus:text-blue-700 focus:shadow-lg rounded-br-lg">Saltar al contenido principal</a>
@@ -47,20 +49,7 @@ import { ConfirmationService } from '../../../core/services/confirmation.service
       </main>
 
       <!-- Footer -->
-      <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-        <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500 gap-4">
-          <div class="flex items-center gap-2">
-            <span class="font-semibold text-gray-700">PAVIS</span>
-            <span class="text-gray-300">|</span>
-            <span>&copy; {{ currentYear }} Todos los derechos reservados.</span>
-          </div>
-          <div class="flex gap-6">
-            <button (click)="openModal('Términos')" class="hover:text-blue-600 transition-colors bg-transparent border-0 cursor-pointer">Términos</button>
-            <button (click)="openModal('Privacidad')" class="hover:text-blue-600 transition-colors bg-transparent border-0 cursor-pointer">Privacidad</button>
-            <button (click)="openModal('Soporte')" class="hover:text-blue-600 transition-colors bg-transparent border-0 cursor-pointer">Soporte</button>
-          </div>
-        </div>
-      </footer>
+      <app-footer />
     </div>
   `
 })
@@ -68,8 +57,6 @@ export class WorkspaceLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
-  
-  currentYear = new Date().getFullYear();
 
   logout() {
     this.confirmationService.confirm({
@@ -82,15 +69,6 @@ export class WorkspaceLayoutComponent {
         this.authService.logout();
         this.router.navigate(['/auth/login']);
       }
-    });
-  }
-
-  openModal(title: string) {
-    this.confirmationService.alert({
-      title: title,
-      message: `Aquí la entidad colocará la información relacionada con ${title}.`,
-      type: 'info',
-      confirmText: 'Entendido'
     });
   }
 }

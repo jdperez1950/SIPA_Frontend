@@ -128,12 +128,20 @@ export class AdminDataService {
     if (query) params = params.set('search', query);
     if (status) params = params.set('status', status);
 
-    return this.http.get<ApiResponse<PaginatedResponse<Project>>>(`${this.apiUrl}/projects`, { params }).pipe(
+    return this.http.get<any>(`${this.apiUrl}/projects`, { params }).pipe(
       map(response => {
         if (response.success && response.data) {
-          // Update local state if needed, or just return data
-          // this.projects.set(response.data.data); // Optional: sync local state
-          return response.data;
+          const apiResponse = response.data;
+          return {
+            data: apiResponse.data || [],
+            meta: {
+              totalItems: apiResponse.total || 0,
+              itemCount: (apiResponse.data || []).length,
+              itemsPerPage: apiResponse.limit || pageSize,
+              totalPages: apiResponse.totalPages || 0,
+              currentPage: apiResponse.page || page
+            }
+          };
         }
         return {
           data: [],
