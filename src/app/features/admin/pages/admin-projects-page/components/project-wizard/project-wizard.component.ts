@@ -217,26 +217,17 @@ export class ProjectWizardComponent {
     };
 
     this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
-      next: (project) => {
-        this.initialData = project; 
-        this.modalAlertData.set({
-          type: 'success',
-          title: 'Datos Guardados',
-          message: 'Los datos han sido actualizados exitosamente.',
-          confirmText: 'Continuar'
+          next: (project) => {
+            this.initialData = project;
+            this.alertService.success('Datos actualizados');
+            this.currentStep.update(s => s + 1);
+            this.isSaving.set(false);
+          },
+          error: () => {
+            this.alertService.error('Error al actualizar el proyecto');
+            this.isSaving.set(false);
+          }
         });
-        this.isSaving.set(false);
-      },
-      error: () => {
-        this.modalAlertData.set({
-          type: 'error',
-          title: 'Error',
-          message: 'Error al actualizar el proyecto. Por favor, intenta nuevamente.',
-          confirmText: 'Aceptar'
-        });
-        this.isSaving.set(false);
-      }
-    });
   }
 
   prevStep() {
@@ -293,21 +284,12 @@ export class ProjectWizardComponent {
 
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
           next: () => {
-            this.modalAlertData.set({
-              type: 'success',
-              title: 'Proyecto Actualizado',
-              message: 'El proyecto ha sido actualizado exitosamente.',
-              confirmText: 'Aceptar'
-            });
+            this.alertService.success('Proyecto actualizado exitosamente');
+            this.completed.emit();
             this.isSaving.set(false);
           },
           error: () => {
-            this.modalAlertData.set({
-              type: 'error',
-              title: 'Error',
-              message: 'Error al actualizar el proyecto. Por favor, intenta nuevamente.',
-              confirmText: 'Aceptar'
-            });
+            this.alertService.error('Error al actualizar el proyecto');
             this.isSaving.set(false);
           }
         });
@@ -346,21 +328,12 @@ export class ProjectWizardComponent {
 
         this.adminService.createProject(createRequest).subscribe({
           next: (project) => {
-            this.modalAlertData.set({
-              type: 'success',
-              title: 'Proyecto Creado',
-              message: 'El proyecto ha sido creado exitosamente.',
-              confirmText: 'Aceptar'
-            });
+            this.alertService.success('Proyecto creado exitosamente');
+            this.completed.emit();
             this.isSaving.set(false);
           },
           error: () => {
-            this.modalAlertData.set({
-              type: 'error',
-              title: 'Error',
-              message: 'Error al crear el proyecto. Por favor, intenta nuevamente.',
-              confirmText: 'Aceptar'
-            });
+            this.alertService.error('Error al crear el proyecto');
             this.isSaving.set(false);
           }
         });
@@ -368,14 +341,6 @@ export class ProjectWizardComponent {
   }
 
   onModalAlertConfirm() {
-    const alertData = this.modalAlertData();
-    if (alertData?.type === 'success') {
-      if (alertData.confirmText === 'Continuar') {
-        this.currentStep.update(s => s + 1);
-      } else {
-        this.completed.emit();
-      }
-    }
     this.modalAlertData.set(null);
   }
 
