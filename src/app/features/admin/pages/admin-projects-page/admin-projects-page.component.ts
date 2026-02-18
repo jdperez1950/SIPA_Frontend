@@ -46,8 +46,7 @@ export class AdminProjectsPageComponent implements OnInit {
       const query = this.searchQuery();
       const status = this.selectedStatus();
       
-      // Untracked to avoid loops if needed, but here we want to react
-      // We set page to 1 when filters change
+      // Reset to page 1 when filters change
       this.currentPage.set(1);
       this.loadProjects();
     });

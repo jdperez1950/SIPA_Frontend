@@ -51,7 +51,17 @@
   </div>
 
   <!-- Content Area -->
-  <div class="flex-1 p-8 overflow-y-auto">
+  <div class="flex-1 p-8 overflow-y-auto relative">
+    <!-- Modal Alert Overlay -->
+    @if (modalAlertData()) {
+      <div class="absolute inset-0 z-10 bg-white/95 flex items-center justify-center p-8">
+        <app-modal-alert 
+          [data]="modalAlertData()"
+          (confirm)="onModalAlertConfirm()"
+        ></app-modal-alert>
+      </div>
+    }
+
     <!-- Steps Content -->
     <div class="mb-8">
       @switch (currentStep()) {

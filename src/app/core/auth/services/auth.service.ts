@@ -47,30 +47,78 @@ export class AuthService {
         window.addEventListener(event, resetTimer);
       });
       
-      this.startInactivityTimer();
+      // Only start timer if user is already authenticated
+      if (this.isAuthenticated()) {
+        this.startInactivityTimer();
+      }
     }
   }
 
   private logoutTimer: any;
   private readonly INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
+  private readonly INACTIVITY_WARNING = 14 * 60 * 1000; // 14 minutes (1 minute before logout)
+  private warningShown = false;
+
+  private periodicValidationTimer: any;
+  private readonly TOKEN_VALIDATION_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
   private startInactivityTimer() {
     clearTimeout(this.logoutTimer);
     if (this.isAuthenticated()) {
+      this.warningShown = false;
+
+      // Warning timer (1 minute before logout)
+      const warningTimer = setTimeout(() => {
+        if (this.isAuthenticated()) {
+          this.warningShown = true;
+          this.confirmationService.alert({
+            title: 'Sesión por Expirar',
+            message: 'Tu sesión expirará en 1 minuto por inactividad. Si continúas trabajando, el contador se reiniciará.',
+            type: 'warning'
+          });
+        }
+      }, this.INACTIVITY_WARNING);
+
+      // Logout timer
       this.logoutTimer = setTimeout(() => {
-        // Force logout first to prevent loops
-        this.logout();
-        
-        // Then show alert and redirect
-        this.confirmationService.alert({
-          title: 'Sesión Expirada',
-          message: 'Tu sesión ha sido cerrada por inactividad.',
-          type: 'info'
-        }).then(() => {
-          this.router.navigate(['/auth/login']);
-        });
+        clearTimeout(warningTimer);
+        this.forceLogoutWithMessage('Tu sesión ha sido cerrada por inactividad.');
       }, this.INACTIVITY_LIMIT);
     }
+  }
+
+  private forceLogoutWithMessage(message: string) {
+    this.logout();
+    this.confirmationService.alert({
+      title: 'Sesión Expirada',
+      message: message,
+      type: 'info'
+    }).then(() => {
+      this.router.navigate(['/auth/login']);
+    });
+  }
+
+  private startPeriodicTokenValidation() {
+    if (isPlatformBrowser(this.platformId)) {
+      clearTimeout(this.periodicValidationTimer);
+      
+      this.periodicValidationTimer = setInterval(() => {
+        if (this.isAuthenticated()) {
+          this.validateToken().subscribe(isValid => {
+            if (!isValid) {
+              console.warn('Token expirado en validación periódica');
+              this.forceLogoutWithMessage('Tu sesión ha caducado. Por favor, inicia sesión nuevamente.');
+            }
+          });
+        } else {
+          clearTimeout(this.periodicValidationTimer);
+        }
+      }, this.TOKEN_VALIDATION_INTERVAL);
+    }
+  }
+
+  private stopPeriodicTokenValidation() {
+    clearTimeout(this.periodicValidationTimer);
   }
 
   private restoreSession() {
@@ -90,11 +138,11 @@ export class AuthService {
             console.log('Resultado validación token:', isValid);
             if (!isValid) {
               console.warn('Token inválido o expirado al restaurar sesión');
-              this.logout();
-              this.router.navigate(['/auth/login']);
+              this.forceLogoutWithMessage('Tu sesión ha caducado. Por favor, inicia sesión nuevamente.');
             } else {
-              // Si es válido, reiniciamos el timer de inactividad
+              // Si es válido, reiniciamos el timer de inactividad y comenzamos validación periódica
               this.startInactivityTimer();
+              this.startPeriodicTokenValidation();
             }
           });
 
@@ -135,6 +183,7 @@ export class AuthService {
         if (isPlatformBrowser(this.platformId)) {
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this.startInactivityTimer();
+          this.startPeriodicTokenValidation();
         }
       }),
       catchError((error: HttpErrorResponse) => {
@@ -175,6 +224,7 @@ export class AuthService {
   logout(): void {
     this.#currentUser.set(null);
     clearTimeout(this.logoutTimer);
+    this.stopPeriodicTokenValidation();
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.USER_KEY);
       localStorage.removeItem(this.TOKEN_KEY);

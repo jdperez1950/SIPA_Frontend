@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ConfirmationService } from '../../services/confirmation.service';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
@@ -32,6 +33,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const router = inject(Router);
+  const confirmationService = inject(ConfirmationService);
   // We can't inject AuthService directly here if it causes circular dep.
   // But we need it for logout logic.
   // Let's inject it lazily inside the error block if possible, or just use Router and clear storage manually.
@@ -54,8 +56,28 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           localStorage.removeItem('pavis_token');
           sessionStorage.clear();
         }
+        
+        // Show session expired message
+        confirmationService.alert({
+          title: 'Sesión Expirada',
+          message: 'Tu sesión ha caducado. Por favor, inicia sesión nuevamente.',
+          type: 'info',
+          confirmText: 'Entendido'
+        });
+
         router.navigate(['/auth/login']);
       }
+      
+      // Handle 403 Forbidden
+      if (error.status === 403) {
+        confirmationService.alert({
+          title: 'Acceso Denegado',
+          message: 'No tienes permisos para realizar esta acción.',
+          type: 'warning',
+          confirmText: 'Entendido'
+        });
+      }
+
       return throwError(() => error);
     })
   );
