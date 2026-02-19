@@ -41,26 +41,19 @@ export class AdminProjectsPageComponent implements OnInit {
   ];
 
   constructor() {
-    // React to filter changes to reset pagination and reload
-    effect(() => {
-      const query = this.searchQuery();
-      const status = this.selectedStatus();
-      
-      // Reset to page 1 when filters change
-      this.currentPage.set(1);
-      this.loadProjects();
-    });
+    // No effect needed - we'll handle filter changes explicitly
   }
 
   ngOnInit() {
-    // Initial load handled by effect
+    // Initial load
+    this.loadProjects();
   }
 
   loadProjects() {
     this.isLoading.set(true);
     this.adminDataService.getProjects(
-      this.currentPage(), 
-      this.pageSize(), 
+      this.currentPage(),
+      this.pageSize(),
       this.searchQuery(),
       this.selectedStatus()
     ).subscribe({
@@ -68,7 +61,7 @@ export class AdminProjectsPageComponent implements OnInit {
         // Handle various response shapes (Paginated vs Array vs Empty)
         const projects = Array.isArray(response) ? response : (response?.data || []);
         const total = response?.meta?.totalItems || projects.length;
-        
+
         this.projects.set(projects);
         this.totalItems.set(total);
         this.isLoading.set(false);
@@ -108,7 +101,14 @@ export class AdminProjectsPageComponent implements OnInit {
 
   filterByStatus(status: ProjectStatus | null) {
     this.selectedStatus.set(status);
-    // Effect will trigger reload
+    this.currentPage.set(1);
+    this.loadProjects();
+  }
+
+  onSearchChange(query: string) {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   openAssignModal(project: Project) {

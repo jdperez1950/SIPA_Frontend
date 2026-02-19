@@ -55,8 +55,9 @@ export class AuthService {
   }
 
   private logoutTimer: any;
+  private warningTimer: any;
   private readonly INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
-  private readonly INACTIVITY_WARNING = 14 * 60 * 1000; // 14 minutes (1 minute before logout)
+  private readonly INACTIVITY_WARNING = 0.5 * 60 * 1000; // 30 seconds before logout
   private warningShown = false;
 
   private periodicValidationTimer: any;
@@ -64,50 +65,54 @@ export class AuthService {
 
   private startInactivityTimer() {
     clearTimeout(this.logoutTimer);
+    clearTimeout(this.warningTimer);
     if (this.isAuthenticated()) {
       this.warningShown = false;
 
-      // Warning timer (1 minute before logout)
-      const warningTimer = setTimeout(() => {
+      // Warning timer (30 seconds before logout)
+      this.warningTimer = setTimeout(() => {
         if (this.isAuthenticated()) {
           this.warningShown = true;
           this.confirmationService.alert({
             title: 'Sesión por Expirar',
-            message: 'Tu sesión expirará en 1 minuto por inactividad. Si continúas trabajando, el contador se reiniciará.',
+            message: 'Tu sesión expirará en 30 segundos por inactividad.',
             type: 'warning'
           });
         }
-      }, this.INACTIVITY_WARNING);
+      }, this.INACTIVITY_LIMIT - this.INACTIVITY_WARNING);
 
       // Logout timer
       this.logoutTimer = setTimeout(() => {
-        clearTimeout(warningTimer);
-        this.forceLogoutWithMessage('Tu sesión ha sido cerrada por inactividad.');
+        clearTimeout(this.warningTimer);
+        this.forceLogoutWithMessage('Tu sesión ha sido cerrada por inactividad');
       }, this.INACTIVITY_LIMIT);
     }
   }
 
-  private forceLogoutWithMessage(message: string) {
+  private forceLogoutWithMessage(message: string, showWarning: boolean = true) {
     this.logout();
-    this.confirmationService.alert({
-      title: 'Sesión Expirada',
-      message: message,
-      type: 'info'
-    }).then(() => {
-      this.router.navigate(['/auth/login']);
-    });
+
+    if (showWarning) {
+      this.confirmationService.alert({
+        title: 'Sesión Cerrada',
+        message: message,
+        type: 'info'
+      });
+    }
+
+    this.router.navigate(['/auth/login']);
   }
 
   private startPeriodicTokenValidation() {
     if (isPlatformBrowser(this.platformId)) {
       clearTimeout(this.periodicValidationTimer);
-      
+
       this.periodicValidationTimer = setInterval(() => {
         if (this.isAuthenticated()) {
           this.validateToken().subscribe(isValid => {
             if (!isValid) {
               console.warn('Token expirado en validación periódica');
-              this.forceLogoutWithMessage('Tu sesión ha caducado. Por favor, inicia sesión nuevamente.');
+              this.forceLogoutWithMessage('', false);
             }
           });
         } else {
@@ -125,7 +130,7 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       const storedUser = localStorage.getItem(this.USER_KEY);
       const token = localStorage.getItem(this.TOKEN_KEY);
-      
+
       if (storedUser && token) {
         try {
           // Primero seteamos el usuario localmente para no bloquear la UI
@@ -138,7 +143,7 @@ export class AuthService {
             console.log('Resultado validación token:', isValid);
             if (!isValid) {
               console.warn('Token inválido o expirado al restaurar sesión');
-              this.forceLogoutWithMessage('Tu sesión ha caducado. Por favor, inicia sesión nuevamente.');
+              this.forceLogoutWithMessage('', false);
             } else {
               // Si es válido, reiniciamos el timer de inactividad y comenzamos validación periódica
               this.startInactivityTimer();
@@ -224,6 +229,7 @@ export class AuthService {
   logout(): void {
     this.#currentUser.set(null);
     clearTimeout(this.logoutTimer);
+    clearTimeout(this.warningTimer);
     this.stopPeriodicTokenValidation();
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.USER_KEY);
@@ -282,7 +288,7 @@ export class AuthService {
   validateToken(): Observable<boolean> {
     const token = this.getToken();
     if (!token) return of(false);
-    
+
     // El endpoint de validación es POST y requiere el token en el body o header
     // Asumimos que el backend espera { token: string } en el body si es POST
     return this.http.post<ValidateTokenResponse>(`${this.apiUrl}/auth/validate`, { token }).pipe(
@@ -290,6 +296,15 @@ export class AuthService {
       map(response => response.success && response.data),
       catchError((err) => {
         console.error('Error validateToken API:', err);
+
+        // Si es error de conexión (ECONNREFUSED, ENOTFOUND, etc), no cerramos sesión
+        // Esto permite que la app siga funcionando si el backend está temporalmente caído
+        if (err.status === 0 || err.error instanceof ErrorEvent) {
+          console.warn('Error de red, no cerrando sesión temporalmente');
+          return of(true); // Asumimos válido para evitar desconexión
+        }
+
+        // Si es error del servidor (401, 403, 500), entonces cerramos sesión
         return of(false);
       })
     );

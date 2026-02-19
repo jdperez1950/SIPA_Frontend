@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
+import { Component, EventEmitter, Output, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -77,19 +77,11 @@ import { CommonModule } from '@angular/common';
   `
 })
 export class PaginationComponent {
-  // Inputs as Signals (Angular 17.2+ style)
-  // For now using classic Inputs + Signals wrapper pattern or just Signals if 17.2+
-  // Assuming classic Input() for broader compatibility but let's use signals internally
-  
-  @Input({ required: true, alias: 'totalItems' }) set setTotalItems(value: number) { this.totalItems.set(value); }
-  @Input({ required: true, alias: 'itemsPerPage' }) set setItemsPerPage(value: number) { this.itemsPerPage.set(value); }
-  @Input({ required: true, alias: 'currentPage' }) set setCurrentPage(value: number) { this.currentPage.set(value); }
+  totalItems = input.required<number>();
+  itemsPerPage = input<number>(10);
+  currentPage = input.required<number>();
 
   @Output() pageChange = new EventEmitter<number>();
-
-  public totalItems = signal(0);
-  public itemsPerPage = signal(10);
-  public currentPage = signal(1);
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.itemsPerPage()));
   
@@ -106,48 +98,16 @@ export class PaginationComponent {
   visiblePages = computed(() => {
     const total = this.totalPages();
     const current = this.currentPage();
-    const delta = 2;
-    const range = [];
-
-    for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
-      range.push(i);
-    }
-
-    if (current - delta > 2) range.unshift(-1); // Ellipsis placeholder (handle in UI if needed, simplified here)
-    if (current + delta < total - 1) range.push(-1);
-
-    // Simplified Logic for this component: Just show limited range around current
-    // Or just all if small
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
     
-    // Always show first and last
-    let pages = [1];
-    
-    if (current > 4) pages.push(-1); // ...
-    
-    let start = Math.max(2, current - 1);
-    let end = Math.min(total - 1, current + 1);
-    
-    if (current <= 4) end = 5;
-    if (current >= total - 3) start = total - 4;
-    
-    for (let i = start; i <= end; i++) {
-      if (i > 1 && i < total) pages.push(i);
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
     }
     
-    if (current < total - 3) pages.push(-1); // ...
-    
-    if (total > 1) pages.push(total);
-    
-    // For now, let's keep it simple: Show max 5 pages centered
-    // To fix the type error in template with -1, let's just show a simple slice for now
-    // A robust pagination needs more logic. Let's do a simple 5-page window.
     const windowStart = Math.max(1, Math.min(current - 2, total - 4));
-    const actualStart = Math.max(1, windowStart);
-    const windowEnd = Math.min(total, actualStart + 4);
+    const windowEnd = Math.min(total, windowStart + 4);
     
     const simpleRange = [];
-    for (let i = actualStart; i <= windowEnd; i++) {
+    for (let i = windowStart; i <= windowEnd; i++) {
       simpleRange.push(i);
     }
     return simpleRange;

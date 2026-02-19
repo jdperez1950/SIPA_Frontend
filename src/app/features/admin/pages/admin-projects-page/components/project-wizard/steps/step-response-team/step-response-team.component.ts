@@ -1,8 +1,22 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ResponseTeamMember } from '../../project-wizard.types';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService } from '../../../../../../../../core/services/confirmation.service';
+import {
+  numericOnlyValidator,
+  nitFormatValidator,
+  textOnlyValidator,
+  getNumericOnlyErrorMessage,
+  getNitFormatErrorMessage,
+  getTextOnlyErrorMessage,
+  getEmailErrorMessage,
+  getRequiredErrorMessage,
+  getMinNameLengthErrorMessage,
+  getMinDocumentNumberLengthErrorMessage,
+  phoneLengthValidator,
+  getPhoneLengthErrorMessage
+} from '../../../../../../../../shared/validators';
 
 @Component({
   selector: 'app-step-response-team',
@@ -21,6 +35,14 @@ export class StepResponseTeamComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   userForm!: FormGroup;
   isSearching = false;
+
+  documentType = signal('CC');
+
+  constructor() {
+    effect(() => {
+      this.updateDocumentValidators();
+    });
+  }
 
   // Mock document types
   documentTypes = [
@@ -46,13 +68,125 @@ export class StepResponseTeamComponent implements OnInit {
   private initForm() {
     this.userForm = this.fb.group({
       documentType: ['CC', Validators.required],
-      documentNumber: ['', [Validators.required, Validators.minLength(5)]],
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      // roleInProject removed from UI, defaulted to 'Otro' in logic
+      documentNumber: ['', [Validators.required, Validators.minLength(5), numericOnlyValidator]],
+      name: ['', [Validators.required, Validators.minLength(3), textOnlyValidator]],
       email: ['', [Validators.required, Validators.email]],
-      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      phoneNumber: ['', [Validators.required, phoneLengthValidator]],
       status: ['ACTIVE', Validators.required]
     });
+
+    this.userForm.get('documentType')?.valueChanges.subscribe(value => {
+      this.documentType.set(value);
+    });
+  }
+
+  private updateDocumentValidators() {
+    const docNumberControl = this.userForm.get('documentNumber');
+    const docType = this.documentType();
+
+    if (docNumberControl) {
+      if (docType === 'NIT') {
+        docNumberControl.setValidators([
+          Validators.required,
+          nitFormatValidator
+        ]);
+      } else if (docType === 'CC' || docType === 'CE') {
+        docNumberControl.setValidators([
+          Validators.required,
+          Validators.minLength(5),
+          numericOnlyValidator
+        ]);
+      } else {
+        docNumberControl.setValidators([
+          Validators.required,
+          Validators.minLength(5)
+        ]);
+      }
+      docNumberControl.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+
+  getDocumentNumberErrorMessage(): string {
+    const control = this.userForm.get('documentNumber');
+    const docType = this.documentType();
+
+    if (!control || !control.errors) return '';
+
+    if (docType === 'NIT') {
+      if (control.hasError('nitFormat')) {
+        return getNitFormatErrorMessage();
+      }
+    }
+
+    if (control.hasError('numericOnly')) {
+      return getNumericOnlyErrorMessage();
+    }
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    if (control.hasError('minlength')) {
+      return getMinDocumentNumberLengthErrorMessage();
+    }
+
+    return '';
+  }
+
+  getNameErrorMessage(): string {
+    const control = this.userForm.get('name');
+
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('textOnly')) {
+      return getTextOnlyErrorMessage();
+    }
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    if (control.hasError('minlength')) {
+      return getMinNameLengthErrorMessage();
+    }
+
+    return '';
+  }
+
+  getEmailErrorMessage(): string {
+    const control = this.userForm.get('email');
+
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('email')) {
+      return getEmailErrorMessage();
+    }
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    return '';
+  }
+
+  getPhoneNumberErrorMessage(): string {
+    const control = this.userForm.get('phoneNumber');
+
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('phoneLength')) {
+      return getPhoneLengthErrorMessage();
+    }
+
+    if (control.hasError('numericOnly')) {
+      return getNumericOnlyErrorMessage();
+    }
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    return '';
   }
 
   searchUserByDocument() {
@@ -70,8 +204,7 @@ export class StepResponseTeamComponent implements OnInit {
           name: 'Usuario Existente',
           email: 'usuario.existente@email.com',
           phoneNumber: '3001234567',
-          documentType: 'CC',
-          status: 'ACTIVE'
+          documentType: 'CC'
         });
       }
     }, 800);
