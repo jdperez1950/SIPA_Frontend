@@ -33,7 +33,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'maintenance',
+    redirectTo: 'auth/login',
     pathMatch: 'full'
   },
   {
