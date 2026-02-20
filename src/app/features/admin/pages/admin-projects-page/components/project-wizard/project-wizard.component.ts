@@ -42,10 +42,30 @@ export class ProjectWizardComponent {
 
   // --- Constants ---
   readonly ALL_STEPS = [
-    { number: 1, title: 'Identificación', icon: 'badge' },
-    { number: 2, title: 'Equipo Respuesta', icon: 'group_add' },
-    { number: 3, title: 'Evaluación', icon: 'quiz' },
-    { number: 4, title: 'Mesa Técnica', icon: 'engineering' }
+    { 
+      number: 1, 
+      title: 'Identificación', 
+      icon: 'badge',
+      description: 'Diligencie la información básica del proyecto: organización, fechas, ubicación y datos principales.'
+    },
+    { 
+      number: 2, 
+      title: 'Equipo Respuesta', 
+      icon: 'group_add',
+      description: 'Asigne el equipo de trabajo del proyecto: líder técnico, apoyo jurídico, responsable financiero, etc.'
+    },
+    { 
+      number: 3, 
+      title: 'Evaluación', 
+      icon: 'quiz',
+      description: 'Seleccione los ejes de evaluación y responda las preguntas técnicas del proyecto.'
+    },
+    { 
+      number: 4, 
+      title: 'Mesa Técnica', 
+      icon: 'engineering',
+      description: 'Configure la mesa técnica y asigne los responsables para el seguimiento del proyecto.'
+    }
   ];
 
   steps = computed(() => {

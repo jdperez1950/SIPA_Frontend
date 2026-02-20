@@ -7,6 +7,7 @@ import { ConfirmationService } from '../../../../core/services/confirmation.serv
 import { User, UserRole, UserStatus, CreateUserDTO, UpdateUserDTO, USER_ROLES_CONFIG } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
+import { textOnlyValidator, getTextOnlyErrorMessage, getEmailErrorMessage, getRequiredErrorMessage, getMinNameLengthErrorMessage } from '../../../../shared/validators';
 
 @Component({
   selector: 'app-admin-users-page',
@@ -40,7 +41,7 @@ export class AdminUsersPageComponent implements OnInit {
 
   // Form
   userForm = new FormGroup({
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(80), textOnlyValidator] }),
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     role: new FormControl<UserRole>('ASESOR', { nonNullable: true, validators: [Validators.required] }),
     status: new FormControl<UserStatus>('ACTIVE', { nonNullable: true })
@@ -177,7 +178,6 @@ export class AdminUsersPageComponent implements OnInit {
           ));
           this.alertService.success(`Usuario ${updatedUser.name} actualizado correctamente.`);
           this.isLoading.set(false);
-          this.closeModal();
         },
         error: (err) => {
           this.alertService.error('Error al actualizar usuario');
@@ -198,7 +198,6 @@ export class AdminUsersPageComponent implements OnInit {
           this.users.update(users => [...users, newUser]);
           this.alertService.success(`Usuario ${newUser.name} creado correctamente.`);
           this.isLoading.set(false);
-          this.closeModal();
         },
         error: (err) => {
           this.alertService.error('Error al crear usuario');
@@ -273,5 +272,33 @@ export class AdminUsersPageComponent implements OnInit {
     if (percentage >= 100) return 'bg-red-500';
     if (percentage >= 80) return 'bg-orange-500';
     return 'bg-green-500';
+  }
+
+  getNameErrorMessage(): string {
+    const control = this.userForm.controls.name;
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    if (control.hasError('minlength')) {
+      return getMinNameLengthErrorMessage();
+    }
+    if (control.hasError('maxlength')) {
+      return 'El nombre no puede tener más de 80 caracteres.';
+    }
+    if (control.hasError('textOnly')) {
+      return getTextOnlyErrorMessage();
+    }
+    return '';
+  }
+
+  getEmailErrorMessage(): string {
+    const control = this.userForm.controls.email;
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    if (control.hasError('email')) {
+      return getEmailErrorMessage();
+    }
+    return '';
   }
 }

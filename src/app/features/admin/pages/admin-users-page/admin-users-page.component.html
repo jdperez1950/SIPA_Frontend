@@ -201,7 +201,7 @@
             placeholder="Ej: Juan Pérez"
           >
           @if (userForm.controls.name.touched && userForm.controls.name.invalid) {
-            <p class="text-xs text-red-500 mt-1">El nombre es requerido.</p>
+            <p class="text-xs text-red-500 mt-1">{{ getNameErrorMessage() }}</p>
           }
         </div>
 
@@ -215,7 +215,7 @@
             placeholder="Ej: juan.perez@pavis.gob"
           >
           @if (userForm.controls.email.touched && userForm.controls.email.invalid) {
-            <p class="text-xs text-red-500 mt-1">Ingrese un correo válido.</p>
+            <p class="text-xs text-red-500 mt-1">{{ getEmailErrorMessage() }}</p>
           }
         </div>
 

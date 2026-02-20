@@ -8,15 +8,16 @@
     </div>
   } @else {
     <!-- Header / Stepper -->
-    <div class="bg-gray-50 border-b border-gray-200 p-6 flex-none">
-      <div class="flex items-center justify-end mb-6">
-        <div class="text-sm text-gray-500">
+    <div class="bg-gray-50 border-b border-gray-200 pt-4 px-4 pb-12 flex-none">
+      <!-- Step Indicator -->
+      <div class="flex items-center justify-end mb-2">
+        <div class="text-[10px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-200">
           Paso <span class="font-bold text-blue-600">{{ currentStep() }}</span> de {{ steps().length }}
         </div>
       </div>
 
       <!-- Stepper Visual -->
-      <div class="relative flex items-center justify-between w-full max-w-4xl mx-auto">
+      <div class="relative flex items-center justify-between w-full max-w-3xl mx-auto">
         <!-- Connecting Line -->
         <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-0 transform -translate-y-1/2 rounded-full"></div>
         <div 
@@ -30,28 +31,38 @@
           <div class="relative z-10 flex flex-col items-center group cursor-pointer" 
                (click)="goToStep(step.number)">
             <div 
-              class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white"
+              class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white shadow-sm"
               [ngClass]="{
-                'border-blue-600 text-blue-600 shadow-md scale-110': currentStep() === step.number,
+                'border-blue-600 text-blue-600 shadow-blue-100 scale-110': currentStep() === step.number,
                 'border-blue-600 bg-blue-600 text-white': currentStep() > step.number,
                 'border-gray-300 text-gray-400': currentStep() < step.number
               }"
             >
               @if (currentStep() > step.number) {
-                <span class="material-symbols-rounded text-lg">check</span>
+                <span class="material-symbols-rounded text-xl">check</span>
               } @else {
-                <span class="material-symbols-rounded text-lg">{{ step.icon }}</span>
+                <span class="material-symbols-rounded text-xl">{{ step.icon }}</span>
               }
             </div>
-            <span 
-              class="absolute top-12 text-xs font-medium whitespace-nowrap transition-colors duration-300"
-              [ngClass]="{
-                'text-blue-700': currentStep() >= step.number,
-                'text-gray-400': currentStep() < step.number
-              }"
-            >
-              {{ step.title }}
-            </span>
+            
+            <!-- Title & Help Tooltip Container -->
+            <div class="absolute top-14 left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 w-max">
+              <span 
+                class="text-sm font-medium whitespace-nowrap transition-colors duration-300"
+                [ngClass]="{
+                  'text-blue-700': currentStep() >= step.number,
+                  'text-gray-500': currentStep() < step.number
+                }"
+              >
+                {{ step.title }}
+              </span>
+              <span 
+                class="material-symbols-rounded text-[18px] text-gray-400 cursor-help hover:text-blue-600 transition-colors"
+                [attr.title]="step.description"
+              >
+                help
+              </span>
+            </div>
           </div>
         }
       }
