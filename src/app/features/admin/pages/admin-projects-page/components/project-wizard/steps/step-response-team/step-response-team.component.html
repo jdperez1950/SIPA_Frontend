@@ -39,8 +39,11 @@
             id="documentNumber" 
             formControlName="documentNumber"
             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            [class.border-red-300]="userForm.get('documentNumber')?.invalid && userForm.get('documentNumber')?.touched"
             placeholder="Ej. 123456789"
           >
+          <!-- Comentario temporal - Botón de búsqueda -->
+          <!--
           <button 
             type="button" 
             (click)="searchUserByDocument()"
@@ -52,7 +55,11 @@
               {{ isSearching ? 'progress_activity' : 'search' }}
             </span>
           </button>
+          -->
         </div>
+        @if (userForm.get('documentNumber')?.invalid && userForm.get('documentNumber')?.touched) {
+          <p class="text-sm text-red-600">{{ getDocumentNumberErrorMessage() }}</p>
+        }
       </div>
 
       <!-- Name -->
@@ -63,8 +70,12 @@
           id="name" 
           formControlName="name"
           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          [class.border-red-300]="userForm.get('name')?.invalid && userForm.get('name')?.touched"
           placeholder="Ej. Juan Pérez"
         >
+        @if (userForm.get('name')?.invalid && userForm.get('name')?.touched) {
+          <p class="text-sm text-red-600">{{ getNameErrorMessage() }}</p>
+        }
       </div>
 
       <!-- Email -->
@@ -75,8 +86,12 @@
           id="email" 
           formControlName="email"
           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          [class.border-red-300]="userForm.get('email')?.invalid && userForm.get('email')?.touched"
           placeholder="ejemplo@correo.com"
         >
+        @if (userForm.get('email')?.invalid && userForm.get('email')?.touched) {
+          <p class="text-sm text-red-600">{{ getEmailErrorMessage() }}</p>
+        }
       </div>
 
       <!-- Phone -->
@@ -87,22 +102,16 @@
           id="phoneNumber" 
           formControlName="phoneNumber"
           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Ej. 3001234567"
+          [class.border-red-300]="userForm.get('phoneNumber')?.invalid && userForm.get('phoneNumber')?.touched"
+          placeholder="Ej. 3001234567 (5-13 dígitos)"
         >
+        @if (userForm.get('phoneNumber')?.invalid && userForm.get('phoneNumber')?.touched) {
+          <p class="text-sm text-red-600">{{ getPhoneNumberErrorMessage() }}</p>
+        }
       </div>
 
-      <!-- Status -->
-      <div class="space-y-2">
-        <label for="status" class="block text-sm font-medium text-gray-700">Estado</label>
-        <select 
-          id="status" 
-          formControlName="status"
-          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-        >
-          <option value="ACTIVE">Activo</option>
-          <option value="INACTIVE">Inactivo</option>
-        </select>
-      </div>
+      <!-- Status - Campo oculto con valor por defecto ACTIVO -->
+      <input type="hidden" formControlName="status" value="ACTIVE">
     </div>
 
     <!-- Actions -->

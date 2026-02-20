@@ -14,6 +14,7 @@ import {
   TechnicalTableAssignment, 
   ResponseTeamMember 
 } from './project-wizard.types';
+import { ModalAlertComponent, ModalAlertData } from '../../../../../../shared/components/modal-alert';
 
 export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY';
 
@@ -25,7 +26,8 @@ export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY';
     StepIdentificationComponent,
     StepEvaluationComponent,
     StepTechnicalTableComponent,
-    StepResponseTeamComponent
+    StepResponseTeamComponent,
+    ModalAlertComponent
   ],
   templateUrl: './project-wizard.component.html',
   styles: []
@@ -76,6 +78,8 @@ export class ProjectWizardComponent {
 
   // Step 4 Data
   technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
+
+  modalAlertData = signal<ModalAlertData | null>(null);
 
   constructor() {
     // Initialize with data if provided
@@ -213,17 +217,17 @@ export class ProjectWizardComponent {
     };
 
     this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
-      next: (project) => {
-        this.initialData = project; 
-        this.alertService.success('Datos actualizados');
-        this.currentStep.update(s => s + 1);
-        this.isSaving.set(false);
-      },
-      error: () => {
-        this.alertService.error('Error al actualizar el proyecto');
-        this.isSaving.set(false);
-      }
-    });
+          next: (project) => {
+            this.initialData = project;
+            this.alertService.success('Datos actualizados');
+            this.currentStep.update(s => s + 1);
+            this.isSaving.set(false);
+          },
+          error: () => {
+            this.alertService.error('Error al actualizar el proyecto');
+            this.isSaving.set(false);
+          }
+        });
   }
 
   prevStep() {
@@ -234,7 +238,12 @@ export class ProjectWizardComponent {
 
   finishWizard() {
     if (!this.isCurrentStepValid()) {
-      this.alertService.error('Por favor complete todos los campos requeridos antes de finalizar.');
+      this.modalAlertData.set({
+        type: 'error',
+        title: 'Datos Incompletos',
+        message: 'Por favor complete todos los campos requeridos antes de finalizar.',
+        confirmText: 'Aceptar'
+      });
       this.markStepAsTouched();
       return;
     }
@@ -329,6 +338,10 @@ export class ProjectWizardComponent {
           }
         });
       }
+  }
+
+  onModalAlertConfirm() {
+    this.modalAlertData.set(null);
   }
 
   markStepAsTouched() {

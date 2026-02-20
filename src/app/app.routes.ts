@@ -28,8 +28,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES)
   },
   {
+    path: 'maintenance',
+    loadComponent: () => import('./core/pages/maintenance-page/maintenance-page.component').then(m => m.MaintenancePageComponent)
+  },
+  {
     path: '',
-    redirectTo: 'auth/login',
+    redirectTo: 'maintenance',
     pathMatch: 'full'
   },
   {

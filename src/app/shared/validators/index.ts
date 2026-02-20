@@ -1,0 +1,19 @@
+export {
+  numericOnlyValidator,
+  nitFormatValidator,
+  textOnlyValidator,
+  NUMERIC_ONLY_ERROR_KEY,
+  TEXT_ONLY_ERROR_KEY,
+  NIT_FORMAT_ERROR_KEY,
+  getNumericOnlyErrorMessage,
+  getNitFormatErrorMessage,
+  getTextOnlyErrorMessage,
+  getEmailErrorMessage,
+  getRequiredErrorMessage,
+  getMinLengthErrorMessage,
+  getMinDocumentNumberLengthErrorMessage,
+  getMinNameLengthErrorMessage,
+  phoneLengthValidator,
+  PHONE_LENGTH_ERROR_KEY,
+  getPhoneLengthErrorMessage
+} from './custom-validators';

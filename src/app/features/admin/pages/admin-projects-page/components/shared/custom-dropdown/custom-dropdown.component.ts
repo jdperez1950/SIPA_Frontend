@@ -24,6 +24,7 @@ export class CustomDropdownComponent {
 
   @Output() valueChange = new EventEmitter<string>();
   @Output() selectionChange = new EventEmitter<DropdownItem>();
+  @Output() dropdownOpen = new EventEmitter<void>();
 
   @ViewChild('dropdownTrigger') dropdownTrigger!: ElementRef;
   @ViewChild('searchInput') searchInput!: ElementRef;
@@ -58,6 +59,7 @@ export class CustomDropdownComponent {
     if (this.disabled) return;
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
+      this.dropdownOpen.emit();
       setTimeout(() => {
         if (this.enableSearch) {
           this.searchInput?.nativeElement?.focus();

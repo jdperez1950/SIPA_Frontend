@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
 import { Project, ProjectStatus, AdvisorCandidate } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
@@ -15,6 +16,7 @@ import { ProjectWizardComponent } from './components/project-wizard/project-wiza
   styles: []
 })
 export class AdminProjectsPageComponent implements OnInit {
+  private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
 
   // State
@@ -41,27 +43,19 @@ export class AdminProjectsPageComponent implements OnInit {
   ];
 
   constructor() {
-    // React to filter changes to reset pagination and reload
-    effect(() => {
-      const query = this.searchQuery();
-      const status = this.selectedStatus();
-      
-      // Untracked to avoid loops if needed, but here we want to react
-      // We set page to 1 when filters change
-      this.currentPage.set(1);
-      this.loadProjects();
-    });
+    // No effect needed - we'll handle filter changes explicitly
   }
 
   ngOnInit() {
-    // Initial load handled by effect
+    // Initial load
+    this.loadProjects();
   }
 
   loadProjects() {
     this.isLoading.set(true);
     this.adminDataService.getProjects(
-      this.currentPage(), 
-      this.pageSize(), 
+      this.currentPage(),
+      this.pageSize(),
       this.searchQuery(),
       this.selectedStatus()
     ).subscribe({
@@ -69,13 +63,13 @@ export class AdminProjectsPageComponent implements OnInit {
         // Handle various response shapes (Paginated vs Array vs Empty)
         const projects = Array.isArray(response) ? response : (response?.data || []);
         const total = response?.meta?.totalItems || projects.length;
-        
+
         this.projects.set(projects);
         this.totalItems.set(total);
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Error loading projects', err);
+        this.alertService.error('Error al cargar los proyectos. Por favor intente nuevamente.');
         this.isLoading.set(false);
         this.projects.set([]); // Ensure empty state on error
       }
@@ -109,7 +103,14 @@ export class AdminProjectsPageComponent implements OnInit {
 
   filterByStatus(status: ProjectStatus | null) {
     this.selectedStatus.set(status);
-    // Effect will trigger reload
+    this.currentPage.set(1);
+    this.loadProjects();
+  }
+
+  onSearchChange(query: string) {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   openAssignModal(project: Project) {
@@ -135,12 +136,14 @@ export class AdminProjectsPageComponent implements OnInit {
             p.id === updatedProject.id ? updatedProject : p
           )
         );
+        this.alertService.success(`Asesor asignado correctamente al proyecto ${updatedProject.name}`);
         this.isLoading.set(false);
         this.closeAssignModal();
       },
       error: (err) => {
-        console.error('Error assigning advisor', err);
+        this.alertService.error('Error al asignar el asesor. Por favor intente nuevamente.');
         this.isLoading.set(false);
+        this.closeAssignModal();
       }
     });
   }

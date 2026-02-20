@@ -8,15 +8,15 @@
         id="projectName"
         formControlName="projectName"
         class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        placeholder="Ej. Construcción de Vivienda de Interés Social..."
+        placeholder="Ej. Construcción de Vivienda de Interés Social... (mínimo 5 caracteres)"
         [ngClass]="{'border-red-300 focus:ring-red-200': form.get('projectName')?.invalid && form.get('projectName')?.touched}"
       >
       @if (form.get('projectName')?.invalid && form.get('projectName')?.touched) {
         <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
       }
     </div>
-    @if (form.get('projectName')?.errors?.['minlength']) {
-      <p class="text-xs text-red-500 mt-1">El nombre debe tener al menos 5 caracteres.</p>
+    @if (form.get('projectName')?.invalid && form.get('projectName')?.touched) {
+      <p class="text-xs text-red-500 mt-1">{{ getProjectNameErrorMessage() }}</p>
     }
   </div>
 
@@ -32,9 +32,10 @@
         [selectedValue]="form.get('department')?.value || ''"
         [enableSearch]="false"
         (valueChange)="onDepartmentChange($event)"
+        (dropdownOpen)="onDepartmentDropdownOpen()"
       ></app-custom-dropdown>
       @if (form.get('department')?.invalid && form.get('department')?.touched) {
-        <p class="text-xs text-red-500 mt-1">Este campo es requerido.</p>
+        <p class="text-xs text-red-500 mt-1">{{ getDepartmentErrorMessage() }}</p>
       }
     </div>
 
@@ -50,9 +51,10 @@
         [selectedValue]="form.get('municipality')?.value || ''"
         [enableSearch]="true"
         (valueChange)="onMunicipalityChange($event)"
+        (dropdownOpen)="onMunicipalityDropdownOpen()"
       ></app-custom-dropdown>
       @if (form.get('municipality')?.invalid && form.get('municipality')?.touched) {
-        <p class="text-xs text-red-500 mt-1">Este campo es requerido.</p>
+        <p class="text-xs text-red-500 mt-1">{{ getMunicipalityErrorMessage() }}</p>
       }
     </div>
   </div>
@@ -117,15 +119,15 @@
             id="organizationName"
             formControlName="organizationName"
             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            placeholder="Ej. Alcaldía de..."
+            placeholder="Ej. Alcaldía de... (mínimo 3 caracteres)"
             [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationName')?.invalid && form.get('organizationName')?.touched}"
           >
           @if (form.get('organizationName')?.invalid && form.get('organizationName')?.touched) {
             <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
           }
         </div>
-        @if (form.get('organizationName')?.errors?.['minlength']) {
-          <p class="text-xs text-red-500 mt-1">El nombre debe tener al menos 3 caracteres.</p>
+        @if (form.get('organizationName')?.invalid && form.get('organizationName')?.touched) {
+          <p class="text-xs text-red-500 mt-1">{{ getOrganizationNameErrorMessage() }}</p>
         }
       </div>
 
@@ -151,13 +153,16 @@
             id="organizationIdentifier"
             formControlName="organizationIdentifier"
             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            placeholder="Ej. 899.999.000-1"
+            placeholder="Ej. 8999990001 (10 dígitos sin puntos ni guiones)"
             [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched}"
           >
           @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
             <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
           }
         </div>
+        @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
+          <p class="text-xs text-red-500 mt-1">{{ getOrganizationIdentifierErrorMessage() }}</p>
+        }
       </div>
 
       <!-- Organization Email -->
@@ -169,15 +174,15 @@
             id="organizationEmail"
             formControlName="organizationEmail"
             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            placeholder="contacto@organizacion.com"
+            placeholder="contacto@organizacion.com (ejemplo@dominio.com)"
             [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationEmail')?.invalid && form.get('organizationEmail')?.touched}"
           >
           @if (form.get('organizationEmail')?.invalid && form.get('organizationEmail')?.touched) {
             <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
           }
         </div>
-        @if (form.get('organizationEmail')?.errors?.['email']) {
-          <p class="text-xs text-red-500 mt-1">Ingrese un correo electrónico válido.</p>
+        @if (form.get('organizationEmail')?.invalid && form.get('organizationEmail')?.touched) {
+          <p class="text-xs text-red-500 mt-1">{{ getOrganizationEmailErrorMessage() }}</p>
         }
       </div>
     </div>
@@ -198,6 +203,9 @@
           <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
         }
       </div>
+      @if (form.get('organizationAddress')?.invalid && form.get('organizationAddress')?.touched) {
+        <p class="text-xs text-red-500 mt-1">{{ getOrganizationAddressErrorMessage() }}</p>
+      }
     </div>
 
     <!-- Organization Description -->

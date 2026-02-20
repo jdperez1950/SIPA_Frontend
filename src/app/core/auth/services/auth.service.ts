@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError, of } from 'rxjs';
-import { tap, map, catchError, delay } from 'rxjs/operators';
+import { tap, map, catchError, delay, switchMap } from 'rxjs/operators';
 import { User } from '../../models/domain.models';
 import { environment } from '../../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, ValidateTokenResponse } from '../models/auth.models';
@@ -47,37 +47,90 @@ export class AuthService {
         window.addEventListener(event, resetTimer);
       });
       
-      this.startInactivityTimer();
+      // Only start timer if user is already authenticated
+      if (this.isAuthenticated()) {
+        this.startInactivityTimer();
+      }
     }
   }
 
   private logoutTimer: any;
+  private warningTimer: any;
   private readonly INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
+  private readonly INACTIVITY_WARNING = 0.5 * 60 * 1000; // 30 seconds before logout
+  private warningShown = false;
+
+  private periodicValidationTimer: any;
+  private readonly TOKEN_VALIDATION_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
   private startInactivityTimer() {
     clearTimeout(this.logoutTimer);
+    clearTimeout(this.warningTimer);
     if (this.isAuthenticated()) {
+      this.warningShown = false;
+
+      // Warning timer (30 seconds before logout)
+      this.warningTimer = setTimeout(() => {
+        if (this.isAuthenticated()) {
+          this.warningShown = true;
+          this.confirmationService.alert({
+            title: 'Sesión por Expirar',
+            message: 'Tu sesión expirará en 30 segundos por inactividad.',
+            type: 'warning'
+          });
+        }
+      }, this.INACTIVITY_LIMIT - this.INACTIVITY_WARNING);
+
+      // Logout timer
       this.logoutTimer = setTimeout(() => {
-        // Force logout first to prevent loops
-        this.logout();
-        
-        // Then show alert and redirect
-        this.confirmationService.alert({
-          title: 'Sesión Expirada',
-          message: 'Tu sesión ha sido cerrada por inactividad.',
-          type: 'info'
-        }).then(() => {
-          this.router.navigate(['/auth/login']);
-        });
+        clearTimeout(this.warningTimer);
+        this.forceLogoutWithMessage('Tu sesión ha sido cerrada por inactividad');
       }, this.INACTIVITY_LIMIT);
     }
+  }
+
+  private forceLogoutWithMessage(message: string, showWarning: boolean = true) {
+    this.logout();
+
+    if (showWarning) {
+      this.confirmationService.alert({
+        title: 'Sesión Cerrada',
+        message: message,
+        type: 'info'
+      });
+    }
+
+    this.router.navigate(['/auth/login']);
+  }
+
+  private startPeriodicTokenValidation() {
+    if (isPlatformBrowser(this.platformId)) {
+      clearTimeout(this.periodicValidationTimer);
+
+      this.periodicValidationTimer = setInterval(() => {
+        if (this.isAuthenticated()) {
+          this.validateToken().subscribe(isValid => {
+            if (!isValid) {
+              console.warn('Token expirado en validación periódica');
+              this.forceLogoutWithMessage('', false);
+            }
+          });
+        } else {
+          clearTimeout(this.periodicValidationTimer);
+        }
+      }, this.TOKEN_VALIDATION_INTERVAL);
+    }
+  }
+
+  private stopPeriodicTokenValidation() {
+    clearTimeout(this.periodicValidationTimer);
   }
 
   private restoreSession() {
     if (isPlatformBrowser(this.platformId)) {
       const storedUser = localStorage.getItem(this.USER_KEY);
       const token = localStorage.getItem(this.TOKEN_KEY);
-      
+
       if (storedUser && token) {
         try {
           // Primero seteamos el usuario localmente para no bloquear la UI
@@ -90,11 +143,11 @@ export class AuthService {
             console.log('Resultado validación token:', isValid);
             if (!isValid) {
               console.warn('Token inválido o expirado al restaurar sesión');
-              this.logout();
-              this.router.navigate(['/auth/login']);
+              this.forceLogoutWithMessage('', false);
             } else {
-              // Si es válido, reiniciamos el timer de inactividad
+              // Si es válido, reiniciamos el timer de inactividad y comenzamos validación periódica
               this.startInactivityTimer();
+              this.startPeriodicTokenValidation();
             }
           });
 
@@ -123,19 +176,18 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
-      map(response => {
-        if (response.success && response.data) {
+      switchMap(response => {
+        if (response.success && response.data && response.data.user && response.data.token) {
           this.setToken(response.data.token);
-          return response.data.user;
+          this.#currentUser.set(response.data.user);
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem(this.USER_KEY, JSON.stringify(response.data.user));
+            this.startInactivityTimer();
+            this.startPeriodicTokenValidation();
+          }
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error en autenticación');
-      }),
-      tap(user => {
-        this.#currentUser.set(user);
-        if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-          this.startInactivityTimer();
-        }
+        return throwError(() => new Error(response.message || 'Error en autenticación'));
       }),
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Error al iniciar sesión';
@@ -149,18 +201,11 @@ export class AuthService {
 
   register(data: RegisterRequest): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, data).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          // Note: We do NOT set the token here because this method might be used by an Admin
-          // to create OTHER users. If it's a self-registration, the caller should handle login.
-          // However, for standard self-registration, we might want to auto-login.
-          // For now, we return the created User. The caller can decide to use the token if needed
-          // (but we are only returning the User here).
-          // If we need the token, we should return the full AuthResponse or a wrapper.
-          // Given the Admin use case, returning just User is safer to avoid accidental session switches.
-          return response.data.user;
+      switchMap(response => {
+        if (response.success && response.data && response.data.user) {
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error en el registro');
+        return throwError(() => new Error(response.message || 'Error en el registro'));
       }),
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Error al registrar usuario';
@@ -175,6 +220,8 @@ export class AuthService {
   logout(): void {
     this.#currentUser.set(null);
     clearTimeout(this.logoutTimer);
+    clearTimeout(this.warningTimer);
+    this.stopPeriodicTokenValidation();
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.USER_KEY);
       localStorage.removeItem(this.TOKEN_KEY);
@@ -209,22 +256,22 @@ export class AuthService {
 
   updateUser(user: Partial<User>): Observable<User> {
     return this.http.patch<AuthResponse>(`${this.apiUrl}/auth/users`, user).pipe(
-      map(response => {
+      switchMap(response => {
         if (response.success && response.data && response.data.user) {
-          return response.data.user;
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error al actualizar usuario');
+        return throwError(() => new Error(response.message || 'Error al actualizar usuario'));
       })
     );
   }
 
   toggleUserStatus(id: string, status: string): Observable<User> {
     return this.http.patch<AuthResponse>(`${this.apiUrl}/auth/users/status`, { id, status }).pipe(
-      map(response => {
+      switchMap(response => {
         if (response.success && response.data && response.data.user) {
-          return response.data.user;
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error al cambiar estado de usuario');
+        return throwError(() => new Error(response.message || 'Error al cambiar estado de usuario'));
       })
     );
   }
@@ -232,7 +279,7 @@ export class AuthService {
   validateToken(): Observable<boolean> {
     const token = this.getToken();
     if (!token) return of(false);
-    
+
     // El endpoint de validación es POST y requiere el token en el body o header
     // Asumimos que el backend espera { token: string } en el body si es POST
     return this.http.post<ValidateTokenResponse>(`${this.apiUrl}/auth/validate`, { token }).pipe(
@@ -240,6 +287,15 @@ export class AuthService {
       map(response => response.success && response.data),
       catchError((err) => {
         console.error('Error validateToken API:', err);
+
+        // Si es error de conexión (ECONNREFUSED, ENOTFOUND, etc), no cerramos sesión
+        // Esto permite que la app siga funcionando si el backend está temporalmente caído
+        if (err.status === 0 || err.error instanceof ErrorEvent) {
+          console.warn('Error de red, no cerrando sesión temporalmente');
+          return of(true); // Asumimos válido para evitar desconexión
+        }
+
+        // Si es error del servidor (401, 403, 500), entonces cerramos sesión
         return of(false);
       })
     );

@@ -36,8 +36,11 @@ export class AdminDataService {
     if (role) params.role = role;
     if (status) params.status = status;
 
+    console.log('getUsers params:', params);
+
     return this.authService.getUsers(params).pipe(
       map(response => {
+        console.log('getUsers response:', response);
         if (response.success && response.data) {
           return {
             data: response.data.data,
@@ -119,8 +122,48 @@ export class AdminDataService {
   }
   
   // New methods for Project Wizard
+  private readonly MAX_BACKEND_ITEMS_BEFORE_FRONTEND_PAGINATION = 10;
+  private cachedProjects = signal<Project[] | null>(null);
+  private cachedQuery = signal<string>('');
+  private cachedStatus = signal<any>(null);
+  private cachedTotal = signal<number>(0);
+
   getProjects(page: number = 1, pageSize: number = 10, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
-    // Integration with Real API
+    // Check if we have cached data with same filters
+    const cachedData = this.cachedProjects();
+    const sameQuery = this.cachedQuery() === query;
+    const sameStatus = this.cachedStatus() === status;
+
+    if (cachedData && sameQuery && sameStatus) {
+      // Use cached data and paginate in frontend
+      const totalItems = this.cachedTotal();
+      const totalPages = Math.ceil(totalItems / pageSize);
+      const startIndex = (page - 1) * pageSize;
+      const paginatedData = cachedData.slice(startIndex, startIndex + pageSize);
+
+      console.log('Using cached data for pagination:', {
+        totalItems,
+        requestedPage: page,
+        pageSize,
+        startIndex,
+        endIndex: startIndex + pageSize,
+        paginatedCount: paginatedData.length,
+        totalPages
+      });
+
+      return of({
+        data: paginatedData,
+        meta: {
+          totalItems,
+          itemCount: paginatedData.length,
+          itemsPerPage: pageSize,
+          totalPages,
+          currentPage: page
+        }
+      });
+    }
+
+    // No cached data or filters changed, fetch from backend
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', pageSize.toString());
@@ -128,12 +171,66 @@ export class AdminDataService {
     if (query) params = params.set('search', query);
     if (status) params = params.set('status', status);
 
-    return this.http.get<ApiResponse<PaginatedResponse<Project>>>(`${this.apiUrl}/projects`, { params }).pipe(
+    console.log('getProjects params:', params.toString());
+
+    return this.http.get<any>(`${this.apiUrl}/projects`, { params }).pipe(
       map(response => {
+        console.log('getProjects response:', response);
         if (response.success && response.data) {
-          // Update local state if needed, or just return data
-          // this.projects.set(response.data.data); // Optional: sync local state
-          return response.data;
+          const apiResponse = response.data;
+          const allProjects = apiResponse.data || [];
+          const totalItems = apiResponse.total || allProjects.length;
+
+          // Backend workaround: If backend returns more items than expected, cache and paginate in frontend
+          const itemsReturned = allProjects.length;
+          const needsFrontendPagination = itemsReturned > this.MAX_BACKEND_ITEMS_BEFORE_FRONTEND_PAGINATION;
+
+          if (needsFrontendPagination) {
+            // Cache all projects for future pagination
+            this.cachedProjects.set(allProjects);
+            this.cachedQuery.set(query);
+            this.cachedStatus.set(status);
+            this.cachedTotal.set(totalItems);
+
+            // Paginate in frontend
+            const totalPages = Math.ceil(totalItems / pageSize);
+            const startIndex = (page - 1) * pageSize;
+            const paginatedData = allProjects.slice(startIndex, startIndex + pageSize);
+
+            console.log('Frontend pagination applied with caching:', {
+              totalItems,
+              itemsReturned,
+              requestedPage: page,
+              pageSize,
+              startIndex,
+              endIndex: startIndex + pageSize,
+              paginatedCount: paginatedData.length,
+              totalPages
+            });
+
+            return {
+              data: paginatedData,
+              meta: {
+                totalItems,
+                itemCount: paginatedData.length,
+                itemsPerPage: pageSize,
+                totalPages,
+                currentPage: page
+              }
+            };
+          }
+
+          // Backend is correctly paginating, don't cache
+          return {
+            data: allProjects,
+            meta: {
+              totalItems,
+              itemCount: allProjects.length,
+              itemsPerPage: apiResponse.limit || pageSize,
+              totalPages: apiResponse.totalPages || 0,
+              currentPage: apiResponse.page || page
+            }
+          };
         }
         return {
           data: [],
@@ -269,7 +366,11 @@ export class AdminDataService {
       }
       return p;
     }));
-    if (!updatedProject) throw new Error('Project not found');
+    
+    if (!updatedProject) {
+      return throwError(() => new Error('Project not found'));
+    }
+    
     return of(updatedProject).pipe(delay(500));
   }
 
@@ -334,7 +435,10 @@ export class AdminDataService {
       return o;
     }));
 
-    if (!updatedOrg) throw new Error('Organization not found');
+    if (!updatedOrg) {
+      return throwError(() => new Error('Organization not found'));
+    }
+    
     return of(updatedOrg).pipe(delay(500));
   }
 

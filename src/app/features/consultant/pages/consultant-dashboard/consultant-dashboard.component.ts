@@ -8,11 +8,13 @@ import { LoadingComponent } from '../../../../shared/components/loading/loading.
 import { ProjectWizardComponent } from '../../../admin/pages/admin-projects-page/components/project-wizard/project-wizard.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Router } from '@angular/router';
+import { FooterComponent } from '../../../../shared/components/footer/footer.component';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-consultant-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent, LoadingComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent, LoadingComponent, FooterComponent],
   templateUrl: './consultant-dashboard.component.html',
   styles: []
 })
@@ -20,6 +22,7 @@ export class ConsultantDashboardComponent implements OnInit {
   private projectsService = inject(ProjectsService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private confirmationService = inject(ConfirmationService);
 
   // State
   showWizard = signal(false); // Controls Wizard visibility

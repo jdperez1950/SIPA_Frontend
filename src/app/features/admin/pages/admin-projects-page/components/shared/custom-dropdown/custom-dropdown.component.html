@@ -15,6 +15,9 @@
     <span class="custom-dropdown-clear" *ngIf="displayValue && !disabled" (click)="clearSelection($event)">
       ×
     </span>
+    <span class="custom-dropdown-error-icon" *ngIf="invalid && !displayValue && !disabled">
+      <span class="material-symbols-rounded" style="font-size: 20px;">error</span>
+    </span>
     <span class="custom-dropdown-arrow" *ngIf="!displayValue || disabled">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
         <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

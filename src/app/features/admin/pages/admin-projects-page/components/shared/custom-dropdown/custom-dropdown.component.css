@@ -35,11 +35,16 @@
 }
 
 .custom-dropdown-trigger.is-invalid {
-  border-color: #fca5a5;
+  border-color: #ef4444;
+  background-color: #fef2f2;
 }
 
 .custom-dropdown-trigger.is-invalid.is-open {
   box-shadow: 0 0 0 2px #fecaca;
+}
+
+.custom-dropdown-trigger.is-invalid:hover:not(.is-disabled) {
+  border-color: #ef4444;
 }
 
 .custom-dropdown-value {
@@ -85,6 +90,17 @@
   transition: transform 0.15s ease;
   position: absolute;
   right: 0.5rem;
+}
+
+.custom-dropdown-error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #ef4444;
+  position: absolute;
+  right: 2rem;
 }
 
 .custom-dropdown-trigger.is-open .custom-dropdown-arrow {

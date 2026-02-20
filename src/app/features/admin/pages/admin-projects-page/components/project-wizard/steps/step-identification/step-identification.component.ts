@@ -4,6 +4,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
 import { IdentificationData } from '../../project-wizard.types';
 import { DivipolaService } from '../../../../../../../../core/services/divipola.service';
+import {
+  nitFormatValidator,
+  getNitFormatErrorMessage,
+  getRequiredErrorMessage,
+  getEmailErrorMessage,
+  getMinLengthErrorMessage,
+} from '../../../../../../../../shared/validators';
 
 @Component({
   selector: 'app-step-identification',
@@ -110,7 +117,7 @@ export class StepIdentificationComponent implements OnInit {
       municipality: [this.initialData?.municipality || null, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       organizationType: [this.initialData?.organizationType || 'COMPANY', Validators.required],
-      organizationIdentifier: [this.initialData?.organizationIdentifier || '', Validators.required],
+      organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
       organizationDescription: [this.initialData?.organizationDescription || ''],
       organizationAddress: [this.initialData?.organizationAddress || '', Validators.required],
@@ -200,7 +207,109 @@ export class StepIdentificationComponent implements OnInit {
     }
   }
 
+  onDepartmentDropdownOpen() {
+    this.form.get('department')?.markAsTouched();
+  }
+
+  onMunicipalityDropdownOpen() {
+    this.form.get('municipality')?.markAsTouched();
+  }
+
   onMunicipalityChange(municipalityName: string) {
     this.form.get('municipality')?.setValue(municipalityName, { emitEvent: true });
+  }
+
+  // Funciones para mensajes de error
+  getProjectNameErrorMessage(): string {
+    const control = this.form.get('projectName');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    if (control.hasError('minlength')) {
+      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
+    }
+    
+    return '';
+  }
+
+  getOrganizationNameErrorMessage(): string {
+    const control = this.form.get('organizationName');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    if (control.hasError('minlength')) {
+      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
+    }
+    
+    return '';
+  }
+
+  getOrganizationIdentifierErrorMessage(): string {
+    const control = this.form.get('organizationIdentifier');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    if (control.hasError('nitFormat')) {
+      return getNitFormatErrorMessage();
+    }
+    
+    return '';
+  }
+
+  getOrganizationEmailErrorMessage(): string {
+    const control = this.form.get('organizationEmail');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    if (control.hasError('email')) {
+      return getEmailErrorMessage();
+    }
+    
+    return '';
+  }
+
+  getOrganizationAddressErrorMessage(): string {
+    const control = this.form.get('organizationAddress');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    return '';
+  }
+
+  getDepartmentErrorMessage(): string {
+    const control = this.form.get('department');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    return '';
+  }
+
+  getMunicipalityErrorMessage(): string {
+    const control = this.form.get('municipality');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    return '';
   }
 }
