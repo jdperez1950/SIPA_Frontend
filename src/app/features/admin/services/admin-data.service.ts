@@ -366,7 +366,11 @@ export class AdminDataService {
       }
       return p;
     }));
-    if (!updatedProject) throw new Error('Project not found');
+    
+    if (!updatedProject) {
+      return throwError(() => new Error('Project not found'));
+    }
+    
     return of(updatedProject).pipe(delay(500));
   }
 
@@ -431,7 +435,10 @@ export class AdminDataService {
       return o;
     }));
 
-    if (!updatedOrg) throw new Error('Organization not found');
+    if (!updatedOrg) {
+      return throwError(() => new Error('Organization not found'));
+    }
+    
     return of(updatedOrg).pipe(delay(500));
   }
 

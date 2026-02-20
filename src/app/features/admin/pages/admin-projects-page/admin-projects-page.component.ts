@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
 import { Project, ProjectStatus, AdvisorCandidate } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
@@ -15,6 +16,7 @@ import { ProjectWizardComponent } from './components/project-wizard/project-wiza
   styles: []
 })
 export class AdminProjectsPageComponent implements OnInit {
+  private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
 
   // State
@@ -67,7 +69,7 @@ export class AdminProjectsPageComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Error loading projects', err);
+        this.alertService.error('Error al cargar los proyectos. Por favor intente nuevamente.');
         this.isLoading.set(false);
         this.projects.set([]); // Ensure empty state on error
       }
@@ -134,12 +136,14 @@ export class AdminProjectsPageComponent implements OnInit {
             p.id === updatedProject.id ? updatedProject : p
           )
         );
+        this.alertService.success(`Asesor asignado correctamente al proyecto ${updatedProject.name}`);
         this.isLoading.set(false);
         this.closeAssignModal();
       },
       error: (err) => {
-        console.error('Error assigning advisor', err);
+        this.alertService.error('Error al asignar el asesor. Por favor intente nuevamente.');
         this.isLoading.set(false);
+        this.closeAssignModal();
       }
     });
   }

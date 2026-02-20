@@ -48,8 +48,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Auto-logout on 401 Unauthorized
-      if (error.status === 401) {
+      // Auto-logout on 401 Unauthorized, except for login endpoint
+      if (error.status === 401 && !req.url.includes('/auth/login')) {
         // Manually clear session to avoid circular dep with AuthService.logout()
         if (typeof localStorage !== 'undefined') {
           localStorage.removeItem('pavis_user');

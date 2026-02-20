@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError, of } from 'rxjs';
-import { tap, map, catchError, delay } from 'rxjs/operators';
+import { tap, map, catchError, delay, switchMap } from 'rxjs/operators';
 import { User } from '../../models/domain.models';
 import { environment } from '../../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, ValidateTokenResponse } from '../models/auth.models';
@@ -176,20 +176,18 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
-      map(response => {
-        if (response.success && response.data) {
+      switchMap(response => {
+        if (response.success && response.data && response.data.user && response.data.token) {
           this.setToken(response.data.token);
-          return response.data.user;
+          this.#currentUser.set(response.data.user);
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem(this.USER_KEY, JSON.stringify(response.data.user));
+            this.startInactivityTimer();
+            this.startPeriodicTokenValidation();
+          }
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error en autenticación');
-      }),
-      tap(user => {
-        this.#currentUser.set(user);
-        if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-          this.startInactivityTimer();
-          this.startPeriodicTokenValidation();
-        }
+        return throwError(() => new Error(response.message || 'Error en autenticación'));
       }),
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Error al iniciar sesión';
@@ -203,18 +201,11 @@ export class AuthService {
 
   register(data: RegisterRequest): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, data).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          // Note: We do NOT set the token here because this method might be used by an Admin
-          // to create OTHER users. If it's a self-registration, the caller should handle login.
-          // However, for standard self-registration, we might want to auto-login.
-          // For now, we return the created User. The caller can decide to use the token if needed
-          // (but we are only returning the User here).
-          // If we need the token, we should return the full AuthResponse or a wrapper.
-          // Given the Admin use case, returning just User is safer to avoid accidental session switches.
-          return response.data.user;
+      switchMap(response => {
+        if (response.success && response.data && response.data.user) {
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error en el registro');
+        return throwError(() => new Error(response.message || 'Error en el registro'));
       }),
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'Error al registrar usuario';
@@ -265,22 +256,22 @@ export class AuthService {
 
   updateUser(user: Partial<User>): Observable<User> {
     return this.http.patch<AuthResponse>(`${this.apiUrl}/auth/users`, user).pipe(
-      map(response => {
+      switchMap(response => {
         if (response.success && response.data && response.data.user) {
-          return response.data.user;
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error al actualizar usuario');
+        return throwError(() => new Error(response.message || 'Error al actualizar usuario'));
       })
     );
   }
 
   toggleUserStatus(id: string, status: string): Observable<User> {
     return this.http.patch<AuthResponse>(`${this.apiUrl}/auth/users/status`, { id, status }).pipe(
-      map(response => {
+      switchMap(response => {
         if (response.success && response.data && response.data.user) {
-          return response.data.user;
+          return of(response.data.user);
         }
-        throw new Error(response.message || 'Error al cambiar estado de usuario');
+        return throwError(() => new Error(response.message || 'Error al cambiar estado de usuario'));
       })
     );
   }
