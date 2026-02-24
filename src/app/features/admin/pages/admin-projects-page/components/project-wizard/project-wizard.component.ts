@@ -52,7 +52,7 @@ export class ProjectWizardComponent {
       number: 2, 
       title: 'Equipo Respuesta', 
       icon: 'group_add',
-      description: 'Asigne el equipo de trabajo del proyecto: líder técnico, apoyo jurídico, responsable financiero, etc.'
+      description: 'Agrega los usuarios que formarán parte del equipo de respuesta para la organización, incluye la persona responsable de diligenciar el cuestionario de cumplimiento para la aplicación del proyecto.'
     },
     { 
       number: 3, 
@@ -128,21 +128,20 @@ export class ProjectWizardComponent {
     const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
 
     this.identificationData.set({
-      // Use 'name' for the project name input, fallback to 'code' if name is missing
       projectName: safeStr(project.name) || safeStr(project.code),
       
       department: project.state || orgData?.region || '',
       municipality: project.municipality || orgData?.municipality || '',
       
-      // Organization details
       organizationName: safeStr(project.organizationName) || orgData?.name || '',
-      organizationType: orgData?.type || 'COMPANY',
+      organizationType: orgData?.type || '',
       organizationIdentifier: orgData?.identifier || '',
+      verificationDigit: orgData?.verificationDigit || '',
       organizationEmail: orgData?.email || '',
+      website: orgData?.website || '',
       organizationDescription: orgData?.description || '',
       organizationAddress: orgData?.address || '',
       
-      // Dates - strip time part if present (YYYY-MM-DD)
       startDate: safeStr(project.startDate).split('T')[0],
       endDate: safeStr(project.endDate).split('T')[0],
       submissionDeadline: safeStr(project.submissionDeadline).split('T')[0]

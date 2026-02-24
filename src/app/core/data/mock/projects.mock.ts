@@ -69,7 +69,7 @@ export const PROJECTS_MOCK: Project[] = [
     organizationData: {
       id: 'org-6',
       name: 'Fundación Nuevos Horizontes',
-      type: 'COMPANY',
+      type: 'ONG',
       identifier: '900.123.456-7',
       email: 'contacto@nuevoshorizontes.org',
       status: 'ACTIVE',
