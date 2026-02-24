@@ -135,7 +135,8 @@ export class ProjectWizardComponent {
 
     this.identificationData.set({
       projectName: safeStr(project.name) || safeStr(project.code),
-      
+      projectBriefDescription: '',
+      financingDescription: '',
       departmentId: orgData?.regionId || '',
       departmentName: project.state || orgData?.region || '',
       municipalityId: orgData?.municipalityId || null,

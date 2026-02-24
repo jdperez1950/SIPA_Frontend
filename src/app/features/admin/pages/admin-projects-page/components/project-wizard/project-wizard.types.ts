@@ -10,6 +10,9 @@ export interface WizardState {
 
 export interface IdentificationData {
   projectName: string;
+  projectBriefDescription: string;
+  projectValue?: string;
+  financingDescription: string;
   departmentId: string;
   departmentName: string;
   municipalityId: string | null;

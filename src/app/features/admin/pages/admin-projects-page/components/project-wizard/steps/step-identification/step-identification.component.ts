@@ -94,6 +94,9 @@ export class StepIdentificationComponent implements OnInit {
         
         this.dataChange.emit({
           projectName: value.projectName,
+          projectBriefDescription: value.projectBriefDescription,
+          projectValue: value.projectValue,
+          financingDescription: value.financingDescription,
           departmentId: deptId,
           departmentName: deptName,
           municipalityId: municipalityId,
@@ -155,6 +158,9 @@ export class StepIdentificationComponent implements OnInit {
 
     this.form = this.fb.group({
       projectName: [this.initialData?.projectName || '', [Validators.required, Validators.minLength(5)]],
+      projectBriefDescription: [this.initialData?.projectBriefDescription || '', [Validators.required, Validators.minLength(10)]],
+      projectValue: [this.initialData?.projectValue || ''],
+      financingDescription: [this.initialData?.financingDescription || '', [Validators.required, Validators.minLength(10)]],
       department: [initialDeptId, Validators.required], // Bind to ID
       municipality: [initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],

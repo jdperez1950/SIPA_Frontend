@@ -8,9 +8,9 @@
     </div>
   } @else {
     <!-- Header / Stepper -->
-    <div class="bg-gray-50 border-b border-gray-200 pt-4 px-4 pb-12 flex-none">
+    <div class="bg-gray-50 border-b border-gray-200 pt-3 px-4 pb-8 flex-none">
       <!-- Step Indicator -->
-      <div class="flex items-center justify-end mb-2">
+      <div class="flex items-center justify-end mb-1">
         <div class="text-[10px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-200">
           Paso <span class="font-bold text-blue-600">{{ currentStep() }}</span> de {{ steps().length }}
         </div>
@@ -19,9 +19,9 @@
       <!-- Stepper Visual -->
       <div class="relative flex items-center justify-between w-full max-w-3xl mx-auto">
         <!-- Connecting Line -->
-        <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-0 transform -translate-y-1/2 rounded-full"></div>
+        <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-0 transform -translate-y-1/2 rounded-full"></div>
         <div 
-          class="absolute top-1/2 left-0 h-1 bg-blue-600 -z-0 transform -translate-y-1/2 rounded-full transition-all duration-500"
+          class="absolute top-1/2 left-0 h-0.5 bg-blue-600 -z-0 transform -translate-y-1/2 rounded-full transition-all duration-500"
           [style.width.%]="((currentStep() - 1) / (steps().length - 1)) * 100"
         ></div>
 
@@ -31,24 +31,24 @@
           <div class="relative z-10 flex flex-col items-center group cursor-pointer" 
                (click)="goToStep(step.number)">
             <div 
-              class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white shadow-sm"
+              class="w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 bg-white shadow-sm"
               [ngClass]="{
-                'border-blue-600 text-blue-600 shadow-blue-100 scale-110': currentStep() === step.number,
+                'border-blue-600 text-blue-600 shadow-blue-100 scale-105': currentStep() === step.number,
                 'border-blue-600 bg-blue-600 text-white': currentStep() > step.number,
                 'border-gray-300 text-gray-400': currentStep() < step.number
               }"
             >
               @if (currentStep() > step.number) {
-                <span class="material-symbols-rounded text-xl">check</span>
+                <span class="material-symbols-rounded text-sm">check</span>
               } @else {
-                <span class="material-symbols-rounded text-xl">{{ step.icon }}</span>
+                <span class="material-symbols-rounded text-sm">{{ step.icon }}</span>
               }
             </div>
             
             <!-- Title & Help Tooltip Container -->
-            <div class="absolute top-14 left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 w-max">
+            <div class="absolute top-10 left-1/2 transform -translate-x-1/2 flex items-center gap-0.5 w-max">
               <span 
-                class="text-sm font-medium whitespace-nowrap transition-colors duration-300"
+                class="text-xs font-medium whitespace-nowrap transition-colors duration-300"
                 [ngClass]="{
                   'text-blue-700': currentStep() >= step.number,
                   'text-gray-500': currentStep() < step.number
@@ -57,7 +57,7 @@
                 {{ step.title }}
               </span>
               <span 
-                class="material-symbols-rounded text-[18px] text-gray-400 cursor-help hover:text-blue-600 transition-colors"
+                class="material-symbols-rounded text-[8px] text-gray-400 cursor-help hover:text-blue-600 transition-colors"
                 [attr.title]="step.description"
               >
                 help
@@ -107,13 +107,13 @@
     </div>
 
     <!-- Footer / Actions -->
-    <div class="bg-gray-50 p-4 border-t border-gray-200 flex items-center justify-between">
+    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
       <button 
         (click)="prevStep()" 
         [disabled]="currentStep() === 1 || isSaving()"
-        class="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        class="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
       >
-        <span class="material-symbols-rounded">arrow_back</span>
+        <span class="material-symbols-rounded text-lg">arrow_back</span>
         Anterior
       </button>
 
@@ -121,14 +121,14 @@
         <button 
           (click)="nextStep()"
           [disabled]="isSaving()"
-          class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 rounded-lg bg-blue-600 text-sm text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           @if (isSaving()) {
-            <span class="material-symbols-rounded animate-spin">refresh</span>
+            <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
             {{ currentStep() === 2 ? 'Guardando...' : 'Procesando...' }}
           } @else {
             {{ currentStep() === 2 ? 'Finalizar y Guardar' : 'Siguiente' }}
-            <span class="material-symbols-rounded">
+            <span class="material-symbols-rounded text-lg">
               {{ currentStep() === 2 ? 'save' : 'arrow_forward' }}
             </span>
           }
@@ -137,16 +137,16 @@
         <!-- Previous logic for later steps (currently unreachable via UI logic) -->
         <button 
           (click)="finishWizard()"
-          class="px-6 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 shadow-sm transition-colors flex items-center gap-2"
+          class="px-4 py-2 rounded-lg bg-green-600 text-sm text-white font-medium hover:bg-green-700 shadow-sm transition-colors flex items-center gap-1.5"
         >
           Finalizar
-          <span class="material-symbols-rounded">check</span>
+          <span class="material-symbols-rounded text-lg">check</span>
         </button>
       }
     </div>
 
     <!-- Legal Footer -->
-    <div class="bg-white px-6 py-3 border-t border-gray-100 text-center flex-none">
+    <div class="bg-white px-6 py-2 border-t border-gray-100 text-center flex-none">
       <p class="text-[10px] text-gray-400 font-medium">
         Programa de Autogestión de Vivienda Nueva Urbana en la Modalidad de Construcción Delegada
       </p>
