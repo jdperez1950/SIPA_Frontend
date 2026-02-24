@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, effect, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ResponseTeamMember } from '../../project-wizard.types';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -36,6 +36,8 @@ export class StepResponseTeamComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   userForm!: FormGroup;
   isSearching = false;
+  editingMember = signal<ResponseTeamMember | null>(null);
+  isEditMode = computed(() => this.editingMember() !== null);
 
   documentType = signal('CC');
 
@@ -256,47 +258,96 @@ export class StepResponseTeamComponent implements OnInit {
     }
 
     const formValue = this.userForm.value;
-    
-    // Check if user already added
-    const exists = this.selectedMembers.some(
-      m => m.documentNumber === formValue.documentNumber
-    );
+    const currentEditing = this.editingMember();
 
-    if (exists) {
-      this.confirmationService.alert({
-        title: 'Usuario Existente',
-        message: 'Este usuario ya ha sido agregado al equipo.',
-        type: 'warning'
-      });
-      return;
+    if (currentEditing) {
+      // Edit mode: update existing member
+      const updatedMember: ResponseTeamMember = {
+        ...currentEditing,
+        userName: formValue.name,
+        userEmail: formValue.email,
+        roleInProject: 'Otro',
+        documentType: formValue.documentType,
+        documentNumber: formValue.documentNumber,
+        phoneNumber: formValue.phoneNumber,
+        status: formValue.status,
+        responsiblePosition: formValue.responsiblePosition,
+        profileDescription: formValue.profileDescription
+      };
+
+      const updatedList = this.selectedMembers.map(m =>
+        m.documentNumber === currentEditing.documentNumber ? updatedMember : m
+      );
+      this.selectionChange.emit(updatedList);
+      this.resetForm();
+    } else {
+      // Add mode: add new member
+      const exists = this.selectedMembers.some(
+        m => m.documentNumber === formValue.documentNumber
+      );
+
+      if (exists) {
+        this.confirmationService.alert({
+          title: 'Usuario Existente',
+          message: 'Este usuario ya ha sido agregado al equipo.',
+          type: 'warning'
+        });
+        return;
+      }
+
+      const newMember: ResponseTeamMember = {
+        userName: formValue.name,
+        userEmail: formValue.email,
+        roleInProject: 'Otro',
+        documentType: formValue.documentType,
+        documentNumber: formValue.documentNumber,
+        phoneNumber: formValue.phoneNumber,
+        status: formValue.status,
+        responsiblePosition: formValue.responsiblePosition,
+        profileDescription: formValue.profileDescription
+      };
+
+      const updatedList = [...this.selectedMembers, newMember];
+      this.selectionChange.emit(updatedList);
+      this.resetForm();
     }
-
-    const newMember: ResponseTeamMember = {
-      userName: formValue.name,
-      userEmail: formValue.email,
-      roleInProject: 'Otro', // Default role to 'Otro' as UI control was removed
-      documentType: formValue.documentType,
-      documentNumber: formValue.documentNumber,
-      phoneNumber: formValue.phoneNumber,
-      status: formValue.status,
-      responsiblePosition: formValue.responsiblePosition,
-      profileDescription: formValue.profileDescription,
-      // userId would be set if it was an existing user from DB, for now undefined for new ones
-    };
-
-    const updatedList = [...this.selectedMembers, newMember];
-    this.selectionChange.emit(updatedList);
-    this.resetForm();
   }
 
   removeMember(member: ResponseTeamMember) {
+    const currentEditing = this.editingMember();
+    
+    if (currentEditing?.documentNumber === member.documentNumber) {
+      this.editingMember.set(null);
+    }
+    
     const updatedList = this.selectedMembers.filter(
       m => m.documentNumber !== member.documentNumber
     );
     this.selectionChange.emit(updatedList);
   }
 
+  editMember(member: ResponseTeamMember) {
+    this.editingMember.set(member);
+    this.userForm.patchValue({
+      documentType: member.documentType,
+      documentNumber: member.documentNumber,
+      name: member.userName,
+      email: member.userEmail,
+      phoneNumber: member.phoneNumber,
+      status: member.status,
+      responsiblePosition: member.responsiblePosition || '',
+      profileDescription: member.profileDescription || ''
+    });
+    this.documentType.set(member.documentType);
+  }
+
+  cancelEdit() {
+    this.editingMember.set(null);
+    this.resetForm();
+  }
+
   resetForm() {
+    this.editingMember.set(null);
     this.userForm.reset({
       documentType: 'CC',
       status: 'ACTIVE',
