@@ -41,7 +41,7 @@ export class StepResponseTeamComponent implements OnInit {
   editingMember = signal<ResponseTeamMember | null>(null);
   isEditMode = computed(() => this.editingMember() !== null);
 
-  documentType = signal('CC');
+  documentType = signal('');
 
   constructor() {
     effect(() => {
@@ -79,7 +79,7 @@ export class StepResponseTeamComponent implements OnInit {
 
   private initForm() {
     this.userForm = this.fb.group({
-      documentType: ['CC', Validators.required],
+      documentType: ['', Validators.required],
       documentNumber: ['', [Validators.required, Validators.minLength(5), numericOnlyValidator]],
       name: ['', [Validators.required, Validators.minLength(3), textOnlyValidator]],
       email: ['', [Validators.required, Validators.email]],
@@ -118,6 +118,18 @@ export class StepResponseTeamComponent implements OnInit {
       }
       docNumberControl.updateValueAndValidity({ emitEvent: false });
     }
+  }
+
+  getDocumentTypeErrorMessage(): string {
+    const control = this.userForm.get('documentType');
+
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    return '';
   }
 
   getDocumentNumberErrorMessage(): string {
@@ -350,7 +362,7 @@ export class StepResponseTeamComponent implements OnInit {
   resetForm() {
     this.editingMember.set(null);
     this.userForm.reset({
-      documentType: 'CC',
+      documentType: '',
       status: 'ACTIVE',
       responsiblePosition: '',
       profileDescription: ''

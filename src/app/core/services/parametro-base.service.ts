@@ -245,7 +245,7 @@ export class ParametroBaseService {
       this._departamentos.set(data);
     });
 
-    this.getByTipo('TIPO DOCUMENTO').subscribe(data => {
+    this.getByTipo('TIPO DOCUMENTO REPRESENTANTE').subscribe(data => {
       this._tiposDocumento.set(data);
     });
 
@@ -339,7 +339,7 @@ export class ParametroBaseService {
         case 'DEPARTAMENTO':
           this._departamentos.set(data);
           break;
-        case 'TIPO DOCUMENTO':
+        case 'TIPO DOCUMENTO REPRESENTANTE':
           this._tiposDocumento.set(data);
           break;
         case 'ESTADO_CIVIL':

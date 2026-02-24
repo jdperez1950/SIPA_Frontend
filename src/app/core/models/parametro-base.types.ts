@@ -1,7 +1,7 @@
 export type ParametroTipo = 
   | 'DEPARTAMENTO' 
   | 'MUNICIPIO' 
-  | 'TIPO DOCUMENTO' 
+  | 'TIPO DOCUMENTO REPRESENTANTE' 
   | 'ESTADO_CIVIL' 
   | 'SEXO' 
   | 'NIVEL_ESCOLARIDAD' 
