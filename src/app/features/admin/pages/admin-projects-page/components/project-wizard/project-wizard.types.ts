@@ -10,10 +10,12 @@ export interface WizardState {
 
 export interface IdentificationData {
   projectName: string;
-  department: string;
-  municipality: string;
+  departmentId: string;
+  departmentName: string;
+  municipalityId: string | null;
+  municipalityName: string | null;
   organizationName: string;
-  organizationType: 'COMUNITARIA_BASE' | 'CONSEJO_COMUNITARIO' | 'AUTORIDAD_INDIGENA' | 'MOVIMIENTO_SOCIAL' | 'COLECTIVO' | 'ONG' | 'OSD' | 'ASOCIACION_PROFESIONAL' | 'EN_CONFORMACION';
+  organizationType: string;
   organizationIdentifier: string;
   verificationDigit: string;
   organizationEmail: string;

@@ -4,7 +4,7 @@ export const ORGANIZATIONS_MOCK: Organization[] = [
   {
     id: '1',
     name: 'Constructora Bolívar S.A.',
-    type: 'ASOCIACION_PROFESIONAL',
+    type: 'COMPANY',
     identifier: '860002503',
     email: 'proyectos@constructorabolivar.com',
     status: 'ACTIVE',
@@ -16,7 +16,7 @@ export const ORGANIZATIONS_MOCK: Organization[] = [
   {
     id: '2',
     name: 'Fundación Mario Santo Domingo',
-    type: 'ONG',
+    type: 'COMPANY',
     identifier: '890101234',
     email: 'contacto@fmsd.org.co',
     status: 'ACTIVE',
@@ -28,7 +28,7 @@ export const ORGANIZATIONS_MOCK: Organization[] = [
   {
     id: '3',
     name: 'Jorge Eliécer García',
-    type: 'COLECTIVO',
+    type: 'PERSON',
     identifier: '79123456',
     email: 'jorge.garcia@email.com',
     status: 'ACTIVE',
@@ -39,7 +39,7 @@ export const ORGANIZATIONS_MOCK: Organization[] = [
   {
     id: '4',
     name: 'Unión Temporal Vivienda 2024',
-    type: 'ASOCIACION_PROFESIONAL',
+    type: 'COMPANY',
     identifier: '901234567',
     email: 'direccion@utvivienda2024.com',
     status: 'INACTIVE',
@@ -51,7 +51,7 @@ export const ORGANIZATIONS_MOCK: Organization[] = [
   {
     id: '5',
     name: 'María Fernanda Valencia',
-    type: 'COLECTIVO',
+    type: 'PERSON',
     identifier: '52345678',
     email: 'maria.valencia@arquitectos.com',
     status: 'ACTIVE',

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ResponseTeamMember } from '../../project-wizard.types';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService } from '../../../../../../../../core/services/confirmation.service';
+import { ParametroBaseService } from '../../../../../../../../core/services/parametro-base.service';
 import {
   numericOnlyValidator,
   nitFormatValidator,
@@ -34,6 +35,7 @@ export class StepResponseTeamComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private confirmationService = inject(ConfirmationService);
+  private parametroBaseService = inject(ParametroBaseService);
   userForm!: FormGroup;
   isSearching = false;
   editingMember = signal<ResponseTeamMember | null>(null);
@@ -47,13 +49,13 @@ export class StepResponseTeamComponent implements OnInit {
     });
   }
 
-  // Mock document types
-  documentTypes = [
-    { value: 'CC', label: 'Cédula de Ciudadanía' },
-    { value: 'CE', label: 'Cédula de Extranjería' },
-    { value: 'NIT', label: 'NIT' },
-    { value: 'PAS', label: 'Pasaporte' }
-  ];
+  // Document types from ParametroBase
+  documentTypes = computed(() =>
+    this.parametroBaseService.tiposDocumento().map(d => ({
+      value: d.id,
+      label: d.nombre
+    }))
+  );
 
   // Project Roles
   projectRoles = [
@@ -64,13 +66,12 @@ export class StepResponseTeamComponent implements OnInit {
     { value: 'Otro', label: 'Otro' }
   ];
 
-  // Responsible Positions
-  responsiblePositions = [
-    { value: 'REPRESENTANTE_LEGAL', label: 'El Representante legal' },
-    { value: 'MIEMBRO_JUNTA_DIRECTIVA', label: 'Un miembro de la junta directiva' },
-    { value: 'MIEMBRO_ACTIVO_ORGANIZACION', label: 'Un miembro activo de la organización' },
-    { value: 'APOYO_ASESOR_EXTERNO', label: 'Un apoyo o asesor externo' }
-  ];
+  responsiblePositions = computed(() => 
+    this.parametroBaseService.tiposEncargado().map(c => ({
+      value: c.id,
+      label: c.nombre
+    }))
+  );
 
   ngOnInit() {
     this.initForm();

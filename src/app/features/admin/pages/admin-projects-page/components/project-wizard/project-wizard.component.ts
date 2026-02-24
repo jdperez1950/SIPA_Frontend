@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, Input, Output, signal, effect } from '@angular/core';
+import { Component, computed, EventEmitter, Input, Output, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
 import { StepEvaluationComponent } from './steps/step-evaluation/step-evaluation.component';
@@ -6,7 +6,7 @@ import { StepTechnicalTableComponent } from './steps/step-technical-table/step-t
 import { StepResponseTeamComponent } from './steps/step-response-team/step-response-team.component';
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
-import { inject } from '@angular/core';
+import { ParametroBaseService } from '../../../../../../core/services/parametro-base.service';
 import { CreateProjectRequest, Project, UpdateProjectRequest } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
@@ -39,6 +39,7 @@ export class ProjectWizardComponent {
   
   private alertService = inject(AlertService);
   private adminService = inject(AdminDataService);
+  private parametroBaseService = inject(ParametroBaseService);
 
   // --- Constants ---
   readonly ALL_STEPS = [
@@ -128,14 +129,20 @@ export class ProjectWizardComponent {
     // Helper to safely get string
     const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
 
+    // Map organization type from code to GUID
+    const orgTypeCode = orgData?.type;
+    const orgType = orgTypeCode ? this.parametroBaseService.tiposOrganizacion().find((t: any) => t.codigo === orgTypeCode) : null;
+
     this.identificationData.set({
       projectName: safeStr(project.name) || safeStr(project.code),
       
-      department: project.state || orgData?.region || '',
-      municipality: project.municipality || orgData?.municipality || '',
+      departmentId: orgData?.regionId || '',
+      departmentName: project.state || orgData?.region || '',
+      municipalityId: orgData?.municipalityId || null,
+      municipalityName: project.municipality || orgData?.municipality || '',
       
       organizationName: safeStr(project.organizationName) || orgData?.name || '',
-      organizationType: orgData?.type || '',
+      organizationType: orgType?.id || '',
       organizationIdentifier: orgData?.identifier || '',
       verificationDigit: orgData?.verificationDigit || '',
       organizationEmail: orgData?.email || '',
@@ -154,13 +161,13 @@ export class ProjectWizardComponent {
         userId: m.userId,
         userName: m.name,
         userEmail: m.email,
-        roleInProject: m.roleInProject,
-        documentType: m.documentType || 'CC',
+        roleInProject: m.profile,
+        documentType: m.documentTypeId || 'CC',
         documentNumber: m.documentNumber,
-        phoneNumber: m.phone || '',
-        status: m.status || 'ACTIVE',
-        responsiblePosition: m.responsiblePosition,
-        profileDescription: m.profileDescription
+        phoneNumber: '',
+        status: 'ACTIVE',
+        responsiblePosition: m.representativeTypeId,
+        profileDescription: ''
       })));
     }
   }
@@ -244,11 +251,15 @@ export class ProjectWizardComponent {
         userId: m.userId,
         name: m.userName,
         email: m.userEmail,
-        roleInProject: m.roleInProject,
-        documentType: m.documentType,
+        profile: m.roleInProject,
+        documentTypeId: m.documentType,
         documentNumber: m.documentNumber,
-        phone: m.phoneNumber,
-        status: m.status
+        representativeTypeId: m.responsiblePosition ? 
+          this.parametroBaseService.tiposEncargado().find((t: any) => t.id === m.responsiblePosition)?.codigo || 
+          m.responsiblePosition : undefined,
+        // phone: m.phoneNumber,
+        // status: m.status,
+        // profileDescription: m.profileDescription
       }))
     };
 
@@ -310,11 +321,15 @@ export class ProjectWizardComponent {
             userId: m.userId,
             name: m.userName,
             email: m.userEmail,
-            roleInProject: m.roleInProject,
-            documentType: m.documentType,
+            profile: m.roleInProject,
+            documentTypeId: m.documentType,
             documentNumber: m.documentNumber,
-            phone: m.phoneNumber,
-            status: m.status
+            representativeTypeId: m.responsiblePosition ? 
+              this.parametroBaseService.tiposEncargado().find((t: any) => t.id === m.responsiblePosition)?.codigo || 
+              m.responsiblePosition : undefined,
+            // phone: m.phoneNumber,
+            // status: m.status,
+            // profileDescription: m.profileDescription
           }))
         };
 
@@ -331,34 +346,48 @@ export class ProjectWizardComponent {
         });
       } else {
         // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
+        // Map organization type GUID back to code
+        const orgType = data.organizationType ? this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === data.organizationType) : null;
+
+        // Map responsiblePosition GUID back to code for each team member
+        const responseTeamWithMappedPositions = this.responseTeam().map(m => {
+          const positionCode = m.responsiblePosition ? 
+            this.parametroBaseService.tiposEncargado().find((t: any) => t.id === m.responsiblePosition)?.codigo : 
+            m.responsiblePosition;
+          return {
+            ...m,
+            responsiblePosition: positionCode as any
+          };
+        });
+
         const createRequest: CreateProjectRequest = {
-          name: data.projectName,
-          department: data.department,
-          municipality: data.municipality,
           organization: {
             name: data.organizationName,
-            type: data.organizationType,
+            type: (orgType?.codigo || data.organizationType) as any,
             identifier: data.organizationIdentifier,
             email: data.organizationEmail,
             description: data.organizationDescription,
             address: data.organizationAddress,
-            municipality: data.municipality,
-            region: data.department
+            municipalityId: data.municipalityId,
+            regionId: data.departmentId
           },
-          dates: {
-            start: data.startDate,
-            end: data.endDate,
-            submissionDeadline: data.submissionDeadline
+          project: {
+            name: data.projectName,
+            municipality: data.municipalityName || '',
+            state: data.departmentName,
+            dates: {
+              start: data.startDate,
+              end: data.endDate,
+              submissionDeadline: data.submissionDeadline
+            }
           },
-          // Send the collected Response Team immediately!
-          responseTeam: this.responseTeam().map(m => ({
+          responseTeam: responseTeamWithMappedPositions.map(m => ({
             name: m.userName,
             email: m.userEmail,
-            roleInProject: m.roleInProject,
-            documentType: m.documentType,
+            profile: m.roleInProject,
+            documentTypeId: m.documentType,
             documentNumber: m.documentNumber,
-            phone: m.phoneNumber,
-            status: m.status
+            representativeTypeId: m.responsiblePosition
           }))
         };
 
@@ -461,13 +490,13 @@ export class ProjectWizardComponent {
         userId: m.userId,
         name: m.userName,
         email: m.userEmail,
-        roleInProject: m.roleInProject,
-        documentType: m.documentType,
+        profile: m.roleInProject,
+        documentTypeId: m.documentType,
         documentNumber: m.documentNumber,
-        phone: m.phoneNumber,
-        status: m.status,
-        responsiblePosition: m.responsiblePosition,
-        profileDescription: m.profileDescription
+        representativeTypeId: m.responsiblePosition,
+        // phone: m.phoneNumber,
+        // status: m.status,
+        // profileDescription: m.profileDescription
       }))
     };
 
