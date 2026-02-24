@@ -116,6 +116,7 @@ export class ProjectWizardComponent {
     // project.code -> Código del proyecto (Ej: "PRJ-2026-0029")
     // project.organization -> Objeto completo con la info de la organización
     // project.organizationName -> Nombre de la organización (string)
+    // project.responseTeam -> Array de miembros del equipo
     
     // Map Project to IdentificationData
     // The 'organization' field in the backend response is actually the full object, 
@@ -146,6 +147,22 @@ export class ProjectWizardComponent {
       endDate: safeStr(project.endDate).split('T')[0],
       submissionDeadline: safeStr(project.submissionDeadline).split('T')[0]
     });
+
+    // Load response team data
+    if (project.responseTeam && project.responseTeam.length > 0) {
+      this.responseTeam.set(project.responseTeam.map(m => ({
+        userId: m.userId,
+        userName: m.name,
+        userEmail: m.email,
+        roleInProject: m.roleInProject,
+        documentType: m.documentType || 'CC',
+        documentNumber: m.documentNumber,
+        phoneNumber: m.phone || '',
+        status: m.status || 'ACTIVE',
+        responsiblePosition: m.responsiblePosition,
+        profileDescription: m.profileDescription
+      })));
+    }
   }
 
   // --- Computed Helpers ---
@@ -374,6 +391,11 @@ export class ProjectWizardComponent {
   // --- Data Updates ---
 
   updateIdentification(data: IdentificationData) {
+    if (!data) {
+      console.warn('updateIdentification received null data, skipping update');
+      return;
+    }
+    
     // If organization changes, we might need to reset Step 4
     const prev = this.identificationData();
     if (prev && prev.organizationIdentifier !== data.organizationIdentifier) {
@@ -443,7 +465,9 @@ export class ProjectWizardComponent {
         documentType: m.documentType,
         documentNumber: m.documentNumber,
         phone: m.phoneNumber,
-        status: m.status
+        status: m.status,
+        responsiblePosition: m.responsiblePosition,
+        profileDescription: m.profileDescription
       }))
     };
 

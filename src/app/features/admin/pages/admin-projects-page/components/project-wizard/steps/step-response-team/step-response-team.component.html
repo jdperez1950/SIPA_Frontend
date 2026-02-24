@@ -11,7 +11,25 @@
 
   <!-- Form Section -->
   <form [formGroup]="userForm" (ngSubmit)="addMember()" class="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
-    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Nuevo Integrante</h4>
+    <div class="flex justify-between items-center mb-4">
+      <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+        @if (isEditMode()) {
+          Editar Integrante
+        } @else {
+          Nuevo Integrante
+        }
+      </h4>
+      @if (isEditMode()) {
+        <button 
+          type="button"
+          (click)="cancelEdit()"
+          class="text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center gap-1"
+        >
+          <span class="material-symbols-rounded text-[18px]">close</span>
+          Cancelar edición
+        </button>
+      }
+    </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
@@ -166,8 +184,18 @@
         [disabled]="userForm.invalid"
         class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
       >
-        <span class="material-symbols-rounded">person_add</span>
-        Agregar Integrante
+        <span class="material-symbols-rounded">
+          @if (isEditMode()) {
+            save
+          } @else {
+            person_add
+          }
+        </span>
+        @if (isEditMode()) {
+          Actualizar Integrante
+        } @else {
+          Agregar Integrante
+        }
       </button>
     </div>
   </form>
@@ -232,13 +260,22 @@
                 </span>
               </td>
               <td class="px-6 py-4 text-right">
-                <button 
-                  (click)="removeMember(member)"
-                  class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
-                  title="Eliminar"
-                >
-                  <span class="material-symbols-rounded">delete</span>
-                </button>
+                <div class="flex items-center justify-end gap-2">
+                  <button 
+                    (click)="editMember(member)"
+                    class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                    title="Editar"
+                  >
+                    <span class="material-symbols-rounded">edit</span>
+                  </button>
+                  <button 
+                    (click)="removeMember(member)"
+                    class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
+                    title="Eliminar"
+                  >
+                    <span class="material-symbols-rounded">delete</span>
+                  </button>
+                </div>
               </td>
             </tr>
           }

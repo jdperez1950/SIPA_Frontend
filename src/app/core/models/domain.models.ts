@@ -131,6 +131,7 @@ export interface Project {
   endDate?: string;
   submissionDeadline?: string;
   correctionDeadline?: string;
+  responseTeam?: ProjectResponseTeamMember[];
 }
 
 export interface ApiResponse<T> {
@@ -169,6 +170,8 @@ export interface ProjectResponseTeamMember {
   documentNumber: string;
   phone?: string;      // Changed from phoneNumber to match Backend
   status?: string;
+  responsiblePosition?: string;
+  profileDescription?: string;
 }
 
 export interface CreateProjectRequest {
