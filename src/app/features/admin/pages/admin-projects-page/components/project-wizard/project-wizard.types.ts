@@ -12,11 +12,12 @@ export interface IdentificationData {
   projectName: string;
   department: string;
   municipality: string;
-  // organizationId: string; // Removed for V2
   organizationName: string;
-  organizationType: 'COMPANY' | 'PERSON';
+  organizationType: 'COMUNITARIA_BASE' | 'CONSEJO_COMUNITARIO' | 'AUTORIDAD_INDIGENA' | 'MOVIMIENTO_SOCIAL' | 'COLECTIVO' | 'ONG' | 'OSD' | 'ASOCIACION_PROFESIONAL' | 'EN_CONFORMACION';
   organizationIdentifier: string;
+  verificationDigit: string;
   organizationEmail: string;
+  website: string;
   organizationDescription: string;
   organizationAddress: string;
   startDate: string;
@@ -46,4 +47,6 @@ export interface ResponseTeamMember {
   documentNumber: string;
   phoneNumber: string;
   status: string; // 'ACTIVE' | 'INACTIVE'
+  responsiblePosition?: string; // El Representante legal | Un miembro de la junta directiva | Un miembro activo de la organización | Un apoyo o asesor externo
+  profileDescription?: string; // Descripción del perfil del responsable
 }

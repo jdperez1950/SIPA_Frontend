@@ -12,6 +12,18 @@ import {
   getMinLengthErrorMessage,
 } from '../../../../../../../../shared/validators';
 
+export const ORGANIZATION_TYPES = [
+  { value: 'COMUNITARIA_BASE', label: 'Organizacion comunitaria de base' },
+  { value: 'CONSEJO_COMUNITARIO', label: 'Consejo Comunitario de Comunidades Negras' },
+  { value: 'AUTORIDAD_INDIGENA', label: 'Autoridad indígena' },
+  { value: 'MOVIMIENTO_SOCIAL', label: 'Movimiento Social' },
+  { value: 'COLECTIVO', label: 'Colectivo' },
+  { value: 'ONG', label: 'Organización no Gubernamental (ONG)' },
+  { value: 'OSD', label: 'Organizaciones Solidarias de Desarrollo (OSD)' },
+  { value: 'ASOCIACION_PROFESIONAL', label: 'Asociacion profesional y/o gremial' },
+  { value: 'EN_CONFORMACION', label: 'En conformación' }
+];
+
 @Component({
   selector: 'app-step-identification',
   standalone: true,
@@ -28,8 +40,11 @@ export class StepIdentificationComponent implements OnInit {
 
   form!: FormGroup;
   
+  organizationTypes = ORGANIZATION_TYPES;
+  
   // Lists for selects
   municipios: CustomDropdownItem[] = [];
+  isManualMunicipality = false;
 
   constructor() {
     // Effect to handle initial data loading when service is ready
@@ -70,12 +85,14 @@ export class StepIdentificationComponent implements OnInit {
         
         this.dataChange.emit({
           projectName: value.projectName,
-          department: deptName, // Emit NAME for backend compatibility
+          department: deptName,
           municipality: value.municipality,
           organizationName: value.organizationName,
           organizationType: value.organizationType,
           organizationIdentifier: value.organizationIdentifier,
+          verificationDigit: value.verificationDigit,
           organizationEmail: value.organizationEmail,
+          website: value.website,
           organizationDescription: value.organizationDescription,
           organizationAddress: value.organizationAddress,
           startDate: value.startDate,
@@ -92,6 +109,12 @@ export class StepIdentificationComponent implements OnInit {
     if (this.form.valid) {
       this.form.updateValueAndValidity({ emitEvent: true });
     }
+  }
+
+  toggleManualMunicipality() {
+    this.isManualMunicipality = !this.isManualMunicipality;
+    this.form.get('municipality')?.setValue(null);
+    this.form.get('municipality')?.markAsUntouched();
   }
 
   private initForm() {
@@ -116,10 +139,12 @@ export class StepIdentificationComponent implements OnInit {
       department: [initialDeptId, Validators.required], // Bind to ID
       municipality: [this.initialData?.municipality || null, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
-      organizationType: [this.initialData?.organizationType || 'COMPANY', Validators.required],
+      organizationType: [this.initialData?.organizationType || '', Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],
+      verificationDigit: [this.initialData?.verificationDigit || '', Validators.required],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
-      organizationDescription: [this.initialData?.organizationDescription || ''],
+      website: [this.initialData?.website || '', [Validators.pattern(/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}$/)]],
+      organizationDescription: [this.initialData?.organizationDescription || '', [Validators.required, Validators.minLength(10)]],
       organizationAddress: [this.initialData?.organizationAddress || '', Validators.required],
       startDate: [this.initialData?.startDate || defaultStart],
       endDate: [this.initialData?.endDate || defaultEnd],
@@ -135,13 +160,32 @@ export class StepIdentificationComponent implements OnInit {
       if (deptId) {
         this.municipios = this.divipolaService.getMunicipiosPorDepto(deptId);
         
-        // If current municipality is not in the new list, reset it
+        // If no municipalities found, switch to manual mode automatically
+        if (this.municipios.length === 0) {
+          this.isManualMunicipality = true;
+        } else {
+          // Check if current value exists in the new list
+          const exists = this.municipios.some(m => m.nombre === currentMunicipality);
+          
+          // If value exists, keep dropdown (manual=false).
+          // If value doesn't exist but has value (initial load of manual data), switch to manual.
+          // If user changed department (dirty), reset to dropdown.
+          if (currentMunicipality && !exists && !this.form.get('department')?.dirty) {
+              this.isManualMunicipality = true;
+          } else {
+              this.isManualMunicipality = false;
+          }
+        }
+
+        // If current municipality is not in the new list, reset it ONLY if user changed department
         const exists = this.municipios.some(m => m.nombre === currentMunicipality);
         if (!exists && this.form.get('department')?.dirty) {
              this.form.get('municipality')?.setValue(null);
+             this.isManualMunicipality = false; // Reset to dropdown for new department selection
         }
       } else {
         this.municipios = [];
+        this.isManualMunicipality = false;
         this.form.get('municipality')?.setValue(null);
       }
     });
@@ -308,6 +352,21 @@ export class StepIdentificationComponent implements OnInit {
     
     if (control.hasError('required')) {
       return getRequiredErrorMessage();
+    }
+    
+    return '';
+  }
+
+  getOrganizationDescriptionErrorMessage(): string {
+    const control = this.form.get('organizationDescription');
+    if (!control || !control.errors) return '';
+    
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+    
+    if (control.hasError('minlength')) {
+      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
     }
     
     return '';

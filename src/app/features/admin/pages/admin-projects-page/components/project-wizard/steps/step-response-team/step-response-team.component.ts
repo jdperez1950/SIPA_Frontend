@@ -15,7 +15,8 @@ import {
   getMinNameLengthErrorMessage,
   getMinDocumentNumberLengthErrorMessage,
   phoneLengthValidator,
-  getPhoneLengthErrorMessage
+  getPhoneLengthErrorMessage,
+  getMinLengthErrorMessage
 } from '../../../../../../../../shared/validators';
 
 @Component({
@@ -61,6 +62,14 @@ export class StepResponseTeamComponent implements OnInit {
     { value: 'Otro', label: 'Otro' }
   ];
 
+  // Responsible Positions
+  responsiblePositions = [
+    { value: 'REPRESENTANTE_LEGAL', label: 'El Representante legal' },
+    { value: 'MIEMBRO_JUNTA_DIRECTIVA', label: 'Un miembro de la junta directiva' },
+    { value: 'MIEMBRO_ACTIVO_ORGANIZACION', label: 'Un miembro activo de la organización' },
+    { value: 'APOYO_ASESOR_EXTERNO', label: 'Un apoyo o asesor externo' }
+  ];
+
   ngOnInit() {
     this.initForm();
   }
@@ -72,7 +81,9 @@ export class StepResponseTeamComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3), textOnlyValidator]],
       email: ['', [Validators.required, Validators.email]],
       phoneNumber: ['', [Validators.required, phoneLengthValidator]],
-      status: ['ACTIVE', Validators.required]
+      status: ['ACTIVE', Validators.required],
+      responsiblePosition: ['', Validators.required],
+      profileDescription: ['', [Validators.required, Validators.minLength(10)]]
     });
 
     this.userForm.get('documentType')?.valueChanges.subscribe(value => {
@@ -189,6 +200,34 @@ export class StepResponseTeamComponent implements OnInit {
     return '';
   }
 
+  getResponsiblePositionErrorMessage(): string {
+    const control = this.userForm.get('responsiblePosition');
+
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    return '';
+  }
+
+  getProfileDescriptionErrorMessage(): string {
+    const control = this.userForm.get('profileDescription');
+
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    if (control.hasError('minlength')) {
+      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
+    }
+
+    return '';
+  }
+
   searchUserByDocument() {
     const docNumber = this.userForm.get('documentNumber')?.value;
     if (!docNumber) return;
@@ -240,6 +279,8 @@ export class StepResponseTeamComponent implements OnInit {
       documentNumber: formValue.documentNumber,
       phoneNumber: formValue.phoneNumber,
       status: formValue.status,
+      responsiblePosition: formValue.responsiblePosition,
+      profileDescription: formValue.profileDescription,
       // userId would be set if it was an existing user from DB, for now undefined for new ones
     };
 
@@ -258,7 +299,9 @@ export class StepResponseTeamComponent implements OnInit {
   resetForm() {
     this.userForm.reset({
       documentType: 'CC',
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      responsiblePosition: '',
+      profileDescription: ''
     });
   }
 }

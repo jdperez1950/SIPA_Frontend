@@ -139,13 +139,15 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-export type OrganizationType = 'COMPANY' | 'PERSON';
+export type OrganizationType = 'COMUNITARIA_BASE' | 'CONSEJO_COMUNITARIO' | 'AUTORIDAD_INDIGENA' | 'MOVIMIENTO_SOCIAL' | 'COLECTIVO' | 'ONG' | 'OSD' | 'ASOCIACION_PROFESIONAL' | 'EN_CONFORMACION';
 
 export interface OrganizationRequest {
   name: string;
   type: OrganizationType;
   identifier: string;
+  verificationDigit?: string;
   email: string;
+  website?: string;
   municipality: string;
   region: string;
   description?: string;
@@ -218,15 +220,17 @@ export interface Organization {
   id: string;
   name: string;
   type: OrganizationType;
-  identifier: string; // RUC or DNI
+  identifier: string;
+  verificationDigit?: string;
   email: string;
+  website?: string;
   status: OrganizationStatus;
   contactName?: string;
   municipality: string;
   region: string;
   description?: string;
   address?: string;
-  userId?: string; // Linked user account
+  userId?: string;
 }
 
 // Pagination Models
@@ -245,7 +249,9 @@ export interface CreateOrganizationDTO {
   name: string;
   type: OrganizationType;
   identifier: string;
+  verificationDigit?: string;
   email: string;
+  website?: string;
   municipality: string;
   region: string;
   contactName?: string;
