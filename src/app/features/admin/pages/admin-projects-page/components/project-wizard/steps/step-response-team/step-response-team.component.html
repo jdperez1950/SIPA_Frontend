@@ -117,10 +117,9 @@
         }
       </div>
 
-      <!-- Phone - Comentado: No se envía al backend -->
-      <!--
+      <!-- Phone -->
       <div class="space-y-2">
-        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Teléfono</label>
+        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
         <input 
           type="tel" 
           id="phoneNumber" 
@@ -133,7 +132,6 @@
           <p class="text-sm text-red-600">{{ getPhoneNumberErrorMessage() }}</p>
         }
       </div>
-      -->
 
       <!-- Responsible Position -->
       <div class="space-y-2">
@@ -159,8 +157,7 @@
         }
       </div>
 
-      <!-- Profile Description - Comentado: No se envía al backend -->
-      <!--
+      <!-- Profile Description -->
       <div class="space-y-2 md:col-span-2 lg:col-span-3">
         <label for="profileDescription" class="block text-sm font-medium text-gray-700">Descripción del perfil del responsable <span class="text-red-500">*</span></label>
         <div class="relative">
@@ -180,7 +177,6 @@
           <p class="text-sm text-red-600">{{ getProfileDescriptionErrorMessage() }}</p>
         }
       </div>
-      -->
 
       <!-- Status - Campo oculto con valor por defecto ACTIVO - Comentado: No se envía al backend -->
       <!--
