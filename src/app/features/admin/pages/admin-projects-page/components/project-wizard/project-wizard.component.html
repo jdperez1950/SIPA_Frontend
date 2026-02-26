@@ -27,7 +27,6 @@
 
         <!-- Steps -->
       @for (step of steps(); track step.number) {
-        @if (step.number <= 2) {
           <div class="relative z-10 flex flex-col items-center group cursor-pointer" 
                (click)="goToStep(step.number)">
             <div 
@@ -65,7 +64,6 @@
             </div>
           </div>
         }
-      }
       </div>
     </div>
 
@@ -90,14 +88,7 @@
             }
           }
           @case (3) {
-            <app-step-evaluation
-              [axes]="evaluationAxes()"
-              (toggleAxis)="toggleAxis($event)"
-            ></app-step-evaluation>
-          }
-          @case (4) {
             <app-step-technical-table
-              [activeAxes]="activeAxes()"
               [assignments]="technicalTableAssignments()"
               (assign)="updateTechnicalTable($event)"
             ></app-step-technical-table>
@@ -117,7 +108,7 @@
         Anterior
       </button>
 
-      @if (currentStep() <= 2) {
+      @if (currentStep() < 3) {
         <button 
           (click)="nextStep()"
           [disabled]="isSaving()"
@@ -125,22 +116,25 @@
         >
           @if (isSaving()) {
             <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
-            {{ currentStep() === 2 ? 'Guardando...' : 'Procesando...' }}
+            Procesando...
           } @else {
-            {{ currentStep() === 2 ? 'Finalizar y Guardar' : 'Siguiente' }}
-            <span class="material-symbols-rounded text-lg">
-              {{ currentStep() === 2 ? 'save' : 'arrow_forward' }}
-            </span>
+            Siguiente
+            <span class="material-symbols-rounded text-lg">arrow_forward</span>
           }
         </button>
       } @else {
-        <!-- Previous logic for later steps (currently unreachable via UI logic) -->
         <button 
           (click)="finishWizard()"
-          class="px-4 py-2 rounded-lg bg-green-600 text-sm text-white font-medium hover:bg-green-700 shadow-sm transition-colors flex items-center gap-1.5"
+          [disabled]="isSaving()"
+          class="px-4 py-2 rounded-lg bg-green-600 text-sm text-white font-medium hover:bg-green-700 shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Finalizar
-          <span class="material-symbols-rounded text-lg">check</span>
+          @if (isSaving()) {
+            <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
+            Finalizando...
+          } @else {
+            Finalizar
+            <span class="material-symbols-rounded text-lg">check</span>
+          }
         </button>
       }
     </div>

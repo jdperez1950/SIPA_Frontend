@@ -44,8 +44,8 @@
           [class.text-gray-400]="!userForm.get('documentType')?.value"
         >
           <option value="">Seleccione una opción...</option>
-          @for (type of documentTypes(); track type.value) {
-            <option [value]="type.value">{{ type.label }}</option>
+          @for (type of documentTypes(); track type.id) {
+            <option [value]="type.id">{{ type.nombre }}</option>
           }
         </select>
         @if (userForm.get('documentType')?.invalid && userForm.get('documentType')?.touched) {
@@ -119,16 +119,16 @@
 
       <!-- Phone -->
       <div class="space-y-2">
-        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
-        <input 
-          type="tel" 
-          id="phoneNumber" 
-          formControlName="phoneNumber"
+        <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
+        <input
+          type="tel"
+          id="phone"
+          formControlName="phone"
           class="w-full px-4 py-2.5 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
-          [class.border-red-300]="userForm.get('phoneNumber')?.invalid && userForm.get('phoneNumber')?.touched"
+          [class.border-red-300]="userForm.get('phone')?.invalid && userForm.get('phone')?.touched"
           placeholder="Ej. 3001234567 (5-13 dígitos)"
         >
-        @if (userForm.get('phoneNumber')?.invalid && userForm.get('phoneNumber')?.touched) {
+        @if (userForm.get('phone')?.invalid && userForm.get('phone')?.touched) {
           <p class="text-sm text-red-600">{{ getPhoneNumberErrorMessage() }}</p>
         }
       </div>
@@ -144,8 +144,8 @@
             [class.border-red-300]="userForm.get('responsiblePosition')?.invalid && userForm.get('responsiblePosition')?.touched"
           >
             <option value="">Seleccione una opción...</option>
-            @for (position of responsiblePositions(); track position.value) {
-              <option [value]="position.value">{{ position.label }}</option>
+            @for (position of responsiblePositions(); track position.id) {
+              <option [value]="position.id">{{ position.nombre }}</option>
             }
           </select>
           @if (userForm.get('responsiblePosition')?.invalid && userForm.get('responsiblePosition')?.touched) {
@@ -159,22 +159,22 @@
 
       <!-- Profile Description -->
       <div class="space-y-2 md:col-span-2 lg:col-span-3">
-        <label for="profileDescription" class="block text-sm font-medium text-gray-700">Descripción del perfil del responsable <span class="text-red-500">*</span></label>
+        <label for="profile" class="block text-sm font-medium text-gray-700">Descripción del perfil del responsable <span class="text-red-500">*</span></label>
         <div class="relative">
-          <textarea 
-            id="profileDescription"
-            formControlName="profileDescription"
+          <textarea
+            id="profile"
+            formControlName="profile"
             rows="3"
             class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm resize-none transition-all"
             placeholder="Describa el perfil y experiencia del responsable... (mínimo 10 caracteres)"
-            [ngClass]="{'border-red-300 focus:ring-red-200': userForm.get('profileDescription')?.invalid && userForm.get('profileDescription')?.touched}"
+            [ngClass]="{'border-red-300 focus:ring-red-200': userForm.get('profile')?.invalid && userForm.get('profile')?.touched}"
           ></textarea>
-          @if (userForm.get('profileDescription')?.invalid && userForm.get('profileDescription')?.touched) {
+          @if (userForm.get('profile')?.invalid && userForm.get('profile')?.touched) {
             <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
           }
         </div>
-        @if (userForm.get('profileDescription')?.invalid && userForm.get('profileDescription')?.touched) {
-          <p class="text-sm text-red-600">{{ getProfileDescriptionErrorMessage() }}</p>
+        @if (userForm.get('profile')?.invalid && userForm.get('profile')?.touched) {
+          <p class="text-sm text-red-600">{{ getProfileErrorMessage() }}</p>
         }
       </div>
 
@@ -232,10 +232,10 @@
         <tbody class="divide-y divide-gray-200">
           @for (member of selectedMembers; track member.documentNumber) {
             <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4 font-medium text-gray-900">{{ member.userName }}</td>
+              <td class="px-6 py-4 font-medium text-gray-900">{{ member.name }}</td>
               <td class="px-6 py-4">
                 <div class="flex flex-col">
-                  <span class="font-medium text-gray-800">{{ member.documentType }}</span>
+                  <span class="font-medium text-gray-800">{{ member.documentTypeId.nombre || member.documentTypeId.id || '' }}</span>
                   <span class="text-xs text-gray-500">{{ member.documentNumber }}</span>
                 </div>
               </td>
@@ -249,12 +249,9 @@
               </td>
               -->
               <td class="px-6 py-4">
-                @switch (member.responsiblePosition) {
-                  @case ('REPRESENTANTE_LEGAL') { <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">Representante Legal</span> }
-                  @case ('MIEMBRO_JUNTA_DIRECTIVA') { <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">Miembro Junta Directiva</span> }
-                  @case ('MIEMBRO_ACTIVO_ORGANIZACION') { <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Miembro Activo</span> }
-                  @case ('APOYO_ASESOR_EXTERNO') { <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs">Asesor Externo</span> }
-                }
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                  {{ member.representativeType.nombre || member.representativeType.id || '-' }}
+                </span>
               </td>
               <!-- Perfil - Comentado: No se envía al backend -->
               <!--

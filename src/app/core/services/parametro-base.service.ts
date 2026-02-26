@@ -113,6 +113,8 @@ export class ParametroBaseService {
   private _tiposPersona = signal<ParametroBase[]>([]);
   private _tiposOrganizacion = signal<ParametroBase[]>([]);
   private _tiposEncargado = signal<ParametroBase[]>([]);
+  private _proyectoTerreno = signal<ParametroBase[]>([]);
+  private _proyectoFinanciacion = signal<ParametroBase[]>([]);
   private _tiposVivienda = signal<ParametroBase[]>([]);
   private _tenenciasVivienda = signal<ParametroBase[]>([]);
   private _tiposSaneamiento = signal<ParametroBase[]>([]);
@@ -230,8 +232,20 @@ export class ParametroBaseService {
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
-  public tiposEncargado = computed(() => 
+  public tiposEncargado = computed(() =>
     this._tiposEncargado()
+      .filter(p => p.deletedAt === null)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  );
+
+  public proyectoTerreno = computed(() =>
+    this._proyectoTerreno()
+      .filter(p => p.deletedAt === null)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  );
+
+  public proyectoFinanciacion = computed(() =>
+    this._proyectoFinanciacion()
       .filter(p => p.deletedAt === null)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
@@ -245,7 +259,7 @@ export class ParametroBaseService {
       this._departamentos.set(data);
     });
 
-    this.getByTipo('TIPO DOCUMENTO REPRESENTANTE').subscribe(data => {
+    this.getByTipo('TIPO_DOCUMENTO_REPRESENTANTE').subscribe(data => {
       this._tiposDocumento.set(data);
     });
 
@@ -265,12 +279,20 @@ export class ParametroBaseService {
       this._tiposPersona.set(data);
     });
 
-    this.getByTipo('TIPO ORGANIZACION').subscribe(data => {
+    this.getByTipo('TIPO_ORGANIZACION').subscribe(data => {
       this._tiposOrganizacion.set(data);
     });
 
-    this.getByTipo('TIPO ENCARGADO').subscribe(data => {
+    this.getByTipo('TIPO_ENCARGADO').subscribe(data => {
       this._tiposEncargado.set(data);
+    });
+
+    this.getByTipo('PROYECTO_TERRENO').subscribe(data => {
+      this._proyectoTerreno.set(data);
+    });
+
+    this.getByTipo('PROYECTO_FINANCIACION').subscribe(data => {
+      this._proyectoFinanciacion.set(data);
     });
   }
 
@@ -339,7 +361,7 @@ export class ParametroBaseService {
         case 'DEPARTAMENTO':
           this._departamentos.set(data);
           break;
-        case 'TIPO DOCUMENTO REPRESENTANTE':
+        case 'TIPO_DOCUMENTO_REPRESENTANTE':
           this._tiposDocumento.set(data);
           break;
         case 'ESTADO_CIVIL':
@@ -354,10 +376,10 @@ export class ParametroBaseService {
         case 'TIPO_PERSONA':
           this._tiposPersona.set(data);
           break;
-        case 'TIPO ORGANIZACION':
+        case 'TIPO_ORGANIZACION':
           this._tiposOrganizacion.set(data);
           break;
-        case 'TIPO ENCARGADO':
+        case 'TIPO_ENCARGADO':
           this._tiposEncargado.set(data);
           break;
       }

@@ -1,3 +1,5 @@
+import { ParametroSelect } from "../../features/admin/pages/admin-projects-page/components/project-wizard/project-wizard.types";
+
 export interface LogMessage {
   id: string;
   timestamp: string;
@@ -166,20 +168,41 @@ export interface ProjectResponseTeamMember {
   name: string;
   email: string;
   profile: string;
-  documentTypeId: string;
+  documentTypeId: ParametroSelect;
   documentNumber: string;
-  representativeTypeId?: string;
+  nombre: string;
+  phone: string;
+  representativeType: ParametroSelect;
+}
+
+export interface ProjectTeamMember {
+  eje: string;
+  consultor: ParametroSelect;
 }
 
 export interface CreateProjectRequest {
-  organization: OrganizationRequest;
-  project: {
+  id: string | null;
+  housingCount: number;
+  beneficiariesCount: number;
+  tieneTerreno: ParametroSelect;
+  landDescription: string;
+  projectValue: number;
+  tieneFinanciacion: ParametroSelect;
+  financingDescription: string;
+  organization: {
     name: string;
-    municipality: string;
-    state: string;
-    dates: DatesRequest;
+    type: ParametroSelect;
+    identifier: string;
+    digitoVerificacion: number;
+    email: string;
+    paginaWeb: string;
+    region: ParametroSelect;
+    municipalityId: ParametroSelect;
+    address: string;
+    description: string;
+    organizationTeam: ProjectResponseTeamMember[];
   };
-  responseTeam?: ProjectResponseTeamMember[];
+  projectTeam: ProjectTeamMember[];
 }
 
 export interface TechnicalTableMember {
@@ -190,13 +213,13 @@ export interface TechnicalTableMember {
 export interface UpdateProjectRequest {
   id: string;
   name?: string;
+  description?: string;
   status?: ProjectStatus;
   viabilityStatus?: ViabilityScenario;
   advisorId?: string;
   activeAxes?: string[];
   technicalTable?: TechnicalTableMember[];
   responseTeam?: ProjectResponseTeamMember[];
-  dates?: DatesRequest;
 }
 
 // Deprecated or Legacy DTOs (kept for compatibility if needed, but prefer Requests above)

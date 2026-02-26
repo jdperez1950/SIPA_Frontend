@@ -49,27 +49,17 @@ export class StepResponseTeamComponent implements OnInit {
     });
   }
 
-  // Document types from ParametroBase
   documentTypes = computed(() =>
     this.parametroBaseService.tiposDocumento().map(d => ({
-      value: d.id,
-      label: d.nombre
+      id: d.id,
+      nombre: d.nombre
     }))
   );
 
-  // Project Roles
-  projectRoles = [
-    { value: 'Líder Técnico', label: 'Líder Técnico' },
-    { value: 'Apoyo Jurídico', label: 'Apoyo Jurídico' },
-    { value: 'Responsable Financiero', label: 'Responsable Financiero' },
-    { value: 'Coordinador Social', label: 'Coordinador Social' },
-    { value: 'Otro', label: 'Otro' }
-  ];
-
-  responsiblePositions = computed(() => 
+  responsiblePositions = computed(() =>
     this.parametroBaseService.tiposEncargado().map(c => ({
-      value: c.id,
-      label: c.nombre
+      id: c.id,
+      nombre: c.nombre
     }))
   );
 
@@ -83,10 +73,9 @@ export class StepResponseTeamComponent implements OnInit {
       documentNumber: ['', [Validators.required, Validators.minLength(5), numericOnlyValidator]],
       name: ['', [Validators.required, Validators.minLength(3), textOnlyValidator]],
       email: ['', [Validators.required, Validators.email]],
-      phoneNumber: ['', [Validators.required, phoneLengthValidator]],
-      status: ['ACTIVE', Validators.required],
+      phone: ['', [Validators.required, phoneLengthValidator]],
       responsiblePosition: ['', Validators.required],
-      profileDescription: ['', [Validators.required, Validators.minLength(10)]]
+      profile: ['', [Validators.required, Validators.minLength(10)]]
     });
 
     this.userForm.get('documentType')?.valueChanges.subscribe(value => {
@@ -196,7 +185,7 @@ export class StepResponseTeamComponent implements OnInit {
   }
 
   getPhoneNumberErrorMessage(): string {
-    const control = this.userForm.get('phoneNumber');
+    const control = this.userForm.get('phone');
 
     if (!control || !control.errors) return '';
 
@@ -227,8 +216,8 @@ export class StepResponseTeamComponent implements OnInit {
     return '';
   }
 
-  getProfileDescriptionErrorMessage(): string {
-    const control = this.userForm.get('profileDescription');
+  getProfileErrorMessage(): string {
+    const control = this.userForm.get('profile');
 
     if (!control || !control.errors) return '';
 
@@ -248,7 +237,7 @@ export class StepResponseTeamComponent implements OnInit {
     if (!docNumber) return;
 
     this.isSearching = true;
-    
+
     // Simulate API search
     setTimeout(() => {
       this.isSearching = false;
@@ -257,7 +246,7 @@ export class StepResponseTeamComponent implements OnInit {
         this.userForm.patchValue({
           name: 'Usuario Existente',
           email: 'usuario.existente@email.com',
-          phoneNumber: '3001234567',
+          phone: '3001234567',
           documentType: 'CC'
         });
       }
@@ -273,19 +262,22 @@ export class StepResponseTeamComponent implements OnInit {
     const formValue = this.userForm.value;
     const currentEditing = this.editingMember();
 
+    // Get parameter objects for JSON format
+    const docTypeParam = this.documentTypes().find(d => d.id === formValue.documentType);
+    const responsibleParam = this.responsiblePositions().find(r => r.id === formValue.responsiblePosition);
+
     if (currentEditing) {
       // Edit mode: update existing member
       const updatedMember: ResponseTeamMember = {
         ...currentEditing,
-        userName: formValue.name,
-        userEmail: formValue.email,
-        roleInProject: 'Otro',
-        documentType: formValue.documentType,
+        name: formValue.name,
+        email: formValue.email,
+        documentTypeId: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
         documentNumber: formValue.documentNumber,
-        phoneNumber: formValue.phoneNumber,
-        status: formValue.status,
-        responsiblePosition: formValue.responsiblePosition,
-        profileDescription: formValue.profileDescription
+        phone: formValue.phone,
+        nombre: formValue.name,
+        profile: formValue.profile,
+        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '' } : { id: '', nombre: '' }
       };
 
       const updatedList = this.selectedMembers.map(m =>
@@ -309,15 +301,14 @@ export class StepResponseTeamComponent implements OnInit {
       }
 
       const newMember: ResponseTeamMember = {
-        userName: formValue.name,
-        userEmail: formValue.email,
-        roleInProject: 'Otro',
-        documentType: formValue.documentType,
+        name: formValue.name,
+        email: formValue.email,
+        documentTypeId: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
         documentNumber: formValue.documentNumber,
-        phoneNumber: formValue.phoneNumber,
-        status: formValue.status,
-        responsiblePosition: formValue.responsiblePosition,
-        profileDescription: formValue.profileDescription
+        phone: formValue.phone,
+        nombre: formValue.name,
+        profile: formValue.profile,
+        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '' } : { id: '', nombre: '' }
       };
 
       const updatedList = [...this.selectedMembers, newMember];
@@ -342,16 +333,15 @@ export class StepResponseTeamComponent implements OnInit {
   editMember(member: ResponseTeamMember) {
     this.editingMember.set(member);
     this.userForm.patchValue({
-      documentType: member.documentType,
+      documentType: member.documentTypeId?.id || '',
       documentNumber: member.documentNumber,
-      name: member.userName,
-      email: member.userEmail,
-      phoneNumber: member.phoneNumber,
-      status: member.status,
-      responsiblePosition: member.responsiblePosition || '',
-      profileDescription: member.profileDescription || ''
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+      responsiblePosition: member.representativeType?.id || '',
+      profile: member.profile || ''
     });
-    this.documentType.set(member.documentType);
+    this.documentType.set(member.documentTypeId?.id || '');
   }
 
   cancelEdit() {
@@ -363,9 +353,8 @@ export class StepResponseTeamComponent implements OnInit {
     this.editingMember.set(null);
     this.userForm.reset({
       documentType: '',
-      status: 'ACTIVE',
       responsiblePosition: '',
-      profileDescription: ''
+      profile: ''
     });
   }
 }

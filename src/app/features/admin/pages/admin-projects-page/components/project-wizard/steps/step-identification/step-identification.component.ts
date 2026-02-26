@@ -34,7 +34,21 @@ export class StepIdentificationComponent implements OnInit {
       nombre: t.nombre
     }))
   );
-  
+
+  tieneTerrenoOptions = computed(() =>
+    this.parametroBaseService.proyectoTerreno().map(t => ({
+      id: t.id,
+      nombre: t.nombre
+    }))
+  );
+
+  tieneFinanciacionOptions = computed(() =>
+    this.parametroBaseService.proyectoFinanciacion().map(t => ({
+      id: t.id,
+      nombre: t.nombre
+    }))
+  );
+
   // Lists for selects - Access service signal directly
   municipios: CustomDropdownItem[] = [];
   isManualMunicipality = false;
@@ -42,18 +56,17 @@ export class StepIdentificationComponent implements OnInit {
   constructor() {
     // Effect to handle initial data loading when service is ready
     effect(() => {
-      const depts = this.parametroBaseService.departamentos();
-      const initialDeptId = this.initialData?.departmentId;
-      
-      // If form has no department ID but we have an initial ID, set it now
-      // Check that form exists before accessing it
-      if (depts.length > 0 && initialDeptId && this.form && !this.form.get('department')?.value) {
-          const found = depts.find(d => d.id === initialDeptId);
-          if (found) {
-              this.form.patchValue({ department: found.id }, { emitEvent: true });
-          }
-      }
-    });
+        const depts = this.parametroBaseService.departamentos();
+        
+        // If form has no department ID but we have an initial ID, set it now
+        // Check that form exists before accessing it
+        if (depts.length > 0 && this.initialData?.departmentId?.id && this.form && !this.form.get('department')?.value) {
+            const found = depts.find(d => d.id === this.initialData!.departmentId.id);
+            if (found) {
+                this.form.patchValue({ department: found.id }, { emitEvent: true });
+            }
+        }
+      });
   }
 
   ngOnInit() {
@@ -92,17 +105,28 @@ export class StepIdentificationComponent implements OnInit {
         // Find organization type code from GUID
         const orgType = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
         
+        const deptParam = this.parametroBaseService.departamentos().find(d => d.id === deptId);
+        const municipioParam = this.municipios.find(m => m.id === municipalityId);
+        const orgTypeParam = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
+        const tieneTerrenoParam = this.tieneTerrenoOptions().find(t => t.id === value.tieneTerreno);
+        const tieneFinanciacionParam = this.tieneFinanciacionOptions().find(t => t.id === value.tieneFinanciacion);
+
         this.dataChange.emit({
-          projectName: value.projectName,
+          description: '',
           projectBriefDescription: value.projectBriefDescription,
-          projectValue: value.projectValue,
-          financingDescription: value.financingDescription,
-          departmentId: deptId,
-          departmentName: deptName,
-          municipalityId: municipalityId,
-          municipalityName: municipalityName,
+          projectValue: value.projectValue || 0,
+          housingCount: value.housingCount || 0,
+          beneficiariesCount: value.beneficiariesCount || 0,
+          tieneTerreno: value.tieneTerreno ? { id: value.tieneTerreno, nombre: tieneTerrenoParam?.nombre || '' } : { id: '', nombre: '' },
+          landDescription: value.landDescription || '',
+          tieneFinanciacion: value.tieneFinanciacion ? { id: value.tieneFinanciacion, nombre: tieneFinanciacionParam?.nombre || '' } : { id: '', nombre: '' },
+          financingDescription: value.financingDescription || '',
+          departmentId: deptParam ? { id: deptId, nombre: deptParam.nombre } : { id: '', nombre: '' },
+          departmentName: deptParam?.nombre || '',
+          municipalityId: municipioParam ? { id: municipalityId || '', nombre: municipioParam.nombre } : null,
+          municipalityName: municipioParam?.nombre || null,
           organizationName: value.organizationName,
-          organizationType: orgType?.codigo || value.organizationType,
+          organizationType: orgTypeParam ? { id: value.organizationType, nombre: orgTypeParam.nombre } : { id: '', nombre: '' },
           organizationIdentifier: value.organizationIdentifier,
           verificationDigit: value.verificationDigit,
           organizationEmail: value.organizationEmail,
@@ -138,31 +162,36 @@ export class StepIdentificationComponent implements OnInit {
     const defaultEnd = '2026-12-31';
 
     // Map initial department ID from initialData
-    let initialDeptId = this.initialData?.departmentId || null;
+    let initialDeptId = null;
+    if (this.initialData?.departmentId?.id) {
+      initialDeptId = this.initialData.departmentId.id;
+    }
     
     // Map initial municipality ID or name
     let initialMunicipio = null;
-    if (this.initialData?.municipalityId) {
-      initialMunicipio = this.initialData.municipalityId;
+    if (this.initialData?.municipalityId?.id) {
+      initialMunicipio = this.initialData.municipalityId.id;
     } else if (this.initialData?.municipalityName) {
       initialMunicipio = this.initialData.municipalityName;
     }
 
-    // Map initial organization type from code to GUID
+    // Map initial organization type from ParametroSelect
     let initialOrgType = null;
-    if (this.initialData?.organizationType) {
-      const orgTypeCode = this.initialData.organizationType;
-      const orgType = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.codigo === orgTypeCode);
-      initialOrgType = orgType?.id || null;
+    if (this.initialData?.organizationType?.id) {
+      initialOrgType = this.initialData.organizationType.id;
     }
 
     this.form = this.fb.group({
-      projectName: [this.initialData?.projectName || '', [Validators.required, Validators.minLength(5)]],
       projectBriefDescription: [this.initialData?.projectBriefDescription || '', [Validators.required, Validators.minLength(10)]],
-      projectValue: [this.initialData?.projectValue || ''],
-      financingDescription: [this.initialData?.financingDescription || '', [Validators.required, Validators.minLength(10)]],
-      department: [initialDeptId, Validators.required], // Bind to ID
-      municipality: [initialMunicipio, Validators.required],
+      housingCount: [this.initialData?.housingCount || 0],
+      beneficiariesCount: [this.initialData?.beneficiariesCount || 0],
+      projectValue: [this.initialData?.projectValue || 0],
+      tieneTerreno: [this.initialData?.tieneTerreno?.id || ''],
+      landDescription: [this.initialData?.landDescription || ''],
+      tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || ''],
+      financingDescription: [this.initialData?.financingDescription || ''],
+      department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
+      municipality: [this.initialData?.municipalityId?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       organizationType: [initialOrgType, Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],
@@ -290,22 +319,6 @@ export class StepIdentificationComponent implements OnInit {
 
   onMunicipalityChange(municipalityName: string) {
     this.form.get('municipality')?.setValue(municipalityName, { emitEvent: true });
-  }
-
-  // Funciones para mensajes de error
-  getProjectNameErrorMessage(): string {
-    const control = this.form.get('projectName');
-    if (!control || !control.errors) return '';
-    
-    if (control.hasError('required')) {
-      return getRequiredErrorMessage();
-    }
-    
-    if (control.hasError('minlength')) {
-      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
-    }
-    
-    return '';
   }
 
   getOrganizationNameErrorMessage(): string {
