@@ -4,7 +4,6 @@ import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest, UpdateProjectRequest, ApiResponse } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
-import { PROJECTS_MOCK } from '../../../core/data/mock/projects.mock';
 import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { RegisterRequest } from '../../../core/auth/models/auth.models';
@@ -19,7 +18,7 @@ export class AdminDataService {
 
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
-  private projects = signal<Project[]>(PROJECTS_MOCK);
+  private projects = signal<Project[]>([]);
   private organizations = signal<Organization[]>(ORGANIZATIONS_MOCK);
 
   constructor() {}
@@ -239,36 +238,12 @@ export class AdminDataService {
       }),
       catchError(error => {
         console.error('Error fetching projects', error);
-        // Fallback to Mock for development if API fails
-        console.warn('Falling back to Mock Data');
-        return this.getProjectsMock(page, pageSize, query, status);
+        return of({
+          data: [],
+          meta: { totalItems: 0, itemCount: 0, itemsPerPage: pageSize, totalPages: 0, currentPage: page }
+        });
       })
     );
-  }
-
-  private getProjectsMock(page: number = 1, pageSize: number = 10, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
-    let data = this.projects();
-    if (query) {
-      const q = query.toLowerCase();
-      data = data.filter(p => p.code.toLowerCase().includes(q) || p.municipality.toLowerCase().includes(q));
-    }
-    if (status) {
-      data = data.filter(p => p.status === status);
-    }
-    const totalItems = data.length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const paginatedData = data.slice(startIndex, startIndex + pageSize);
-    return of({
-      data: paginatedData,
-      meta: {
-        totalItems,
-        itemCount: paginatedData.length,
-        itemsPerPage: pageSize,
-        totalPages,
-        currentPage: page
-      }
-    }).pipe(delay(500));
   }
 
   createProject(request: CreateProjectRequest): Observable<Project> {
@@ -279,41 +254,9 @@ export class AdminDataService {
       }),
       catchError(error => {
         console.error('Error creating project (API)', error);
-        // NO mock fallback - Propagate error to UI
         return throwError(() => error);
       })
     );
-  }
-
-  private createProjectMock(request: CreateProjectRequest): Observable<Project> {
-    console.log('Creating Project V2 (Mock):', request);
-    const newProject: Project = {
-      id: Math.random().toString(36).substr(2, 9),
-      code: `PROJ-${Math.floor(Math.random() * 10000)}`,
-      organization: request.organization.name,
-      municipality: request.municipality,
-      state: request.department,
-      status: 'ACTIVE',
-      viabilityStatus: 'PRE_HABILITADO' as any,
-      progress: { technical: 0, legal: 0, financial: 0, social: 0 },
-      startDate: request.dates.start,
-      endDate: request.dates.end,
-      submissionDeadline: request.dates.submissionDeadline,
-      organizationData: {
-        id: Math.random().toString(36).substr(2, 9),
-        name: request.organization.name,
-        type: request.organization.type,
-        identifier: request.organization.identifier,
-        email: request.organization.email,
-        status: 'ACTIVE',
-        municipality: request.municipality,
-        region: request.department,
-        description: request.organization.description,
-        address: request.organization.address
-      }
-    };
-    this.projects.update(current => [newProject, ...current]);
-    return of(newProject).pipe(delay(1000));
   }
 
   updateProject(id: string, request: UpdateProjectRequest): Observable<Project> {
@@ -324,37 +267,9 @@ export class AdminDataService {
       }),
       catchError(error => {
         console.error('Error updating project', error);
-        return this.updateProjectMock(id, request);
+        return throwError(() => error);
       })
     );
-  }
-
-  private updateProjectMock(id: string, request: UpdateProjectRequest): Observable<Project> {
-    console.log('Updating Project (Mock):', id, request);
-    const projectIndex = this.projects().findIndex(p => p.id === id);
-    if (projectIndex === -1) return throwError(() => new Error('Project not found'));
-
-    const currentProject = this.projects()[projectIndex];
-    const updatedProject: Project = {
-      ...currentProject,
-      ...(request.name && { code: request.name }),
-      ...(request.status && { status: request.status }),
-      ...(request.viabilityStatus && { viabilityStatus: request.viabilityStatus }),
-      ...(request.advisorId && { advisor: { id: request.advisorId, name: 'Asesor Mock' } }),
-      ...(request.dates && {
-        startDate: request.dates.start,
-        endDate: request.dates.end,
-        submissionDeadline: request.dates.submissionDeadline
-      })
-    };
-
-    this.projects.update(current => {
-      const updated = [...current];
-      updated[projectIndex] = updatedProject;
-      return updated;
-    });
-
-    return of(updatedProject).pipe(delay(1000));
   }
 
   assignAdvisor(projectId: string, advisor: { id: string; name: string }): Observable<Project> {

@@ -1,133 +1,6 @@
 <form [formGroup]="form" class="space-y-6 max-w-3xl mx-auto">
-  <!-- Project Name -->
-  <div class="space-y-2">
-    <label for="projectName" class="block text-sm font-medium text-gray-700">Nombre del Proyecto <span class="text-red-500">*</span></label>
-    <div class="relative">
-      <input 
-        type="text" 
-        id="projectName"
-        formControlName="projectName"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        placeholder="Ej. Construcción de Vivienda de Interés Social... (mínimo 5 caracteres)"
-        [ngClass]="{'border-red-300 focus:ring-red-200': form.get('projectName')?.invalid && form.get('projectName')?.touched}"
-      >
-      @if (form.get('projectName')?.invalid && form.get('projectName')?.touched) {
-        <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
-      }
-    </div>
-    @if (form.get('projectName')?.invalid && form.get('projectName')?.touched) {
-      <p class="text-xs text-red-500 mt-1">{{ getProjectNameErrorMessage() }}</p>
-    }
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Department -->
-    <div class="space-y-2">
-      <label for="department" class="block text-sm font-medium text-gray-700">Departamento <span class="text-red-500">*</span></label>
-      <app-custom-dropdown
-        id="department"
-        [items]="divipolaService.departamentos()"
-        placeholder="Seleccione..."
-        [invalid]="!!(form.get('department')?.invalid && form.get('department')?.touched)"
-        [selectedValue]="form.get('department')?.value || ''"
-        [enableSearch]="false"
-        (valueChange)="onDepartmentChange($event)"
-        (dropdownOpen)="onDepartmentDropdownOpen()"
-      ></app-custom-dropdown>
-      @if (form.get('department')?.invalid && form.get('department')?.touched) {
-        <p class="text-xs text-red-500 mt-1">{{ getDepartmentErrorMessage() }}</p>
-      }
-    </div>
-
-    <!-- Municipality -->
-    <div class="space-y-2">
-      <div class="flex justify-between items-center">
-        <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
-        @if (form.get('department')?.value && municipios.length > 0) {
-          <button 
-            type="button" 
-            (click)="toggleManualMunicipality()"
-            class="text-xs text-blue-600 hover:text-blue-800 underline focus:outline-none"
-          >
-            {{ isManualMunicipality ? 'Seleccionar de lista' : '¿No está en la lista?' }}
-          </button>
-        }
-      </div>
-
-      @if (!isManualMunicipality) {
-        <app-custom-dropdown
-          id="municipality"
-          [items]="municipios"
-          placeholder="Seleccione..."
-          [disabled]="!form.get('department')?.value"
-          [invalid]="!!(form.get('municipality')?.invalid && form.get('municipality')?.touched)"
-          [selectedValue]="form.get('municipality')?.value || ''"
-          [enableSearch]="true"
-          (valueChange)="onMunicipalityChange($event)"
-          (dropdownOpen)="onMunicipalityDropdownOpen()"
-        ></app-custom-dropdown>
-      } @else {
-        <input 
-          type="text" 
-          id="municipality"
-          formControlName="municipality"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          placeholder="Escriba el nombre del municipio..."
-          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('municipality')?.invalid && form.get('municipality')?.touched}"
-        >
-      }
-      
-      @if (form.get('municipality')?.invalid && form.get('municipality')?.touched) {
-        <p class="text-xs text-red-500 mt-1">{{ getMunicipalityErrorMessage() }}</p>
-      }
-    </div>
-  </div>
-
-  <!-- Dates Section (Hidden - Auto-filled) -->
-  <!-- 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="space-y-2">
-      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
-      <input 
-        type="date" 
-        id="startDate"
-        formControlName="startDate"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      >
-    </div>
-
-    <div class="space-y-2">
-      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas</label>
-      <input 
-        type="date" 
-        id="submissionDeadline"
-        formControlName="submissionDeadline"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        [ngClass]="{'border-red-300 focus:ring-red-200': form.errors?.['deadlineInvalid'] && form.get('submissionDeadline')?.touched}"
-      >
-      @if (form.errors?.['deadlineInvalid'] && form.get('submissionDeadline')?.touched) {
-        <p class="text-xs text-red-500 mt-1">Debe estar entre Inicio y Fin.</p>
-      }
-    </div>
-
-    <div class="space-y-2">
-      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización</label>
-      <input 
-        type="date" 
-        id="endDate"
-        formControlName="endDate"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        [ngClass]="{'border-red-300 focus:ring-red-200': form.errors?.['endDateInvalid'] && form.get('endDate')?.touched}"
-      >
-      @if (form.errors?.['endDateInvalid'] && form.get('endDate')?.touched) {
-        <p class="text-xs text-red-500 mt-1">Debe ser posterior al Inicio.</p>
-      }
-    </div>
-  </div>
-  -->
-
   <!-- Organization Details Section -->
-  <div class="pt-6 border-t border-gray-200">
+  <div class="pt-2">
     <h3 class="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
       <span class="material-symbols-rounded text-blue-600">domain</span>
       Información de la Organización Responsable
@@ -158,17 +31,16 @@
       <!-- Organization Type -->
       <div class="space-y-2">
         <label for="organizationType" class="block text-sm font-medium text-gray-700">Tipo de Organización <span class="text-red-500">*</span></label>
-        <select 
+        <app-custom-dropdown
           id="organizationType"
-          formControlName="organizationType"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
-          [ngClass]="{'border-red-300 focus:ring-red-200 focus:border-red-500': form.get('organizationType')?.invalid && form.get('organizationType')?.touched}"
-        >
-          <option value="">Seleccione una opción...</option>
-          @for (type of organizationTypes; track type.value) {
-            <option [value]="type.value">{{ type.label }}</option>
-          }
-        </select>
+          [items]="organizationTypes()"
+          placeholder="Seleccione..."
+          [disabled]="false"
+          [invalid]="!!(form.get('organizationType')?.invalid && form.get('organizationType')?.touched)"
+          [selectedValue]="form.get('organizationType')?.value || ''"
+          [enableSearch]="true"
+          (valueChange)="form.get('organizationType')?.setValue($event); form.get('organizationType')?.markAsTouched()"
+        ></app-custom-dropdown>
         @if (form.get('organizationType')?.invalid && form.get('organizationType')?.touched) {
           <p class="text-xs text-red-500 mt-1">Debe seleccionar un tipo de organización</p>
         }
@@ -211,6 +83,43 @@
         </select>
         @if (form.get('verificationDigit')?.invalid && form.get('verificationDigit')?.touched) {
           <p class="text-xs text-red-500 mt-1">Debe seleccionar el dígito de verificación</p>
+        }
+      </div>
+
+      <!-- Department -->
+      <div class="space-y-2">
+        <label for="department" class="block text-sm font-medium text-gray-700">Departamento <span class="text-red-500">*</span></label>
+        <app-custom-dropdown
+          id="department"
+          [items]="parametroBaseService.departamentos()"
+          placeholder="Seleccione..."
+          [invalid]="!!(form.get('department')?.invalid && form.get('department')?.touched)"
+          [selectedValue]="form.get('department')?.value || ''"
+          [enableSearch]="false"
+          (valueChange)="onDepartmentChange($event)"
+          (dropdownOpen)="onDepartmentDropdownOpen()"
+        ></app-custom-dropdown>
+        @if (form.get('department')?.invalid && form.get('department')?.touched) {
+          <p class="text-xs text-red-500 mt-1">{{ getDepartmentErrorMessage() }}</p>
+        }
+      </div>
+
+      <!-- Municipality -->
+      <div class="space-y-2">
+        <label for="municipality" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
+        <app-custom-dropdown
+          id="municipality"
+          [items]="municipios"
+          placeholder="Seleccione..."
+          [disabled]="!form.get('department')?.value"
+          [invalid]="!!(form.get('municipality')?.invalid && form.get('municipality')?.touched)"
+          [selectedValue]="form.get('municipality')?.value || ''"
+          [enableSearch]="true"
+          (valueChange)="onMunicipalityChange($event)"
+          (dropdownOpen)="onMunicipalityDropdownOpen()"
+        ></app-custom-dropdown>
+        @if (form.get('municipality')?.invalid && form.get('municipality')?.touched) {
+          <p class="text-xs text-red-500 mt-1">{{ getMunicipalityErrorMessage() }}</p>
         }
       </div>
 
@@ -299,4 +208,198 @@
       }
     </div>
   </div>
+
+  <!-- Project Information Section -->
+  <div class="pt-6 border-t border-gray-200">
+    <h3 class="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
+      <span class="material-symbols-rounded text-blue-600">description</span>
+      Información del Proyecto
+    </h3>
+
+    <!-- Project Name -->
+    <!-- Project Brief Description -->
+    <div class="space-y-2 mb-6">
+      <label for="projectBriefDescription" class="block text-sm font-medium text-gray-700">Descripción Breve del Proyecto <span class="text-red-500">*</span></label>
+      <div class="relative">
+        <textarea 
+          id="projectBriefDescription"
+          formControlName="projectBriefDescription"
+          rows="4"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y"
+          placeholder="Describa brevemente el estado o situación actual del terreno para el proyecto (propiedad o gestión, tiene alguna obra, si es urbano, cuenta con licencia, cuenta con servicios públicos, etc.)"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('projectBriefDescription')?.invalid && form.get('projectBriefDescription')?.touched}"
+        ></textarea>
+        @if (form.get('projectBriefDescription')?.invalid && form.get('projectBriefDescription')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+      </div>
+      @if (form.get('projectBriefDescription')?.invalid && form.get('projectBriefDescription')?.touched) {
+        <p class="text-xs text-red-500 mt-1">La descripción breve del proyecto es requerida</p>
+      }
+    </div>
+
+    <!-- Housing Count -->
+    <div class="space-y-2 mb-6">
+      <label for="housingCount" class="block text-sm font-medium text-gray-700">Cantidad Estimada de Viviendas</label>
+      <div class="relative">
+        <input 
+          type="number" 
+          id="housingCount"
+          formControlName="housingCount"
+          min="0"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Ej. 120"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('housingCount')?.invalid && form.get('housingCount')?.touched}"
+        >
+        @if (form.get('housingCount')?.invalid && form.get('housingCount')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+      </div>
+    </div>
+
+    <!-- Beneficiaries Count -->
+    <div class="space-y-2 mb-6">
+      <label for="beneficiariesCount" class="block text-sm font-medium text-gray-700">Cantidad de Beneficiarios</label>
+      <div class="relative">
+        <input 
+          type="number" 
+          id="beneficiariesCount"
+          formControlName="beneficiariesCount"
+          min="0"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Ej. 480"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('beneficiariesCount')?.invalid && form.get('beneficiariesCount')?.touched}"
+        >
+        @if (form.get('beneficiariesCount')?.invalid && form.get('beneficiariesCount')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+      </div>
+    </div>
+
+    <!-- Project Value -->
+    <div class="space-y-2 mb-6">
+      <label for="projectValue" class="block text-sm font-medium text-gray-700">Valor del Proyecto</label>
+      <div class="relative">
+        <input 
+          type="number" 
+          id="projectValue"
+          formControlName="projectValue"
+          min="0"
+          step="0.01"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Si ya cuenta con un valor total estimado del proyecto a la fecha por favor regístrelo"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('projectValue')?.invalid && form.get('projectValue')?.touched}"
+        >
+        @if (form.get('projectValue')?.invalid && form.get('projectValue')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+      </div>
+    </div>
+
+    <!-- Tiene Terreno -->
+    <div class="space-y-2 mb-6">
+      <label for="tieneTerreno" class="block text-sm font-medium text-gray-700">¿Cuenta con terreno para el proyecto?</label>
+      <app-custom-dropdown
+        id="tieneTerreno"
+        [items]="tieneTerrenoOptions()"
+        placeholder="Seleccione..."
+        [disabled]="false"
+        [invalid]="!!(form.get('tieneTerreno')?.invalid && form.get('tieneTerreno')?.touched)"
+        [selectedValue]="form.get('tieneTerreno')?.value || ''"
+        [enableSearch]="false"
+        (valueChange)="form.get('tieneTerreno')?.setValue($event); form.get('tieneTerreno')?.markAsTouched()"
+      ></app-custom-dropdown>
+    </div>
+
+    <!-- Land Description -->
+    <div class="space-y-2 mb-6">
+      <label for="landDescription" class="block text-sm font-medium text-gray-700">Descripción del Terreno</label>
+      <div class="relative">
+        <textarea 
+          id="landDescription"
+          formControlName="landDescription"
+          rows="3"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y"
+          placeholder="Describa el terreno..."
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('landDescription')?.invalid && form.get('landDescription')?.touched}"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Tiene Financiacion -->
+    <div class="space-y-2 mb-6">
+      <label for="tieneFinanciacion" class="block text-sm font-medium text-gray-700">¿Tiene financiación?</label>
+      <app-custom-dropdown
+        id="tieneFinanciacion"
+        [items]="tieneFinanciacionOptions()"
+        placeholder="Seleccione..."
+        [disabled]="false"
+        [invalid]="!!(form.get('tieneFinanciacion')?.invalid && form.get('tieneFinanciacion')?.touched)"
+        [selectedValue]="form.get('tieneFinanciacion')?.value || ''"
+        [enableSearch]="false"
+        (valueChange)="form.get('tieneFinanciacion')?.setValue($event); form.get('tieneFinanciacion')?.markAsTouched()"
+      ></app-custom-dropdown>
+    </div>
+
+    <!-- Financing Description -->
+    <div class="space-y-2 mb-6">
+      <label for="financingDescription" class="block text-sm font-medium text-gray-700">Descripción de la Financiación</label>
+      <div class="relative">
+        <textarea 
+          id="financingDescription"
+          formControlName="financingDescription"
+          rows="4"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y"
+          placeholder="Describa brevemente el estado o situación actual de la financiación del proyecto (fuentes de financiación y recursos disponibles, aportes en especie, etc.)"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('financingDescription')?.invalid && form.get('financingDescription')?.touched}"
+        ></textarea>
+        @if (form.get('financingDescription')?.invalid && form.get('financingDescription')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Dates Section (Hidden - Auto-filled) -->
+  <!-- 
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="space-y-2">
+      <label for="startDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+      <input 
+        type="date" 
+        id="startDate"
+        formControlName="startDate"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+
+    <div class="space-y-2">
+      <label for="submissionDeadline" class="block text-sm font-medium text-gray-700">Cierre de Respuestas</label>
+      <input 
+        type="date" 
+        id="submissionDeadline"
+        formControlName="submissionDeadline"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        [ngClass]="{'border-red-300 focus:ring-red-200': form.errors?.['deadlineInvalid'] && form.get('submissionDeadline')?.touched}"
+      >
+      @if (form.errors?.['deadlineInvalid'] && form.get('submissionDeadline')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Debe estar entre Inicio y Fin.</p>
+      }
+    </div>
+
+    <div class="space-y-2">
+      <label for="endDate" class="block text-sm font-medium text-gray-700">Fecha de Finalización</label>
+      <input 
+        type="date" 
+        id="endDate"
+        formControlName="endDate"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        [ngClass]="{'border-red-300 focus:ring-red-200': form.errors?.['endDateInvalid'] && form.get('endDate')?.touched}"
+      >
+      @if (form.errors?.['endDateInvalid'] && form.get('endDate')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Debe ser posterior al Inicio.</p>
+      }
+    </div>
+  </div>
+  -->
 </form>

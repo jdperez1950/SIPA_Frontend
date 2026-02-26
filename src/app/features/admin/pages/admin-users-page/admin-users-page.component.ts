@@ -144,8 +144,7 @@ export class AdminUsersPageComponent implements OnInit {
     this.userForm.patchValue({
       name: user.name,
       email: user.email,
-      role: user.role,
-      status: user.status
+      role: user.role
     });
     this.showModal.set(true);
   }
@@ -168,7 +167,9 @@ export class AdminUsersPageComponent implements OnInit {
       // Update
       const updateDto: UpdateUserDTO = {
         id: this.currentUserId()!,
-        ...formData
+        name: formData.name,
+        email: formData.email,
+        role: formData.role
       };
       
       this.adminDataService.updateUser(updateDto).subscribe({
@@ -176,8 +177,9 @@ export class AdminUsersPageComponent implements OnInit {
           this.users.update(users => users.map(u => 
             u.id === updatedUser.id ? updatedUser : u
           ));
-          this.alertService.success(`Usuario ${updatedUser.name} actualizado correctamente.`);
           this.isLoading.set(false);
+          this.alertService.success(`Usuario ${updatedUser.name} actualizado correctamente.`);
+          setTimeout(() => this.closeModal(), 500);
         },
         error: (err) => {
           this.alertService.error('Error al actualizar usuario');
@@ -196,8 +198,9 @@ export class AdminUsersPageComponent implements OnInit {
       this.adminDataService.createUser(createDto).subscribe({
         next: (newUser) => {
           this.users.update(users => [...users, newUser]);
-          this.alertService.success(`Usuario ${newUser.name} creado correctamente.`);
           this.isLoading.set(false);
+          this.alertService.success(`Usuario ${newUser.name} creado correctamente.`);
+          setTimeout(() => this.closeModal(), 500);
         },
         error: (err) => {
           this.alertService.error('Error al crear usuario');
@@ -265,13 +268,6 @@ export class AdminUsersPageComponent implements OnInit {
   getRoleBadgeClass(role: string): string {
     const config = this.rolesConfig.find(r => r.value === role);
     return config ? config.class : 'bg-gray-50 text-gray-700';
-  }
-
-  getWorkloadColor(current: number, max: number): string {
-    const percentage = (current / max) * 100;
-    if (percentage >= 100) return 'bg-red-500';
-    if (percentage >= 80) return 'bg-orange-500';
-    return 'bg-green-500';
   }
 
   getNameErrorMessage(): string {

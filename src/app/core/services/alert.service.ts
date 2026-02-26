@@ -14,7 +14,7 @@ export class AlertService {
   alerts = signal<Alert[]>([]);
   private nextId = 0;
 
-  show(type: Alert['type'], message: string, duration = 3000) {
+  show(type: Alert['type'], message: string, duration = 5000) {
     const id = this.nextId++;
     const alert: Alert = { id, type, message, duration };
     

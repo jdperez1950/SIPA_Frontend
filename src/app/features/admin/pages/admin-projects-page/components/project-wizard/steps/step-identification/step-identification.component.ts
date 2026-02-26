@@ -1,9 +1,9 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, effect } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
 import { IdentificationData } from '../../project-wizard.types';
-import { DivipolaService } from '../../../../../../../../core/services/divipola.service';
+import { ParametroBaseService } from '../../../../../../../../core/services/parametro-base.service';
 import {
   nitFormatValidator,
   getNitFormatErrorMessage,
@@ -11,18 +11,6 @@ import {
   getEmailErrorMessage,
   getMinLengthErrorMessage,
 } from '../../../../../../../../shared/validators';
-
-export const ORGANIZATION_TYPES = [
-  { value: 'COMUNITARIA_BASE', label: 'Organizacion comunitaria de base' },
-  { value: 'CONSEJO_COMUNITARIO', label: 'Consejo Comunitario de Comunidades Negras' },
-  { value: 'AUTORIDAD_INDIGENA', label: 'Autoridad indígena' },
-  { value: 'MOVIMIENTO_SOCIAL', label: 'Movimiento Social' },
-  { value: 'COLECTIVO', label: 'Colectivo' },
-  { value: 'ONG', label: 'Organización no Gubernamental (ONG)' },
-  { value: 'OSD', label: 'Organizaciones Solidarias de Desarrollo (OSD)' },
-  { value: 'ASOCIACION_PROFESIONAL', label: 'Asociacion profesional y/o gremial' },
-  { value: 'EN_CONFORMACION', label: 'En conformación' }
-];
 
 @Component({
   selector: 'app-step-identification',
@@ -36,32 +24,49 @@ export class StepIdentificationComponent implements OnInit {
   @Output() dataChange = new EventEmitter<IdentificationData>();
 
   private fb = inject(FormBuilder);
-  public divipolaService = inject(DivipolaService);
+  public parametroBaseService = inject(ParametroBaseService);
 
   form!: FormGroup;
   
-  organizationTypes = ORGANIZATION_TYPES;
-  
-  // Lists for selects
+  organizationTypes = computed(() => 
+    this.parametroBaseService.tiposOrganizacion().map(t => ({
+      id: t.id,
+      nombre: t.nombre
+    }))
+  );
+
+  tieneTerrenoOptions = computed(() =>
+    this.parametroBaseService.proyectoTerreno().map(t => ({
+      id: t.id,
+      nombre: t.nombre
+    }))
+  );
+
+  tieneFinanciacionOptions = computed(() =>
+    this.parametroBaseService.proyectoFinanciacion().map(t => ({
+      id: t.id,
+      nombre: t.nombre
+    }))
+  );
+
+  // Lists for selects - Access service signal directly
   municipios: CustomDropdownItem[] = [];
   isManualMunicipality = false;
 
   constructor() {
     // Effect to handle initial data loading when service is ready
     effect(() => {
-      const depts = this.divipolaService.departamentos();
-      const initialName = this.initialData?.department;
-      
-      // If form has no department ID but we have an initial name, try to map it now
-      // Check that form exists before accessing it
-      if (depts.length > 0 && initialName && this.form && !this.form.get('department')?.value) {
-          const found = depts.find(d => d.nombre === initialName);
-          if (found) {
-              this.form.patchValue({ department: found.id }, { emitEvent: true });
-              // Municipality will be loaded by valueChanges subscription
-          }
-      }
-    });
+        const depts = this.parametroBaseService.departamentos();
+        
+        // If form has no department ID but we have an initial ID, set it now
+        // Check that form exists before accessing it
+        if (depts.length > 0 && this.initialData?.departmentId?.id && this.form && !this.form.get('department')?.value) {
+            const found = depts.find(d => d.id === this.initialData!.departmentId.id);
+            if (found) {
+                this.form.patchValue({ department: found.id }, { emitEvent: true });
+            }
+        }
+      });
   }
 
   ngOnInit() {
@@ -75,20 +80,53 @@ export class StepIdentificationComponent implements OnInit {
       }
       
       if (this.form.valid) {
-        // Find department and municipality names for emission if needed
+        // Find department and municipality IDs and names
         const deptId = value.department;
-        const deptName = this.divipolaService.departamentos().find(d => d.id === deptId)?.nombre || deptId;
+        const deptName = this.parametroBaseService.departamentos().find(d => d.id === deptId)?.nombre || '';
         
-        // Municipality is already bound to name in ng-select (bindValue="nombre")
-        // But if we change it to bindValue="id", we would need mapping here.
-        // Currently HTML uses bindValue="nombre" for municipality, so value.municipality is the name.
+        // Municipality - find ID from loaded municipalities or use as-is (manual entry)
+        let municipalityId: string | null = null;
+        let municipalityName: string | null = null;
         
+        if (this.isManualMunicipality) {
+          municipalityId = null;
+          municipalityName = value.municipality || null;
+        } else {
+          const municipio = this.municipios.find(m => m.id === value.municipality);
+          if (municipio) {
+            municipalityId = municipio.id;
+            municipalityName = municipio.nombre;
+          } else {
+            municipalityId = value.municipality || null;
+            municipalityName = this.municipios.find(m => m.id === value.municipality)?.nombre || value.municipality || null;
+          }
+        }
+        
+        // Find organization type code from GUID
+        const orgType = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
+        
+        const deptParam = this.parametroBaseService.departamentos().find(d => d.id === deptId);
+        const municipioParam = this.municipios.find(m => m.id === municipalityId);
+        const orgTypeParam = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
+        const tieneTerrenoParam = this.tieneTerrenoOptions().find(t => t.id === value.tieneTerreno);
+        const tieneFinanciacionParam = this.tieneFinanciacionOptions().find(t => t.id === value.tieneFinanciacion);
+
         this.dataChange.emit({
-          projectName: value.projectName,
-          department: deptName,
-          municipality: value.municipality,
+          description: '',
+          projectBriefDescription: value.projectBriefDescription,
+          projectValue: value.projectValue || 0,
+          housingCount: value.housingCount || 0,
+          beneficiariesCount: value.beneficiariesCount || 0,
+          tieneTerreno: value.tieneTerreno ? { id: value.tieneTerreno, nombre: tieneTerrenoParam?.nombre || '' } : { id: '', nombre: '' },
+          landDescription: value.landDescription || '',
+          tieneFinanciacion: value.tieneFinanciacion ? { id: value.tieneFinanciacion, nombre: tieneFinanciacionParam?.nombre || '' } : { id: '', nombre: '' },
+          financingDescription: value.financingDescription || '',
+          departmentId: deptParam ? { id: deptId, nombre: deptParam.nombre } : { id: '', nombre: '' },
+          departmentName: deptParam?.nombre || '',
+          municipalityId: municipioParam ? { id: municipalityId || '', nombre: municipioParam.nombre } : null,
+          municipalityName: municipioParam?.nombre || null,
           organizationName: value.organizationName,
-          organizationType: value.organizationType,
+          organizationType: orgTypeParam ? { id: value.organizationType, nombre: orgTypeParam.nombre } : { id: '', nombre: '' },
           organizationIdentifier: value.organizationIdentifier,
           verificationDigit: value.verificationDigit,
           organizationEmail: value.organizationEmail,
@@ -123,23 +161,39 @@ export class StepIdentificationComponent implements OnInit {
     const defaultDeadline = '2026-12-24';
     const defaultEnd = '2026-12-31';
 
-    // Map initial department NAME to ID if possible
+    // Map initial department ID from initialData
     let initialDeptId = null;
-    const initialDeptName = this.initialData?.department;
+    if (this.initialData?.departmentId?.id) {
+      initialDeptId = this.initialData.departmentId.id;
+    }
     
-    if (initialDeptName) {
-        // Try to find ID from loaded departments (might be empty initially)
-        // We rely on the effect below to update it when data arrives
-        const found = this.divipolaService.departamentos().find(d => d.nombre === initialDeptName);
-        initialDeptId = found ? found.id : null;
+    // Map initial municipality ID or name
+    let initialMunicipio = null;
+    if (this.initialData?.municipalityId?.id) {
+      initialMunicipio = this.initialData.municipalityId.id;
+    } else if (this.initialData?.municipalityName) {
+      initialMunicipio = this.initialData.municipalityName;
+    }
+
+    // Map initial organization type from ParametroSelect
+    let initialOrgType = null;
+    if (this.initialData?.organizationType?.id) {
+      initialOrgType = this.initialData.organizationType.id;
     }
 
     this.form = this.fb.group({
-      projectName: [this.initialData?.projectName || '', [Validators.required, Validators.minLength(5)]],
-      department: [initialDeptId, Validators.required], // Bind to ID
-      municipality: [this.initialData?.municipality || null, Validators.required],
+      projectBriefDescription: [this.initialData?.projectBriefDescription || '', [Validators.required, Validators.minLength(10)]],
+      housingCount: [this.initialData?.housingCount || 0],
+      beneficiariesCount: [this.initialData?.beneficiariesCount || 0],
+      projectValue: [this.initialData?.projectValue || 0],
+      tieneTerreno: [this.initialData?.tieneTerreno?.id || ''],
+      landDescription: [this.initialData?.landDescription || ''],
+      tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || ''],
+      financingDescription: [this.initialData?.financingDescription || ''],
+      department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
+      municipality: [this.initialData?.municipalityId?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
-      organizationType: [this.initialData?.organizationType || '', Validators.required],
+      organizationType: [initialOrgType, Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],
       verificationDigit: [this.initialData?.verificationDigit || '', Validators.required],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
@@ -158,31 +212,33 @@ export class StepIdentificationComponent implements OnInit {
       const currentMunicipality = this.form.get('municipality')?.value;
       
       if (deptId) {
-        this.municipios = this.divipolaService.getMunicipiosPorDepto(deptId);
-        
-        // If no municipalities found, switch to manual mode automatically
-        if (this.municipios.length === 0) {
-          this.isManualMunicipality = true;
-        } else {
-          // Check if current value exists in the new list
-          const exists = this.municipios.some(m => m.nombre === currentMunicipality);
+        this.parametroBaseService.getMunicipiosPorDepto(deptId).subscribe(municipios => {
+          this.municipios = municipios.map(m => ({ id: m.id, nombre: m.nombre }));
           
-          // If value exists, keep dropdown (manual=false).
-          // If value doesn't exist but has value (initial load of manual data), switch to manual.
-          // If user changed department (dirty), reset to dropdown.
-          if (currentMunicipality && !exists && !this.form.get('department')?.dirty) {
-              this.isManualMunicipality = true;
+          // If no municipalities found, switch to manual mode automatically
+          if (this.municipios.length === 0) {
+            this.isManualMunicipality = true;
           } else {
-              this.isManualMunicipality = false;
+            // Check if current value exists in the new list
+            const exists = this.municipios.some(m => m.nombre === currentMunicipality);
+            
+            // If value exists, keep dropdown (manual=false).
+            // If value doesn't exist but has value (initial load of manual data), switch to manual.
+            // If user changed department (dirty), reset to dropdown.
+            if (currentMunicipality && !exists && !this.form.get('department')?.dirty) {
+                this.isManualMunicipality = true;
+            } else {
+                this.isManualMunicipality = false;
+            }
           }
-        }
 
-        // If current municipality is not in the new list, reset it ONLY if user changed department
-        const exists = this.municipios.some(m => m.nombre === currentMunicipality);
-        if (!exists && this.form.get('department')?.dirty) {
-             this.form.get('municipality')?.setValue(null);
-             this.isManualMunicipality = false; // Reset to dropdown for new department selection
-        }
+          // If current municipality is not in the new list, reset it ONLY if user changed department
+          const exists = this.municipios.some(m => m.nombre === currentMunicipality);
+          if (!exists && this.form.get('department')?.dirty) {
+               this.form.get('municipality')?.setValue(null);
+               this.isManualMunicipality = false; // Reset to dropdown for new department selection
+          }
+        });
       } else {
         this.municipios = [];
         this.isManualMunicipality = false;
@@ -243,8 +299,10 @@ export class StepIdentificationComponent implements OnInit {
     this.form.get('department')?.setValue(deptId, { emitEvent: true });
     
     if (deptId) {
-      this.municipios = this.divipolaService.getMunicipiosPorDepto(deptId);
-      this.form.get('municipality')?.setValue(null);
+      this.parametroBaseService.getMunicipiosPorDepto(deptId).subscribe(municipios => {
+        this.municipios = municipios.map(m => ({ id: m.id, nombre: m.nombre }));
+        this.form.get('municipality')?.setValue(null);
+      });
     } else {
       this.municipios = [];
       this.form.get('municipality')?.setValue(null);
@@ -261,22 +319,6 @@ export class StepIdentificationComponent implements OnInit {
 
   onMunicipalityChange(municipalityName: string) {
     this.form.get('municipality')?.setValue(municipalityName, { emitEvent: true });
-  }
-
-  // Funciones para mensajes de error
-  getProjectNameErrorMessage(): string {
-    const control = this.form.get('projectName');
-    if (!control || !control.errors) return '';
-    
-    if (control.hasError('required')) {
-      return getRequiredErrorMessage();
-    }
-    
-    if (control.hasError('minlength')) {
-      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
-    }
-    
-    return '';
   }
 
   getOrganizationNameErrorMessage(): string {

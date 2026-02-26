@@ -1,16 +1,14 @@
-import { Component, computed, EventEmitter, Input, Output, signal, effect } from '@angular/core';
+import { Component, computed, EventEmitter, Input, Output, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
-import { StepEvaluationComponent } from './steps/step-evaluation/step-evaluation.component';
 import { StepTechnicalTableComponent } from './steps/step-technical-table/step-technical-table.component';
 import { StepResponseTeamComponent } from './steps/step-response-team/step-response-team.component';
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
-import { inject } from '@angular/core';
+import { ParametroBaseService } from '../../../../../../core/services/parametro-base.service';
 import { CreateProjectRequest, Project, UpdateProjectRequest } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
-  EvaluationAxis, 
   TechnicalTableAssignment, 
   ResponseTeamMember 
 } from './project-wizard.types';
@@ -24,7 +22,6 @@ export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY';
   imports: [
     CommonModule, 
     StepIdentificationComponent,
-    StepEvaluationComponent,
     StepTechnicalTableComponent,
     StepResponseTeamComponent,
     ModalAlertComponent
@@ -39,6 +36,7 @@ export class ProjectWizardComponent {
   
   private alertService = inject(AlertService);
   private adminService = inject(AdminDataService);
+  private parametroBaseService = inject(ParametroBaseService);
 
   // --- Constants ---
   readonly ALL_STEPS = [
@@ -56,12 +54,6 @@ export class ProjectWizardComponent {
     },
     { 
       number: 3, 
-      title: 'Evaluación', 
-      icon: 'quiz',
-      description: 'Seleccione los ejes de evaluación y responda las preguntas técnicas del proyecto.'
-    },
-    { 
-      number: 4, 
       title: 'Mesa Técnica', 
       icon: 'engineering',
       description: 'Configure la mesa técnica y asigne los responsables para el seguimiento del proyecto.'
@@ -82,21 +74,10 @@ export class ProjectWizardComponent {
   // Step 1 Data
   identificationData = signal<IdentificationData | null>(null);
 
-  // Step 3 Data
-  evaluationAxes = signal<EvaluationAxis[]>([
-    { id: 'SUELO', name: 'Suelo', questionCount: 45, isActive: true },
-    { id: 'SOCIAL', name: 'Social', questionCount: 30, isActive: true },
-    { id: 'FINANCIERO', name: 'Financiero', questionCount: 25, isActive: true },
-    { id: 'PRECONSTRUCCION', name: 'Preconstrucción', questionCount: 20, isActive: true }
-  ]);
-
   // Step 2 Data
   responseTeam = signal<ResponseTeamMember[]>([]);
 
-  // Step 3 Data
-  // (managed in evaluationAxes signal)
-
-  // Step 4 Data
+  // Step 3 Data (Mesa Técnica)
   technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
 
   modalAlertData = signal<ModalAlertData | null>(null);
@@ -128,14 +109,27 @@ export class ProjectWizardComponent {
     // Helper to safely get string
     const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
 
+    // Map organization type from code to GUID
+    const orgTypeCode = orgData?.type;
+    const orgType = orgTypeCode ? this.parametroBaseService.tiposOrganizacion().find((t: any) => t.codigo === orgTypeCode) : null;
+
     this.identificationData.set({
-      projectName: safeStr(project.name) || safeStr(project.code),
-      
-      department: project.state || orgData?.region || '',
-      municipality: project.municipality || orgData?.municipality || '',
+      description: '',
+      projectBriefDescription: '',
+      projectValue: 0,
+      housingCount: 0,
+      beneficiariesCount: 0,
+      tieneTerreno: { id: '', nombre: '' },
+      landDescription: '',
+      tieneFinanciacion: { id: '', nombre: '' },
+      financingDescription: '',
+      departmentId: orgData?.regionId ? { id: orgData.regionId, nombre: project.state || orgData?.region || '' } : { id: '', nombre: '' },
+      departmentName: project.state || orgData?.region || '',
+      municipalityId: orgData?.municipalityId ? { id: orgData.municipalityId, nombre: project.municipality || orgData?.municipality || '' } : null,
+      municipalityName: project.municipality || orgData?.municipality || '',
       
       organizationName: safeStr(project.organizationName) || orgData?.name || '',
-      organizationType: orgData?.type || '',
+      organizationType: orgType ? { id: orgType.id, nombre: orgType.nombre } : { id: '', nombre: '' },
       organizationIdentifier: orgData?.identifier || '',
       verificationDigit: orgData?.verificationDigit || '',
       organizationEmail: orgData?.email || '',
@@ -152,21 +146,19 @@ export class ProjectWizardComponent {
     if (project.responseTeam && project.responseTeam.length > 0) {
       this.responseTeam.set(project.responseTeam.map(m => ({
         userId: m.userId,
-        userName: m.name,
-        userEmail: m.email,
-        roleInProject: m.roleInProject,
-        documentType: m.documentType || 'CC',
+        name: m.name,
+        documentTypeId: m.documentTypeId || { id: '', nombre: '' },
         documentNumber: m.documentNumber,
-        phoneNumber: m.phone || '',
-        status: m.status || 'ACTIVE',
-        responsiblePosition: m.responsiblePosition,
-        profileDescription: m.profileDescription
+        email: m.email,
+        phone: m.phone || '',
+        nombre: m.nombre || m.name,
+        profile: m.profile,
+        representativeType: m.representativeType || { id: '', nombre: '' }
       })));
     }
   }
 
   // --- Computed Helpers ---
-  activeAxes = computed(() => this.evaluationAxes().filter(axis => axis.isActive));
   
   // Validation for Current Step
   isCurrentStepValid = computed(() => {
@@ -175,13 +167,8 @@ export class ProjectWizardComponent {
         return !!this.identificationData();
       case 2:
         return this.responseTeam().length > 0;
-      case 3: 
-        return this.activeAxes().length > 0;
-      case 4:
-        const activeIds = this.activeAxes().map(a => a.id);
-        const assignedIds = this.technicalTableAssignments().map(a => a.axisId);
-        // All active axes must have an assignment
-        return activeIds.every(id => assignedIds.includes(id));
+      case 3:
+        return true; // Mesa técnica es opcional
       default:
         return false;
     }
@@ -216,10 +203,11 @@ export class ProjectWizardComponent {
         this.saveStep1AndProceed();
       }
     } else if (this.currentStep() === 2) {
-      // Finalize (Create or Update)
-      this.finishWizard();
-    } else {
+      // Proceed to Step 3 (Mesa Técnica)
       this.currentStep.update(s => s + 1);
+    } else if (this.currentStep() === 3) {
+      // Finalize (Create or Update) at step 3
+      this.finishWizard();
     }
   }
 
@@ -232,23 +220,21 @@ export class ProjectWizardComponent {
     // Already exists -> Update (Step 1 fields) but preserve others from Signals
     const updateRequest: UpdateProjectRequest = {
       id: this.initialData.id,
-      name: data.projectName,
-      dates: {
-        start: data.startDate,
-        end: data.endDate,
-        submissionDeadline: data.submissionDeadline
-      },
-      activeAxes: this.activeAxes().map(a => a.id),
-      technicalTable: this.technicalTableAssignments().map(a => ({ axisId: a.axisId, advisorId: a.advisorId })),
+      name: data.projectBriefDescription,
+      technicalTable: this.technicalTableAssignments().map(a => ({
+        axisId: a.eje,
+        advisorId: a.consultor.id
+      })),
       responseTeam: this.responseTeam().map(m => ({
         userId: m.userId,
-        name: m.userName,
-        email: m.userEmail,
-        roleInProject: m.roleInProject,
-        documentType: m.documentType,
+        name: m.name,
+        email: m.email,
+        profile: m.profile,
+        documentTypeId: m.documentTypeId,
         documentNumber: m.documentNumber,
-        phone: m.phoneNumber,
-        status: m.status
+        nombre: m.nombre,
+        phone: m.phone,
+        representativeType: m.representativeType
       }))
     };
 
@@ -295,26 +281,21 @@ export class ProjectWizardComponent {
         // Edit Mode -> Update
         const updateRequest: UpdateProjectRequest = {
           id: this.initialData.id,
-          name: data.projectName,
-          dates: {
-            start: data.startDate,
-            end: data.endDate,
-            submissionDeadline: data.submissionDeadline
-          },
-          activeAxes: this.activeAxes().map(a => a.id),
+          name: data.projectBriefDescription,
           technicalTable: this.technicalTableAssignments().map(a => ({
-            axisId: a.axisId,
-            advisorId: a.advisorId
+            axisId: a.eje,
+            advisorId: a.consultor.id
           })),
           responseTeam: this.responseTeam().map(m => ({
             userId: m.userId,
-            name: m.userName,
-            email: m.userEmail,
-            roleInProject: m.roleInProject,
-            documentType: m.documentType,
+            name: m.name,
+            email: m.email,
+            profile: m.profile,
+            documentTypeId: m.documentTypeId,
             documentNumber: m.documentNumber,
-            phone: m.phoneNumber,
-            status: m.status
+            nombre: m.nombre,
+            phone: m.phone,
+            representativeType: m.representativeType
           }))
         };
 
@@ -332,33 +313,40 @@ export class ProjectWizardComponent {
       } else {
         // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
         const createRequest: CreateProjectRequest = {
-          name: data.projectName,
-          department: data.department,
-          municipality: data.municipality,
+          id: null,
+          housingCount: data.housingCount,
+          beneficiariesCount: data.beneficiariesCount,
+          tieneTerreno: data.tieneTerreno,
+          landDescription: data.landDescription,
+          projectValue: data.projectValue,
+          tieneFinanciacion: data.tieneFinanciacion,
+          financingDescription: data.financingDescription,
           organization: {
             name: data.organizationName,
             type: data.organizationType,
             identifier: data.organizationIdentifier,
+            digitoVerificacion: parseInt(data.verificationDigit) || 0,
             email: data.organizationEmail,
-            description: data.organizationDescription,
+            paginaWeb: data.website,
+            region: data.departmentId,
+            municipalityId: data.municipalityId || { id: '', nombre: '' },
             address: data.organizationAddress,
-            municipality: data.municipality,
-            region: data.department
+            description: data.organizationDescription,
+            organizationTeam: this.responseTeam().map(m => ({
+              userId: m.userId,
+              name: m.name,
+              email: m.email,
+              profile: m.profile,
+              documentTypeId: m.documentTypeId,
+              documentNumber: m.documentNumber,
+              nombre: m.nombre,
+              phone: m.phone,
+              representativeType: m.representativeType
+            }))
           },
-          dates: {
-            start: data.startDate,
-            end: data.endDate,
-            submissionDeadline: data.submissionDeadline
-          },
-          // Send the collected Response Team immediately!
-          responseTeam: this.responseTeam().map(m => ({
-            name: m.userName,
-            email: m.userEmail,
-            roleInProject: m.roleInProject,
-            documentType: m.documentType,
-            documentNumber: m.documentNumber,
-            phone: m.phoneNumber,
-            status: m.status
+          projectTeam: this.technicalTableAssignments().map(a => ({
+            eje: a.eje,
+            consultor: a.consultor
           }))
         };
 
@@ -404,28 +392,10 @@ export class ProjectWizardComponent {
     this.identificationData.set(data);
   }
 
-  toggleAxis(axisId: string) {
-    this.evaluationAxes.update(axes => 
-      axes.map(axis => {
-        if (axis.id === axisId) {
-          const isActive = !axis.isActive;
-          // If turning off, remove assignment from Step 4
-          if (!isActive) {
-            this.technicalTableAssignments.update(assignments => 
-              assignments.filter(a => a.axisId !== axisId)
-            );
-          }
-          return { ...axis, isActive };
-        }
-        return axis;
-      })
-    );
-  }
-
   updateTechnicalTable(assignment: TechnicalTableAssignment) {
     this.technicalTableAssignments.update(prev => {
       // Replace existing assignment for this axis or add new
-      const filtered = prev.filter(a => a.axisId !== assignment.axisId);
+      const filtered = prev.filter(a => a.eje !== assignment.eje);
       return [...filtered, assignment];
     });
   }
@@ -445,29 +415,21 @@ export class ProjectWizardComponent {
 
     const updateRequest: UpdateProjectRequest = {
       id: this.initialData.id,
-      name: data.projectName,
-      dates: {
-        start: data.startDate,
-        end: data.endDate,
-        submissionDeadline: data.submissionDeadline
-      },
-      // Preserve other fields if they exist in state, otherwise map from initialData or empty
-      activeAxes: this.activeAxes().map(a => a.id), 
+      name: data.projectBriefDescription,
       technicalTable: this.technicalTableAssignments().map(a => ({
-        axisId: a.axisId,
-        advisorId: a.advisorId
+        axisId: a.eje,
+        advisorId: a.consultor.id
       })),
       responseTeam: this.responseTeam().map(m => ({
         userId: m.userId,
-        name: m.userName,
-        email: m.userEmail,
-        roleInProject: m.roleInProject,
-        documentType: m.documentType,
+        name: m.name,
+        email: m.email,
+        profile: m.profile,
+        documentTypeId: m.documentTypeId,
         documentNumber: m.documentNumber,
-        phone: m.phoneNumber,
-        status: m.status,
-        responsiblePosition: m.responsiblePosition,
-        profileDescription: m.profileDescription
+        nombre: m.nombre,
+        phone: m.phone,
+        representativeType: m.representativeType
       }))
     };
 

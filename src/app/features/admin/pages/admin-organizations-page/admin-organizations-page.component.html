@@ -1,5 +1,45 @@
 <div class="space-y-6">
   <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Organizaciones</h1>
+    <p class="text-gray-500">Gestión de organizaciones y acceso al sistema</p>
+  </div>
+
+  <!-- Coming Soon Banner -->
+  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-12 text-center">
+    <div class="max-w-2xl mx-auto">
+      <div class="flex justify-center mb-6">
+        <div class="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
+          <span class="material-symbols-rounded text-4xl text-blue-600">construction</span>
+        </div>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Próximamente</h2>
+      <p class="text-gray-600 text-lg mb-6">
+        En esta sección podrás ver las organizaciones asociadas a los proyectos, crear organizaciones individuales y gestionar su información.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <div class="flex items-center gap-2 bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+          <span class="material-symbols-rounded text-blue-600">domain</span>
+          <span class="text-sm font-medium text-gray-700">Ver organizaciones</span>
+        </div>
+        <div class="flex items-center gap-2 bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+          <span class="material-symbols-rounded text-blue-600">add_business</span>
+          <span class="text-sm font-medium text-gray-700">Crear organizaciones</span>
+        </div>
+        <div class="flex items-center gap-2 bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+          <span class="material-symbols-rounded text-blue-600">folder_shared</span>
+          <span class="text-sm font-medium text-gray-700">Organizaciones por proyecto</span>
+        </div>
+        <div class="flex items-center gap-2 bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+          <span class="material-symbols-rounded text-blue-600">manage_accounts</span>
+          <span class="text-sm font-medium text-gray-700">Gestión de usuarios</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Original content commented out -->
+  <!--
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">Organizaciones</h1>
@@ -13,9 +53,7 @@
     </button>
   </div>
 
-  <!-- Filters -->
   <div class="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-    <!-- Search -->
     <div class="relative w-full">
       <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <span class="material-symbols-rounded text-gray-400">search</span>
@@ -30,7 +68,6 @@
     </div>
   </div>
 
-  <!-- Table -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
@@ -60,7 +97,6 @@
           } @else {
             @for (org of organizations(); track org.id) {
               <tr class="hover:bg-gray-50 transition-colors">
-                <!-- Org Info -->
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-100 text-blue-700">
@@ -76,7 +112,6 @@
                   </div>
                 </td>
                 
-                <!-- Location -->
                 <td class="px-6 py-4 text-sm text-gray-600">
                   <div class="flex flex-col">
                     <span class="font-medium">{{ org.municipality }}</span>
@@ -84,7 +119,6 @@
                   </div>
                 </td>
 
-                <!-- Contact -->
                 <td class="px-6 py-4 text-sm text-gray-600">
                   <div class="flex flex-col">
                     @if (org.contactName) {
@@ -94,7 +128,6 @@
                   </div>
                 </td>
 
-                <!-- Status -->
                 <td class="px-6 py-4">
                   <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
                     [class.bg-green-50]="org.status === 'ACTIVE'"
@@ -107,7 +140,6 @@
                   </span>
                 </td>
 
-                <!-- Actions -->
                 <td class="px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-2">
                     <button (click)="resetPassword(org)" 
@@ -130,7 +162,6 @@
       </table>
     </div>
     
-    <!-- Pagination -->
     <app-pagination
         [totalItems]="totalItems()"
         [itemsPerPage]="pageSize()"
@@ -139,7 +170,6 @@
       </app-pagination>
   </div>
 
-  <!-- Create/Edit Modal -->
   @if (showCreateModal()) {
     <app-admin-organization-create-modal
       [organization]="selectedOrganization()"
@@ -148,4 +178,5 @@
       (update)="handleUpdateOrganization($event)">
     </app-admin-organization-create-modal>
   }
+  -->
 </div>
