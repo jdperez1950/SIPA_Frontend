@@ -15,7 +15,22 @@ export interface DropdownItem {
   styleUrls: ['./custom-dropdown.component.css']
 })
 export class CustomDropdownComponent {
-  @Input() items: DropdownItem[] = [];
+  private _items: DropdownItem[] = [];
+  @Input()
+  set items(value: DropdownItem[]) {
+    this._items = value;
+    // Re-try selection when items change
+    if (this.selectedValue) {
+      const found = value.find(item => item.id === this.selectedValue);
+      if (found && !this.selectedItem) {
+        this.selectedItem = found;
+      }
+    }
+  }
+  get items(): DropdownItem[] {
+    return this._items;
+  }
+
   @Input() placeholder: string = 'Seleccione...';
   @Input() disabled: boolean = false;
   @Input() invalid: boolean | undefined = false;
@@ -48,8 +63,10 @@ export class CustomDropdownComponent {
   }
 
   ngOnChanges() {
+    console.log('ngOnChanges - selectedValue:', this.selectedValue, 'items:', this.items);
     if (this.selectedValue) {
       this.selectedItem = this.items.find(item => item.id === this.selectedValue) || null;
+      console.log('ngOnChanges - selectedItem:', this.selectedItem);
     } else {
       this.selectedItem = null;
     }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
@@ -57,14 +57,54 @@ export class StepIdentificationComponent implements OnInit {
     // Effect to handle initial data loading when service is ready
     effect(() => {
         const depts = this.parametroBaseService.departamentos();
-        
-        // If form has no department ID but we have an initial ID, set it now
-        // Check that form exists before accessing it
-        if (depts.length > 0 && this.initialData?.departmentId?.id && this.form && !this.form.get('department')?.value) {
+        const deptValue = this.form?.get('department')?.value;
+
+        // If we have initial data and form exists, handle department and municipality
+        if (depts.length > 0 && this.initialData?.departmentId?.id && this.form) {
             const found = depts.find(d => d.id === this.initialData!.departmentId.id);
-            if (found) {
-                this.form.patchValue({ department: found.id }, { emitEvent: true });
+
+            // Set department if not already set
+            if (found && deptValue !== found.id) {
+                this.form.patchValue({ department: found.id }, { emitEvent: false });
             }
+
+            // Load municipios for this department if we have a department ID
+            const deptIdToUse = found?.id || deptValue;
+            if (deptIdToUse && this.municipios.length === 0) {
+                this.parametroBaseService.getMunicipiosPorDepto(deptIdToUse).subscribe(municipios => {
+                    console.log('Municipios loaded:', municipios);
+                    this.municipios = municipios.map(m => ({ id: m.id, nombre: m.nombre }));
+                    console.log('Mapped municipios:', this.municipios);
+
+                    // Set municipality if we have initial data
+                    console.log('Initial municipality ID:', this.initialData?.municipality?.id);
+                    if (this.initialData?.municipality?.id) {
+                        const municipioFound = this.municipios.find(m => m.id === this.initialData!.municipality!.id);
+                        console.log('Municipio found:', municipioFound);
+                        if (municipioFound) {
+                            this.form.patchValue({ municipality: municipioFound.id }, { emitEvent: false });
+                        }
+                    }
+                });
+            }
+        }
+
+        // Handle verification digit and other fields when initialData changes
+        if (this.initialData && this.form) {
+          const currentVerificationDigit = this.form.get('verificationDigit')?.value;
+          if (this.initialData.verificationDigit && currentVerificationDigit !== this.initialData.verificationDigit) {
+            this.form.patchValue({ verificationDigit: this.initialData.verificationDigit }, { emitEvent: false });
+          }
+
+          const currentOrgType = this.form.get('organizationType')?.value;
+          if (this.initialData.organizationType?.id && currentOrgType !== this.initialData.organizationType.id) {
+            this.form.patchValue({ organizationType: this.initialData.organizationType.id }, { emitEvent: false });
+          }
+
+          const currentOrgIdentifier = this.form.get('organizationIdentifier')?.value;
+          if (this.initialData.organizationIdentifier && currentOrgIdentifier !== this.initialData.organizationIdentifier) {
+            this.form.patchValue({ organizationIdentifier: this.initialData.organizationIdentifier }, { emitEvent: false });
+          }
         }
       });
   }
@@ -123,7 +163,7 @@ export class StepIdentificationComponent implements OnInit {
           financingDescription: value.financingDescription || '',
           departmentId: deptParam ? { id: deptId, nombre: deptParam.nombre } : { id: '', nombre: '' },
           departmentName: deptParam?.nombre || '',
-          municipalityId: municipioParam ? { id: municipalityId || '', nombre: municipioParam.nombre } : null,
+          municipality: municipioParam ? { id: municipalityId || '', nombre: municipioParam.nombre } : null,
           municipalityName: municipioParam?.nombre || null,
           organizationName: value.organizationName,
           organizationType: orgTypeParam ? { id: value.organizationType, nombre: orgTypeParam.nombre } : { id: '', nombre: '' },
@@ -169,8 +209,8 @@ export class StepIdentificationComponent implements OnInit {
     
     // Map initial municipality ID or name
     let initialMunicipio = null;
-    if (this.initialData?.municipalityId?.id) {
-      initialMunicipio = this.initialData.municipalityId.id;
+    if (this.initialData?.municipality?.id) {
+      initialMunicipio = this.initialData.municipality.id;
     } else if (this.initialData?.municipalityName) {
       initialMunicipio = this.initialData.municipalityName;
     }
@@ -191,7 +231,7 @@ export class StepIdentificationComponent implements OnInit {
       tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || ''],
       financingDescription: [this.initialData?.financingDescription || ''],
       department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
-      municipality: [this.initialData?.municipalityId?.id || initialMunicipio, Validators.required],
+      municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       organizationType: [initialOrgType, Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],

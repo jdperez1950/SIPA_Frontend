@@ -28,13 +28,29 @@ export class ProjectsService {
 
     return this.http.get<any>(`${this.apiUrl}/projects`, { params }).pipe(
       map(response => {
+        console.log('Full response structure from /api/projects:', JSON.stringify(response, null, 2));
+        
         if (response.success && response.data) {
           const apiResponse = response.data;
+          console.log('apiResponse.data:', apiResponse.data);
+          console.log('apiResponse.total:', apiResponse.total);
+          
+          // Mock progress values to 0% to avoid errors
+          const projects = (apiResponse.data || []).map((project: any) => ({
+            ...project,
+            progress: project.progress || {
+              technical: 0,
+              legal: 0,
+              financial: 0,
+              social: 0
+            }
+          }));
+          
           return {
-            data: apiResponse.data || [],
+            data: projects,
             meta: {
               totalItems: apiResponse.total || 0,
-              itemCount: (apiResponse.data || []).length,
+              itemCount: projects.length,
               itemsPerPage: apiResponse.limit || pageSize,
               totalPages: apiResponse.totalPages || 0,
               currentPage: apiResponse.page || page

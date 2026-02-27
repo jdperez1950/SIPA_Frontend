@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
+import { ProjectsService } from '../../../../core/services/projects.service';
 import { Project, ProjectStatus, AdvisorCandidate } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
@@ -18,6 +19,7 @@ import { ProjectWizardComponent } from './components/project-wizard/project-wiza
 export class AdminProjectsPageComponent implements OnInit {
   private alertService = inject(AlertService);
   private adminDataService = inject(AdminDataService);
+  private projectsService = inject(ProjectsService);
 
   // State
   showWizard = signal(false); // Controls Wizard visibility
@@ -97,8 +99,18 @@ export class AdminProjectsPageComponent implements OnInit {
   }
 
   editProject(project: Project) {
-    this.selectedProject.set(project);
-    this.toggleWizard(true);
+    this.isLoading.set(true);
+    this.projectsService.getProjectById(project.id).subscribe({
+      next: (fullProject) => {
+        this.selectedProject.set(fullProject);
+        this.toggleWizard(true);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.alertService.error('Error al cargar el proyecto');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   filterByStatus(status: ProjectStatus | null) {
@@ -179,5 +191,13 @@ export class AdminProjectsPageComponent implements OnInit {
       case 'SIN_POSIBILIDAD': return 'text-red-600';
       default: return 'text-gray-500';
     }
+  }
+
+  getAdvisorName(project: Project): string {
+    return project.advisor?.name || '';
+  }
+
+  getProgressValue(project: Project, axis: 'technical' | 'legal' | 'financial' | 'social'): number {
+    return project.progress?.[axis] || 0;
   }
 }

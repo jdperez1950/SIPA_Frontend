@@ -272,7 +272,7 @@ export class StepResponseTeamComponent implements OnInit {
         ...currentEditing,
         name: formValue.name,
         email: formValue.email,
-        documentTypeId: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
+        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
         documentNumber: formValue.documentNumber,
         phone: formValue.phone,
         nombre: formValue.name,
@@ -303,7 +303,7 @@ export class StepResponseTeamComponent implements OnInit {
       const newMember: ResponseTeamMember = {
         name: formValue.name,
         email: formValue.email,
-        documentTypeId: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
+        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
         documentNumber: formValue.documentNumber,
         phone: formValue.phone,
         nombre: formValue.name,
@@ -333,7 +333,7 @@ export class StepResponseTeamComponent implements OnInit {
   editMember(member: ResponseTeamMember) {
     this.editingMember.set(member);
     this.userForm.patchValue({
-      documentType: member.documentTypeId?.id || '',
+      documentType: member.documentType?.id || '',
       documentNumber: member.documentNumber,
       name: member.name,
       email: member.email,
@@ -341,7 +341,7 @@ export class StepResponseTeamComponent implements OnInit {
       responsiblePosition: member.representativeType?.id || '',
       profile: member.profile || ''
     });
-    this.documentType.set(member.documentTypeId?.id || '');
+    this.documentType.set(member.documentType?.id || '');
   }
 
   cancelEdit() {

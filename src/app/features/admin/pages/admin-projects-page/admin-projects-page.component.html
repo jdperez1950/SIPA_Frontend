@@ -100,13 +100,13 @@
               
               <div class="flex items-center gap-1 text-sm text-gray-500 mt-2">
                 <span class="material-symbols-rounded text-sm">location_on</span>
-                {{ project.municipality }}
+                {{ project.municipality || project.organization?.municipality?.nombre || '-' }}
               </div>
             </div>
             <div class="flex flex-col items-end">
-              <span [class]="'text-xs font-bold flex items-center gap-1 ' + getViabilityColor(project.viabilityStatus)">
+              <span [class]="'text-xs font-bold flex items-center gap-1 ' + getViabilityColor(project.viabilityStatus || 'SIN_GESTIONAR')">
                 <span class="material-symbols-rounded text-sm">verified</span>
-                {{ project.viabilityStatus.replace('_', ' ') }}
+                {{ project.viabilityStatus?.replace('_', ' ') || '-' }}
               </span>
             </div>
           </div>
@@ -120,7 +120,7 @@
               <span class="text-[10px] text-gray-400 font-medium uppercase">Técnico</span>
               <div class="flex gap-1">
                 @for (step of [1,2,3,4]; track step) {
-                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.technical >= step ? 'bg-blue-500' : 'bg-gray-200')"></div>
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (getProgressValue(project, 'technical') >= step ? 'bg-blue-500' : 'bg-gray-200')"></div>
                 }
               </div>
             </div>
@@ -129,7 +129,7 @@
               <span class="text-[10px] text-gray-400 font-medium uppercase">Legal</span>
               <div class="flex gap-1">
                 @for (step of [1,2,3,4]; track step) {
-                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.legal >= step ? 'bg-purple-500' : 'bg-gray-200')"></div>
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (getProgressValue(project, 'legal') >= step ? 'bg-purple-500' : 'bg-gray-200')"></div>
                 }
               </div>
             </div>
@@ -138,7 +138,7 @@
               <span class="text-[10px] text-gray-400 font-medium uppercase">Financiero</span>
               <div class="flex gap-1">
                 @for (step of [1,2,3,4]; track step) {
-                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.financial >= step ? 'bg-green-500' : 'bg-gray-200')"></div>
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (getProgressValue(project, 'financial') >= step ? 'bg-green-500' : 'bg-gray-200')"></div>
                 }
               </div>
             </div>
@@ -147,7 +147,7 @@
               <span class="text-[10px] text-gray-400 font-medium uppercase">Social</span>
               <div class="flex gap-1">
                 @for (step of [1,2,3,4]; track step) {
-                  <div [class]="'h-1.5 flex-1 rounded-full ' + (project.progress.social >= step ? 'bg-orange-500' : 'bg-gray-200')"></div>
+                  <div [class]="'h-1.5 flex-1 rounded-full ' + (getProgressValue(project, 'social') >= step ? 'bg-orange-500' : 'bg-gray-200')"></div>
                 }
               </div>
             </div>
@@ -158,13 +158,13 @@
           <!-- Advisor & Actions -->
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              @if (project.advisor) {
+              @if (getAdvisorName(project)) {
                 <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                  {{ project.advisor.name.charAt(0) }}
+                  {{ getAdvisorName(project).charAt(0) }}
                 </div>
                 <div class="flex flex-col">
                   <span class="text-xs text-gray-400">Asesor Asignado</span>
-                  <span class="text-sm font-medium text-gray-900">{{ project.advisor.name }}</span>
+                  <span class="text-sm font-medium text-gray-900">{{ getAdvisorName(project) }}</span>
                 </div>
               } @else {
                 <div class="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">

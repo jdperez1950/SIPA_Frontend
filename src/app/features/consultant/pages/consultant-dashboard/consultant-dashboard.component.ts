@@ -142,7 +142,8 @@ export class ConsultantDashboardComponent implements OnInit {
     this.selectedViability.set(viability);
   }
 
-  getViabilityLabel(viability: ViabilityScenario): string {
+  getViabilityLabel(viability: ViabilityScenario | undefined): string {
+    if (!viability) return '-';
     switch (viability) {
       case 'HABILITADO':
         return 'Habilitado';

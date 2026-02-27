@@ -176,13 +176,21 @@ export class AdminOrganizationCreateModalComponent implements OnInit {
 
   ngOnInit() {
     if (this.organization) {
+      const municipalityValue = typeof this.organization.municipality === 'string' 
+        ? this.organization.municipality 
+        : this.organization.municipality?.nombre || '';
+      
+      const regionValue = typeof this.organization.region === 'string' 
+        ? this.organization.region 
+        : this.organization.region?.nombre || '';
+
       this.form.patchValue({
         name: this.organization.name,
         type: this.organization.type,
         identifier: this.organization.identifier,
         email: this.organization.email,
-        municipality: this.organization.municipality,
-        region: this.organization.region,
+        municipality: municipalityValue,
+        region: regionValue,
         contactName: this.organization.contactName || ''
       });
     }
@@ -220,6 +228,7 @@ export class AdminOrganizationCreateModalComponent implements OnInit {
 
     this.isSubmitting.set(true);
     const formData = this.form.getRawValue();
+    
     const dto: CreateOrganizationDTO = {
       name: formData.name,
       type: formData.type as OrganizationType,
@@ -232,7 +241,16 @@ export class AdminOrganizationCreateModalComponent implements OnInit {
     };
 
     if (this.organization) {
-      this.update.emit({ id: this.organization.id, dto });
+      const updateDto: any = { ...dto };
+      
+      if (typeof this.organization.municipality === 'object') {
+        updateDto.municipalityId = this.organization.municipality.id;
+      }
+      if (typeof this.organization.region === 'object') {
+        updateDto.regionId = this.organization.region.id;
+      }
+      
+      this.update.emit({ id: this.organization.id, dto: updateDto });
     } else {
       if (!this.selectedFile()) {
         this.fileError.set('Debe cargar el archivo de usuarios');
