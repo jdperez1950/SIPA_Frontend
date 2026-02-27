@@ -4,7 +4,6 @@ import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest, UpdateProjectRequest, ApiResponse } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
-import { ORGANIZATIONS_MOCK } from '../../../core/data/mock/organizations.mock';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { RegisterRequest } from '../../../core/auth/models/auth.models';
 
@@ -19,7 +18,7 @@ export class AdminDataService {
   // State Signals (acting as cache/store)
   private users = signal<User[]>(USERS_MOCK);
   private projects = signal<Project[]>([]);
-  private organizations = signal<Organization[]>(ORGANIZATIONS_MOCK);
+  private organizations = signal<Organization[]>([]);
 
   constructor() {}
 
@@ -174,10 +173,24 @@ export class AdminDataService {
 
     return this.http.get<any>(`${this.apiUrl}/projects`, { params }).pipe(
       map(response => {
-        console.log('getProjects response:', response);
+        console.log('Full response structure from /api/projects (admin):', JSON.stringify(response, null, 2));
+        
         if (response.success && response.data) {
           const apiResponse = response.data;
-          const allProjects = apiResponse.data || [];
+          console.log('admin - apiResponse.data:', apiResponse.data);
+          console.log('admin - apiResponse.total:', apiResponse.total);
+          
+          // Mock progress values to 0% to avoid errors
+          const allProjects = (apiResponse.data || []).map((project: any) => ({
+            ...project,
+            progress: project.progress || {
+              technical: 0,
+              legal: 0,
+              financial: 0,
+              social: 0
+            }
+          }));
+          
           const totalItems = apiResponse.total || allProjects.length;
 
           // Backend workaround: If backend returns more items than expected, cache and paginate in frontend
@@ -329,8 +342,17 @@ export class AdminDataService {
   createOrganization(dto: CreateOrganizationDTO, file: File): Observable<Organization> {
     const newOrg: Organization = {
       id: Math.random().toString(36).substr(2, 9),
-      ...dto,
-      userId: 'temp-user-id' // Mock linked user
+      name: dto.name,
+      type: dto.type,
+      identifier: dto.identifier,
+      verificationDigit: dto.verificationDigit,
+      email: dto.email,
+      website: dto.website,
+      municipality: { id: '', nombre: dto.municipality, codigo: '', tipo: '', padreId: null, deletedAt: null, createdAt: '', updatedAt: null },
+      region: { id: '', nombre: dto.region, codigo: '', tipo: '', padreId: null, deletedAt: null, createdAt: '', updatedAt: null },
+      contactName: dto.contactName,
+      status: dto.status || 'ACTIVE',
+      userId: 'temp-user-id'
     };
 
     // console.log('Uploading file:', file.name, 'Size:', file.size); // REMOVED FOR SECURITY (A02)
@@ -344,7 +366,29 @@ export class AdminDataService {
     
     this.organizations.update(current => current.map(o => {
       if (o.id === id) {
-        updatedOrg = { ...o, ...dto };
+        updatedOrg = { ...o };
+        if (dto.name !== undefined) updatedOrg.name = dto.name;
+        if (dto.type !== undefined) updatedOrg.type = dto.type;
+        if (dto.identifier !== undefined) updatedOrg.identifier = dto.identifier;
+        if (dto.verificationDigit !== undefined) updatedOrg.verificationDigit = dto.verificationDigit;
+        if (dto.email !== undefined) updatedOrg.email = dto.email;
+        if (dto.website !== undefined) updatedOrg.website = dto.website;
+        if (dto.contactName !== undefined) updatedOrg.contactName = dto.contactName;
+        if (dto.status !== undefined) updatedOrg.status = dto.status;
+        
+        if (dto.municipality !== undefined) {
+          updatedOrg.municipality = { ...o.municipality, nombre: dto.municipality };
+        }
+        if (dto.region !== undefined) {
+          updatedOrg.region = { ...o.region, nombre: dto.region };
+        }
+        if (dto.municipalityId !== undefined) {
+          updatedOrg.municipality = { ...o.municipality, id: dto.municipalityId };
+        }
+        if (dto.regionId !== undefined) {
+          updatedOrg.region = { ...o.region, id: dto.regionId };
+        }
+        
         return updatedOrg;
       }
       return o;

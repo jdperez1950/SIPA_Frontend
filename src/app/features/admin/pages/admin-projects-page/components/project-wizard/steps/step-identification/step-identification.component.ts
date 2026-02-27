@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
@@ -57,14 +57,45 @@ export class StepIdentificationComponent implements OnInit {
     // Effect to handle initial data loading when service is ready
     effect(() => {
         const depts = this.parametroBaseService.departamentos();
-        
+
         // If form has no department ID but we have an initial ID, set it now
         // Check that form exists before accessing it
         if (depts.length > 0 && this.initialData?.departmentId?.id && this.form && !this.form.get('department')?.value) {
             const found = depts.find(d => d.id === this.initialData!.departmentId.id);
             if (found) {
-                this.form.patchValue({ department: found.id }, { emitEvent: true });
+                this.form.patchValue({ department: found.id }, { emitEvent: false });
+
+                // Load municipios for this department
+                this.parametroBaseService.getMunicipiosPorDepto(found.id).subscribe(municipios => {
+                    this.municipios = municipios.map(m => ({ id: m.id, nombre: m.nombre }));
+
+                    // Set municipality if we have initial data
+                    if (this.initialData?.municipality?.id) {
+                        const municipioFound = this.municipios.find(m => m.id === this.initialData!.municipality!.id);
+                        if (municipioFound) {
+                            this.form.patchValue({ municipality: municipioFound.id }, { emitEvent: false });
+                        }
+                    }
+                });
             }
+        }
+
+        // Handle verification digit and other fields when initialData changes
+        if (this.initialData && this.form) {
+          const currentVerificationDigit = this.form.get('verificationDigit')?.value;
+          if (this.initialData.verificationDigit && currentVerificationDigit !== this.initialData.verificationDigit) {
+            this.form.patchValue({ verificationDigit: this.initialData.verificationDigit }, { emitEvent: false });
+          }
+
+          const currentOrgType = this.form.get('organizationType')?.value;
+          if (this.initialData.organizationType?.id && currentOrgType !== this.initialData.organizationType.id) {
+            this.form.patchValue({ organizationType: this.initialData.organizationType.id }, { emitEvent: false });
+          }
+
+          const currentOrgIdentifier = this.form.get('organizationIdentifier')?.value;
+          if (this.initialData.organizationIdentifier && currentOrgIdentifier !== this.initialData.organizationIdentifier) {
+            this.form.patchValue({ organizationIdentifier: this.initialData.organizationIdentifier }, { emitEvent: false });
+          }
         }
       });
   }

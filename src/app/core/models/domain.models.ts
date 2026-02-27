@@ -110,30 +110,38 @@ export interface AdvisorCandidate extends ProjectAdvisor {
 }
 
 export interface ProjectProgress {
-  technical: number;
-  legal: number;
-  financial: number;
-  social: number;
+  technical?: number;
+  legal?: number;
+  financial?: number;
+  social?: number;
 }
 
 export interface Project {
   id: string;
   code: string;
   name?: string; // Project Name (e.g., "vivienda el santander")
+  description?: string; // Full project description
   organization: string | any; // Supports string (legacy/mock) or object (API)
   organizationName?: string; // API Organization Name
   municipality: string;
   state: string;
   status: ProjectStatus;
-  viabilityStatus: ViabilityScenario;
+  viabilityStatus?: ViabilityScenario;
   advisor?: ProjectAdvisor;
-  progress: ProjectProgress;
-  organizationData?: Organization; // Full organization details (Detail View)
+  progress?: ProjectProgress;
+  organizationData?: Organization; // Full organization details (Detail View) - contains municipality/region as ParametroBase objects
   startDate?: string;
   endDate?: string;
   submissionDeadline?: string;
   correctionDeadline?: string;
   responseTeam?: ProjectResponseTeamMember[];
+  housingCount?: number;
+  beneficiariesCount?: number;
+  projectValue?: number;
+  tieneTerreno?: ParametroSelect;
+  landDescription?: string;
+  tieneFinanciacion?: ParametroSelect;
+  financingDescription?: string;
 }
 
 export interface ApiResponse<T> {
@@ -247,12 +255,13 @@ export interface Organization {
   type: OrganizationType;
   identifier: string;
   verificationDigit?: string;
+  digitoVerificacion?: number;
   email: string;
   website?: string;
   status: OrganizationStatus;
   contactName?: string;
-  municipality: string;
-  region: string;
+  municipality: ParametroBase;
+  region: ParametroBase;
   description?: string;
   address?: string;
   userId?: string;
@@ -281,6 +290,8 @@ export interface CreateOrganizationDTO {
   region: string;
   contactName?: string;
   status: OrganizationStatus;
+  municipalityId?: string;
+  regionId?: string;
 }
 
 export interface ParametroBase {

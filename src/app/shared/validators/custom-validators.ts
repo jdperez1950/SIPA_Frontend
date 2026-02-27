@@ -30,7 +30,7 @@ export const nitFormatValidator: ValidatorFn = (control: AbstractControl): Valid
     return null;
   }
 
-  const nitRegex = /^[0-9]{10}$/;
+  const nitRegex = /^[0-9]{9}$/;
 
   if (!nitRegex.test(value)) {
     return {
@@ -64,7 +64,7 @@ export function getNumericOnlyErrorMessage(): string {
 }
 
 export function getNitFormatErrorMessage(): string {
-  return 'Digite los 10 números sin guion, ni puntos, etc.';
+  return 'Digite los 9 números sin guion, ni puntos, etc.';
 }
 
 export function getTextOnlyErrorMessage(): string {

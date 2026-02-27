@@ -92,6 +92,8 @@ export class ProjectWizardComponent {
   }
 
   loadInitialData(project: Project) {
+    console.log('loadInitialData - Full project object:', JSON.stringify(project, null, 2));
+    
     // Backend response structure:
     // project.name -> Nombre real del proyecto (Ej: "CosiPet")
     // project.code -> Código del proyecto (Ej: "PRJ-2026-0029")
@@ -106,6 +108,8 @@ export class ProjectWizardComponent {
     
     const orgData = project.organizationData || (typeof project.organization === 'object' ? project.organization : null);
     
+    console.log('loadInitialData - orgData:', JSON.stringify(orgData, null, 2));
+    
     // Helper to safely get string
     const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
 
@@ -113,25 +117,33 @@ export class ProjectWizardComponent {
     const orgTypeCode = orgData?.type;
     const orgType = orgTypeCode ? this.parametroBaseService.tiposOrganizacion().find((t: any) => t.codigo === orgTypeCode) : null;
 
+    // Backend returns municipality and region as ParametroBase objects
+    const deptParam = orgData?.region;
+    const municipioParam = orgData?.municipality;
+
+    // Helper to get nombre or fallback to codigo
+    const getNombreOrCodigo = (param: any) => param?.nombre || param?.codigo || '';
+
+    // Parse project fields from backend
     this.identificationData.set({
-      description: '',
-      projectBriefDescription: '',
-      projectValue: 0,
-      housingCount: 0,
-      beneficiariesCount: 0,
-      tieneTerreno: { id: '', nombre: '' },
-      landDescription: '',
-      tieneFinanciacion: { id: '', nombre: '' },
-      financingDescription: '',
-      departmentId: orgData?.regionId ? { id: orgData.regionId, nombre: project.state || orgData?.region || '' } : { id: '', nombre: '' },
-      departmentName: project.state || orgData?.region || '',
-      municipality: orgData?.municipality ? { id: orgData.municipality.id, nombre: project.municipality || orgData?.municipality.nombre || '' } : null,
-      municipalityName: project.municipality || orgData?.municipality || '',
+      description: safeStr(project.description) || '',
+      projectBriefDescription: safeStr(project.name) || '',
+      projectValue: project.projectValue || 0,
+      housingCount: project.housingCount || 0,
+      beneficiariesCount: project.beneficiariesCount || 0,
+      tieneTerreno: project.tieneTerreno || { id: '', nombre: '' },
+      landDescription: safeStr(project.landDescription) || '',
+      tieneFinanciacion: project.tieneFinanciacion || { id: '', nombre: '' },
+      financingDescription: safeStr(project.financingDescription) || '',
+      departmentId: deptParam ? { id: deptParam.id, nombre: getNombreOrCodigo(deptParam) } : { id: '', nombre: project.state || '' },
+      departmentName: getNombreOrCodigo(deptParam) || project.state || '',
+      municipality: municipioParam ? { id: municipioParam.id, nombre: getNombreOrCodigo(municipioParam) } : { id: '', nombre: project.municipality || '' },
+      municipalityName: getNombreOrCodigo(municipioParam) || project.municipality || '',
       
       organizationName: safeStr(project.organizationName) || orgData?.name || '',
       organizationType: orgType ? { id: orgType.id, nombre: orgType.nombre } : { id: '', nombre: '' },
       organizationIdentifier: orgData?.identifier || '',
-      verificationDigit: orgData?.verificationDigit || '',
+      verificationDigit: orgData?.digitoVerificacion?.toString() ?? '',
       organizationEmail: orgData?.email || '',
       website: orgData?.website || '',
       organizationDescription: orgData?.description || '',
