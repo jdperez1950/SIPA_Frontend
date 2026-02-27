@@ -26,12 +26,12 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
             <div class="flex gap-3 items-center">
                <button 
                  type="button" 
-                 (click)="logout()" 
-                 class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                 aria-label="Cerrar sesión"
+                 (click)="goBackToPanel()" 
+                 class="flex items-center gap-2 px-3 py-2 text-sm text-sky-600 hover:bg-sky-50 rounded-md transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+                 aria-label="Volver al panel"
                >
-                 <span class="material-symbols-rounded text-lg" aria-hidden="true">logout</span>
-                 <span class="hidden sm:inline">Salir</span>
+                 <span class="material-symbols-rounded text-lg" aria-hidden="true">arrow_back</span>
+                 <span class="hidden sm:inline">Volver al Panel</span>
                </button>
             </div>
           </div>
@@ -70,5 +70,9 @@ export class WorkspaceLayoutComponent {
         this.router.navigate(['/auth/login']);
       }
     });
+  }
+
+  goBackToPanel() {
+    this.router.navigateByUrl('/organization/panel');
   }
 }

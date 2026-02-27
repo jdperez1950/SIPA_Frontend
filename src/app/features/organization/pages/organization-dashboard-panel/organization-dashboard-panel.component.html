@@ -1,0 +1,381 @@
+<div class="min-h-screen bg-gray-50 flex flex-col">
+  
+  <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+        <span class="material-symbols-rounded">dashboard</span>
+      </div>
+      <h1 class="text-xl font-bold text-gray-800">Panel de Organización</h1>
+    </div>
+    <button (click)="logout()" class="text-gray-500 hover:text-red-600 flex items-center gap-2 transition-colors">
+      <span class="text-sm font-medium">Cerrar Sesión</span>
+      <span class="material-symbols-rounded">logout</span>
+    </button>
+  </header>
+
+  <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+
+    <!-- Mensaje Temporal Panel en Construcción -->
+    <div class="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded mb-6">
+      <div class="flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <p class="font-medium">Panel en construcción</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Mis Proyectos</h2>
+        <p class="text-gray-500">Consulta y gestiona tus proyectos</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
+      <div class="relative w-full md:w-80">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="material-symbols-rounded text-gray-400">search</span>
+        </span>
+        <input 
+          type="text" 
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Buscar proyecto..."
+        >
+      </div>
+      
+      <div class="flex gap-2 flex-wrap justify-center">
+        <button 
+          (click)="filterByStatus(null)"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+          [ngClass]="{
+            'bg-gray-100 border-gray-300 text-gray-700': selectedStatus() === null,
+            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== null
+          }"
+        >
+          Todos
+        </button>
+        <button 
+          (click)="filterByStatus('ACTIVE')"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+          [ngClass]="{
+            'bg-green-50 border-green-200 text-green-700': selectedStatus() === 'ACTIVE',
+            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'ACTIVE'
+          }"
+        >
+          Activos
+        </button>
+        <button 
+          (click)="filterByStatus('CERTIFIED')"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+          [ngClass]="{
+            'bg-blue-50 border-blue-200 text-blue-700': selectedStatus() === 'CERTIFIED',
+            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'CERTIFIED'
+          }"
+        >
+          Certificados
+        </button>
+        <button 
+          (click)="filterByStatus('SUSPENDED')"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+          [ngClass]="{
+            'bg-gray-100 border-gray-200 text-gray-700': selectedStatus() === 'SUSPENDED',
+            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'SUSPENDED'
+          }"
+        >
+          Suspendidos
+        </button>
+        <button 
+          (click)="filterByStatus('BENEFICIARY')"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+          [ngClass]="{
+            'bg-purple-50 border-purple-200 text-purple-700': selectedStatus() === 'BENEFICIARY',
+            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'BENEFICIARY'
+          }"
+        >
+          Beneficiarios
+        </button>
+      </div>
+
+      <div class="flex gap-2 flex-wrap justify-center">
+        <button 
+          (click)="filterByViability(null)"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+          [ngClass]="{
+            'bg-gray-100 border-gray-300 text-gray-700': selectedViability() === null,
+            'border-transparent text-gray-500 hover:bg-gray-50': selectedViability() !== null
+          }"
+        >
+          Viabilidad
+        </button>
+        @for (viability of viabilityOptions; track viability) {
+          <button 
+            (click)="filterByViability(viability)"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+            [ngClass]="{
+              'bg-teal-50 border-teal-200 text-teal-700': selectedViability() === viability,
+              'border-transparent text-gray-500 hover:bg-gray-50': selectedViability() !== viability
+            }"
+          >
+            {{ getViabilityLabel(viability) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      @if (isLoading()) {
+        <app-loading message="Cargando proyectos..."></app-loading>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200">
+              <tr>
+                <th class="px-6 py-3">Código</th>
+                <th class="px-6 py-3">Organización</th>
+                <th class="px-6 py-3">Municipio</th>
+                <th class="px-6 py-3">Estado</th>
+                <th class="px-6 py-3">Viabilidad</th>
+                <th class="px-6 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (project of projects(); track project.id) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 font-medium text-gray-900">{{ project.code }}</td>
+                  <td class="px-6 py-4">
+                    {{ project.organizationName || (typeof project.organization === 'object' ? project.organization.name : project.organization) }}
+                  </td>
+                  <td class="px-6 py-4">{{ project.municipality }}, {{ project.state }}</td>
+                  <td class="px-6 py-4">
+                    <span 
+                      class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                      [ngClass]="{
+                        'bg-green-50 text-green-700 border-green-100': project.status === 'ACTIVE',
+                        'bg-gray-100 text-gray-600 border-gray-200': project.status === 'SUSPENDED',
+                        'bg-blue-50 text-blue-700 border-blue-100': project.status === 'CERTIFIED',
+                        'bg-purple-50 text-purple-700 border-purple-100': project.status === 'BENEFICIARY'
+                      }"
+                    >
+                      {{ project.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span 
+                      class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                      [ngClass]="{
+                        'bg-green-50 text-green-700 border-green-100': project.viabilityStatus === 'HABILITADO',
+                        'bg-blue-50 text-blue-700 border-blue-100': project.viabilityStatus === 'PRE_HABILITADO',
+                        'bg-yellow-50 text-yellow-700 border-yellow-100': project.viabilityStatus === 'ALTA_POSIBILIDAD',
+                        'bg-red-50 text-red-700 border-red-100': project.viabilityStatus === 'SIN_POSIBILIDAD'
+                      }"
+                    >
+                      {{ getViabilityLabel(project.viabilityStatus) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex gap-2">
+                      <button 
+                        (click)="viewProject(project)"
+                        class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                      >
+                        <span class="material-symbols-rounded text-sm">visibility</span>
+                        Ver
+                      </button>
+                      <button 
+                        (click)="fillSurvey(project)"
+                        class="text-green-600 hover:text-green-800 font-medium flex items-center gap-1"
+                      >
+                        <span class="material-symbols-rounded text-sm">assignment</span>
+                        Diligenciar encuesta
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                    <div class="flex flex-col items-center gap-2">
+                      <span class="material-symbols-rounded text-4xl">folder_off</span>
+                      <p>No se encontraron proyectos</p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="border-t border-gray-200 px-6 py-4">
+          <app-pagination
+            [currentPage]="currentPage()"
+            [itemsPerPage]="pageSize()"
+            [totalItems]="totalItems()"
+            (pageChange)="onPageChange($event)"
+          ></app-pagination>
+        </div>
+      }
+    </div>
+
+  </main>
+
+  @if (selectedProject()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative animate-slide-in-up">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-none">
+          <h3 class="font-bold text-gray-800 text-lg">Detalle del Proyecto</h3>
+          <button 
+            (click)="toggleProjectDetail(false)" 
+            class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200"
+            title="Cerrar"
+          >
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Código</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.code }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Estado</p>
+                <span 
+                  class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                  [ngClass]="{
+                    'bg-green-50 text-green-700 border-green-100': selectedProject()?.status === 'ACTIVE',
+                    'bg-gray-100 text-gray-600 border-gray-200': selectedProject()?.status === 'SUSPENDED',
+                    'bg-blue-50 text-blue-700 border-blue-100': selectedProject()?.status === 'CERTIFIED',
+                    'bg-purple-50 text-purple-700 border-purple-100': selectedProject()?.status === 'BENEFICIARY'
+                  }"
+                >
+                  {{ selectedProject()?.status }}
+                </span>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Organización</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.organizationName || (typeof selectedProject()?.organization === 'object' ? selectedProject()?.organization?.name : selectedProject()?.organization) }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Viabilidad</p>
+                <span 
+                  class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                  [ngClass]="{
+                    'bg-green-50 text-green-700 border-green-100': selectedProject()?.viabilityStatus === 'HABILITADO',
+                    'bg-blue-50 text-blue-700 border-blue-100': selectedProject()?.viabilityStatus === 'PRE_HABILITADO',
+                    'bg-yellow-50 text-yellow-700 border-yellow-100': selectedProject()?.viabilityStatus === 'ALTA_POSIBILIDAD',
+                    'bg-red-50 text-red-700 border-red-100': selectedProject()?.viabilityStatus === 'SIN_POSIBILIDAD'
+                  }"
+                >
+                  {{ getViabilityLabel(selectedProject()?.viabilityStatus || ViabilityScenario.PRE_ENABLED) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Viviendas</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.housingCount || '-' }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Beneficiarios</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.beneficiariesCount || '-' }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Valor del Proyecto</p>
+                <p class="font-semibold text-gray-900">{{ formatCurrency(selectedProject()?.projectValue) }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Terreno</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.tieneTerreno?.nombre || '-' }}</p>
+              </div>
+            </div>
+
+            @if (selectedProject()?.landDescription) {
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-2">Descripción del Terreno</p>
+                <p class="font-medium text-gray-900">{{ selectedProject()?.landDescription }}</p>
+              </div>
+            }
+
+            @if (selectedProject()?.description) {
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-2">Descripción</p>
+                <p class="font-medium text-gray-900">{{ selectedProject()?.description }}</p>
+              </div>
+            }
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-500 mb-2">Progreso</p>
+              <div class="grid grid-cols-4 gap-4">
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Técnico</p>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" [style.width.%]="selectedProject()?.progress?.technical || 0"></div>
+                  </div>
+                  <p class="text-xs text-right mt-1">{{ selectedProject()?.progress?.technical || 0 }}%</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Legal</p>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" [style.width.%]="selectedProject()?.progress?.legal || 0"></div>
+                  </div>
+                  <p class="text-xs text-right mt-1">{{ selectedProject()?.progress?.legal || 0 }}%</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Financiero</p>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-600 h-2 rounded-full" [style.width.%]="selectedProject()?.progress?.financial || 0"></div>
+                  </div>
+                  <p class="text-xs text-right mt-1">{{ selectedProject()?.progress?.financial || 0 }}%</p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Social</p>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-orange-600 h-2 rounded-full" [style.width.%]="selectedProject()?.progress?.social || 0"></div>
+                  </div>
+                  <p class="text-xs text-right mt-1">{{ selectedProject()?.progress?.social || 0 }}%</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-500 mb-2">Equipo del Proyecto</p>
+              @if (isLoadingTeam()) {
+                <app-loading message="Cargando equipo..."></app-loading>
+              } @else if (projectTeam() && projectTeam().length > 0) {
+                <div class="space-y-2">
+                  @for (member of projectTeam(); track member.userId || member.email) {
+                    <div class="flex items-center justify-between bg-white p-3 rounded-lg">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-medium">
+                          {{ member.name?.charAt(0).toUpperCase() }}
+                        </div>
+                        <div>
+                          <p class="font-medium text-sm">{{ member.name }}</p>
+                          <p class="text-xs text-gray-500">{{ member.email }}</p>
+                        </div>
+                      </div>
+                      <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{{ member.roleInProject }}</span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="text-sm text-gray-500">No hay equipo asignado</p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <app-footer />
+
+</div>

@@ -1,10 +1,23 @@
 @if (currentQuestion(); as question) {
   <div class="space-y-8"> <!-- Contenedor principal con espaciado -->
-  
+
+    <!-- Mensaje Temporal en Construcción -->
+    <div class="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded">
+      <div class="flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <p class="font-medium">En construcción</p>
+          <p class="text-sm">Aún no se conecta con servicios REST API</p>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       
       <!-- Header con Eje y Código -->
-      <div class="bg-sky-500 text-white p-6 flex items-start gap-4">
+      <div class="bg-sky-500 text-white p-6 flex items-start gap-4 relative">
         <div class="flex-shrink-0 bg-white/20 w-12 h-12 flex items-center justify-center text-xl font-bold rounded">
           {{ question.order }}
         </div>

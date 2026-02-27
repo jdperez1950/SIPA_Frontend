@@ -320,10 +320,16 @@
           formControlName="landDescription"
           rows="3"
           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y"
-          placeholder="Describa el terreno..."
+          placeholder="Describa el terreno... (mínimo 10 caracteres si lo llena)"
           [ngClass]="{'border-red-300 focus:ring-red-200': form.get('landDescription')?.invalid && form.get('landDescription')?.touched}"
         ></textarea>
+        @if (form.get('landDescription')?.invalid && form.get('landDescription')?.touched) {
+          <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
       </div>
+      @if (form.get('landDescription')?.invalid && form.get('landDescription')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Mínimo 10 caracteres</p>
+      }
     </div>
 
     <!-- Tiene Financiacion -->
@@ -350,11 +356,14 @@
           formControlName="financingDescription"
           rows="4"
           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y"
-          placeholder="Describa brevemente el estado o situación actual de la financiación del proyecto (fuentes de financiación y recursos disponibles, aportes en especie, etc.)"
+          placeholder="Describa brevemente el estado o situación actual de la financiación del proyecto (fuentes de financiación y recursos disponibles, aportes en especie, etc.) (mínimo 10 caracteres si lo llena)"
           [ngClass]="{'border-red-300 focus:ring-red-200': form.get('financingDescription')?.invalid && form.get('financingDescription')?.touched}"
         ></textarea>
         @if (form.get('financingDescription')?.invalid && form.get('financingDescription')?.touched) {
           <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+        }
+        @if (form.get('financingDescription')?.invalid && form.get('financingDescription')?.touched) {
+          <p class="text-xs text-red-500 mt-1">Mínimo 10 caracteres</p>
         }
       </div>
     </div>
