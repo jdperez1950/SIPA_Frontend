@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/project-workspace/project-workspace.routes').then(m => m.PROJECT_WORKSPACE_ROUTES)
   },
   {
+    path: 'organization',
+    canMatch: [roleGuard(['ORGANIZACION'])],
+    loadChildren: () => import('./features/organization/organization.routes').then(m => m.ORGANIZATION_ROUTES)
+  },
+  {
     path: 'consultant',
     canMatch: [roleGuard(['CONSULTA'])],
     loadChildren: () => import('./features/consultant/consultant.routes').then(m => m.CONSULTANT_ROUTES)

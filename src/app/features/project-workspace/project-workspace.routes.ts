@@ -8,7 +8,11 @@ export const PROJECT_WORKSPACE_ROUTES: Routes = [
     component: WorkspaceLayoutComponent,
     children: [
       {
-        path: 'question/:id',
+        path: 'project/:projectId/question/:questionId',
+        component: QuestionPageComponent
+      },
+      {
+        path: 'question/:questionId',
         component: QuestionPageComponent
       },
       {
