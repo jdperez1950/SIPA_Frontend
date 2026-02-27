@@ -63,7 +63,12 @@ export class StepTechnicalTableComponent implements OnInit {
   }
 
   getAdvisorsForAxis(axisId: string) {
+    const assignedAdvisorIds = this.assignments
+      .filter(a => a.eje !== axisId)
+      .map(a => a.consultor.id);
+
     return this.advisors()
+      .filter(advisor => !assignedAdvisorIds.includes(advisor.id))
       .sort((a, b) => (a.workload || 0) - (b.workload || 0));
   }
 
