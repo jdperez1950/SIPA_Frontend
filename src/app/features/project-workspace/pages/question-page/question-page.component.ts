@@ -24,8 +24,8 @@ export class QuestionPageComponent {
   currentQuestionId = toSignal(
     this.route.paramMap.pipe(
       map(params => {
-        const id = params.get('id'); // Parameter name in routes is 'id', not 'questionId'
-        console.log('Route param id:', id);
+        const id = params.get('questionId'); // Parameter name in routes is 'questionId'
+        console.log('Route param questionId:', id);
         return id;
       })
     )
@@ -224,5 +224,9 @@ export class QuestionPageComponent {
       this.questionManager.submitResponse(response);
       this.nextQuestion(questionId);
     }
+  }
+
+  goBackToPanel() {
+    this.router.navigateByUrl('/organization/panel');
   }
 }
