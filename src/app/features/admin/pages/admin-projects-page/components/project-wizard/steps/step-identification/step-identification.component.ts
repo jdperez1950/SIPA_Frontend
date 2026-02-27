@@ -57,21 +57,30 @@ export class StepIdentificationComponent implements OnInit {
     // Effect to handle initial data loading when service is ready
     effect(() => {
         const depts = this.parametroBaseService.departamentos();
+        const deptValue = this.form?.get('department')?.value;
 
-        // If form has no department ID but we have an initial ID, set it now
-        // Check that form exists before accessing it
-        if (depts.length > 0 && this.initialData?.departmentId?.id && this.form && !this.form.get('department')?.value) {
+        // If we have initial data and form exists, handle department and municipality
+        if (depts.length > 0 && this.initialData?.departmentId?.id && this.form) {
             const found = depts.find(d => d.id === this.initialData!.departmentId.id);
-            if (found) {
-                this.form.patchValue({ department: found.id }, { emitEvent: false });
 
-                // Load municipios for this department
-                this.parametroBaseService.getMunicipiosPorDepto(found.id).subscribe(municipios => {
+            // Set department if not already set
+            if (found && deptValue !== found.id) {
+                this.form.patchValue({ department: found.id }, { emitEvent: false });
+            }
+
+            // Load municipios for this department if we have a department ID
+            const deptIdToUse = found?.id || deptValue;
+            if (deptIdToUse && this.municipios.length === 0) {
+                this.parametroBaseService.getMunicipiosPorDepto(deptIdToUse).subscribe(municipios => {
+                    console.log('Municipios loaded:', municipios);
                     this.municipios = municipios.map(m => ({ id: m.id, nombre: m.nombre }));
+                    console.log('Mapped municipios:', this.municipios);
 
                     // Set municipality if we have initial data
+                    console.log('Initial municipality ID:', this.initialData?.municipality?.id);
                     if (this.initialData?.municipality?.id) {
                         const municipioFound = this.municipios.find(m => m.id === this.initialData!.municipality!.id);
+                        console.log('Municipio found:', municipioFound);
                         if (municipioFound) {
                             this.form.patchValue({ municipality: municipioFound.id }, { emitEvent: false });
                         }
