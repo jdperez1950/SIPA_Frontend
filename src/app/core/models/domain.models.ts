@@ -168,7 +168,7 @@ export interface ProjectResponseTeamMember {
   name: string;
   email: string;
   profile: string;
-  documentTypeId: ParametroSelect;
+  documentType: ParametroSelect;
   documentNumber: string;
   nombre: string;
   phone: string;
@@ -197,7 +197,7 @@ export interface CreateProjectRequest {
     email: string;
     paginaWeb: string;
     region: ParametroSelect;
-    municipalityId: ParametroSelect;
+    municipality: ParametroSelect;
     address: string;
     description: string;
     organizationTeam: ProjectResponseTeamMember[];

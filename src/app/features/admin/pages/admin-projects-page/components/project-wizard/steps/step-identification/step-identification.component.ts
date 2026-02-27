@@ -123,7 +123,7 @@ export class StepIdentificationComponent implements OnInit {
           financingDescription: value.financingDescription || '',
           departmentId: deptParam ? { id: deptId, nombre: deptParam.nombre } : { id: '', nombre: '' },
           departmentName: deptParam?.nombre || '',
-          municipalityId: municipioParam ? { id: municipalityId || '', nombre: municipioParam.nombre } : null,
+          municipality: municipioParam ? { id: municipalityId || '', nombre: municipioParam.nombre } : null,
           municipalityName: municipioParam?.nombre || null,
           organizationName: value.organizationName,
           organizationType: orgTypeParam ? { id: value.organizationType, nombre: orgTypeParam.nombre } : { id: '', nombre: '' },
@@ -169,8 +169,8 @@ export class StepIdentificationComponent implements OnInit {
     
     // Map initial municipality ID or name
     let initialMunicipio = null;
-    if (this.initialData?.municipalityId?.id) {
-      initialMunicipio = this.initialData.municipalityId.id;
+    if (this.initialData?.municipality?.id) {
+      initialMunicipio = this.initialData.municipality.id;
     } else if (this.initialData?.municipalityName) {
       initialMunicipio = this.initialData.municipalityName;
     }
@@ -191,7 +191,7 @@ export class StepIdentificationComponent implements OnInit {
       tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || ''],
       financingDescription: [this.initialData?.financingDescription || ''],
       department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
-      municipality: [this.initialData?.municipalityId?.id || initialMunicipio, Validators.required],
+      municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       organizationType: [initialOrgType, Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],

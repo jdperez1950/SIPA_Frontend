@@ -12,7 +12,7 @@ import { AdminOrganizationCreateModalComponent } from './components/create-organ
 @Component({
   selector: 'app-admin-organizations-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, AdminOrganizationCreateModalComponent, LoadingComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-organizations-page.component.html',
   styles: []
 })

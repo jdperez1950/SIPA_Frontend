@@ -20,7 +20,7 @@ export interface IdentificationData {
   financingDescription: string;
   departmentId: ParametroSelect;
   departmentName: string;
-  municipalityId: ParametroSelect | null;
+  municipality: ParametroSelect | null;
   municipalityName: string | null;
   organizationName: string;
   organizationType: ParametroSelect;
@@ -55,7 +55,7 @@ export interface TechnicalTableAssignment {
 export interface ResponseTeamMember {
   userId?: string;
   name: string;
-  documentTypeId: ParametroSelect;
+  documentType: ParametroSelect;
   documentNumber: string;
   email: string;
   phone: string;
