@@ -52,14 +52,18 @@ export class StepResponseTeamComponent implements OnInit {
   documentTypes = computed(() =>
     this.parametroBaseService.tiposDocumento().map(d => ({
       id: d.id,
-      nombre: d.nombre
+      nombre: d.nombre,
+      tipo: d.tipo,
+      codigo: d.codigo
     }))
   );
 
   responsiblePositions = computed(() =>
     this.parametroBaseService.tiposEncargado().map(c => ({
       id: c.id,
-      nombre: c.nombre
+      nombre: c.nombre,
+      tipo: c.tipo,
+      codigo: c.codigo
     }))
   );
 
@@ -272,12 +276,12 @@ export class StepResponseTeamComponent implements OnInit {
         ...currentEditing,
         name: formValue.name,
         email: formValue.email,
-        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
+        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '', tipo: docTypeParam?.tipo, codigo: docTypeParam?.codigo } : null,
         documentNumber: formValue.documentNumber,
         phone: formValue.phone,
         nombre: formValue.name,
         profile: formValue.profile,
-        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '' } : { id: '', nombre: '' }
+        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '', tipo: responsibleParam?.tipo, codigo: responsibleParam?.codigo } : null
       };
 
       const updatedList = this.selectedMembers.map(m =>
@@ -303,12 +307,12 @@ export class StepResponseTeamComponent implements OnInit {
       const newMember: ResponseTeamMember = {
         name: formValue.name,
         email: formValue.email,
-        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
+        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '', tipo: docTypeParam?.tipo, codigo: docTypeParam?.codigo } : null,
         documentNumber: formValue.documentNumber,
         phone: formValue.phone,
         nombre: formValue.name,
         profile: formValue.profile,
-        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '' } : { id: '', nombre: '' }
+        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '', tipo: responsibleParam?.tipo, codigo: responsibleParam?.codigo } : null
       };
 
       const updatedList = [...this.selectedMembers, newMember];

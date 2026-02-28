@@ -176,41 +176,42 @@ export interface ProjectResponseTeamMember {
   name: string;
   email: string;
   profile: string;
-  documentType: ParametroSelect;
+  documentType: ParametroSelect | null;
   documentNumber: string;
   nombre: string;
   phone: string;
-  representativeType: ParametroSelect;
+  representativeType: ParametroSelect | null;
 }
 
 export interface ProjectTeamMember {
   eje: string;
-  consultor: ParametroSelect;
+  consultor: ParametroSelect | null;
 }
 
 export interface CreateProjectRequest {
   id: string | null;
-  housingCount: number;
-  beneficiariesCount: number;
-  tieneTerreno: ParametroSelect;
-  landDescription: string;
+  Description: string;
+  HousingCount: number;
+  BeneficiariesCount: number;
+  TieneTerreno: ParametroSelect | null;
+  LandDescription: string;
   projectValue: number;
-  tieneFinanciacion: ParametroSelect;
-  financingDescription: string;
-  organization: {
+  TieneFinanciacion: ParametroSelect | null;
+  FinancingDescription: string;
+  Organization: {
     name: string;
-    type: ParametroSelect;
+    type: ParametroSelect | null;
     identifier: string;
     digitoVerificacion: number;
     email: string;
     paginaWeb: string;
-    region: ParametroSelect;
-    municipality: ParametroSelect;
+    region: ParametroSelect | null;
+    municipality: ParametroSelect | null;
     address: string;
     description: string;
     organizationTeam: ProjectResponseTeamMember[];
   };
-  projectTeam: ProjectTeamMember[];
+  projectTeam?: ProjectTeamMember[];
 }
 
 export interface TechnicalTableMember {

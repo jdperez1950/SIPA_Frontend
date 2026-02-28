@@ -127,7 +127,6 @@ export class ProjectWizardComponent {
     // Parse project fields from backend
     this.identificationData.set({
       description: safeStr(project.description) || '',
-      projectBriefDescription: safeStr(project.name) || '',
       projectValue: project.projectValue || 0,
       housingCount: project.housingCount || 0,
       beneficiariesCount: project.beneficiariesCount || 0,
@@ -232,7 +231,7 @@ export class ProjectWizardComponent {
     // Already exists -> Update (Step 1 fields) but preserve others from Signals
     const updateRequest: UpdateProjectRequest = {
       id: this.initialData.id,
-      name: data.projectBriefDescription,
+      name: data.description,
       technicalTable: this.technicalTableAssignments().map(a => ({
         axisId: a.eje,
         advisorId: a.consultor.id
@@ -293,7 +292,7 @@ export class ProjectWizardComponent {
         // Edit Mode -> Update
         const updateRequest: UpdateProjectRequest = {
           id: this.initialData.id,
-          name: data.projectBriefDescription,
+          name: data.description,
           technicalTable: this.technicalTableAssignments().map(a => ({
             axisId: a.eje,
             advisorId: a.consultor.id
@@ -324,16 +323,19 @@ export class ProjectWizardComponent {
         });
       } else {
         // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
+        console.log('DATA desde formulario:', JSON.stringify(data, null, 2));
+        
         const createRequest: CreateProjectRequest = {
           id: null,
-          housingCount: data.housingCount,
-          beneficiariesCount: data.beneficiariesCount,
-          tieneTerreno: data.tieneTerreno,
-          landDescription: data.landDescription,
+          Description: data.description,
+          HousingCount: data.housingCount,
+          BeneficiariesCount: data.beneficiariesCount,
+          TieneTerreno: data.tieneTerreno,
+          LandDescription: data.landDescription,
           projectValue: data.projectValue,
-          tieneFinanciacion: data.tieneFinanciacion,
-          financingDescription: data.financingDescription,
-          organization: {
+          TieneFinanciacion: data.tieneFinanciacion,
+          FinancingDescription: data.financingDescription,
+          Organization: {
             name: data.organizationName,
             type: data.organizationType,
             identifier: data.organizationIdentifier,
@@ -341,7 +343,7 @@ export class ProjectWizardComponent {
             email: data.organizationEmail,
             paginaWeb: data.website,
             region: data.departmentId,
-            municipality: data.municipality || { id: '', nombre: '' },
+            municipality: data.municipality,
             address: data.organizationAddress,
             description: data.organizationDescription,
             organizationTeam: this.responseTeam().map(m => ({
@@ -356,11 +358,13 @@ export class ProjectWizardComponent {
               representativeType: m.representativeType
             }))
           },
-          projectTeam: this.technicalTableAssignments().map(a => ({
-            eje: a.eje,
-            consultor: a.consultor
-          }))
+          // projectTeam: this.technicalTableAssignments().map(a => ({
+          //   eje: a.eje,
+          //   consultor: a.consultor
+          // }))
         };
+
+        console.log('CREATE REQUEST enviado al backend:', JSON.stringify(createRequest, null, 2));
 
         this.adminService.createProject(createRequest).subscribe({
           next: (project) => {
@@ -427,7 +431,7 @@ export class ProjectWizardComponent {
 
     const updateRequest: UpdateProjectRequest = {
       id: this.initialData.id,
-      name: data.projectBriefDescription,
+      name: data.description,
       technicalTable: this.technicalTableAssignments().map(a => ({
         axisId: a.eje,
         advisorId: a.consultor.id
