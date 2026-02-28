@@ -36,6 +36,7 @@ export class AdminProjectsPageComponent implements OnInit {
 
   // Data
   projects = signal<Project[]>([]);
+  expandedDescriptions = signal<Set<string>>(new Set());
 
   // Mock Advisors for Modal
   availableAdvisors: AdvisorCandidate[] = [
@@ -195,6 +196,35 @@ export class AdminProjectsPageComponent implements OnInit {
 
   getAdvisorName(project: Project): string {
     return project.advisor?.name || '';
+  }
+
+  toggleDescription(projectId: string) {
+    const current = new Set(this.expandedDescriptions());
+    if (current.has(projectId)) {
+      current.delete(projectId);
+    } else {
+      current.add(projectId);
+    }
+    this.expandedDescriptions.set(current);
+  }
+
+  isDescriptionExpanded(projectId: string): boolean {
+    return this.expandedDescriptions().has(projectId);
+  }
+
+  truncateDescription(description: string, projectId: string): string {
+    const descriptionAdjusted = "Descripción proyecto: " + description?.trim() || 'Sin descripción';
+    if (!descriptionAdjusted) return 'Sin descripción';
+    if (this.isDescriptionExpanded(projectId)) return descriptionAdjusted;
+    
+    const words = descriptionAdjusted.split(' ');
+    if (words.length <= 20) return descriptionAdjusted;
+    return words.slice(0, 20).join(' ') + '...';
+  }
+
+  shouldShowReadMore(description: string): boolean {
+    if (!description) return false;
+    return description.split(' ').length > 20;
   }
 
   getProgressValue(project: Project, axis: 'technical' | 'legal' | 'financial' | 'social'): number {

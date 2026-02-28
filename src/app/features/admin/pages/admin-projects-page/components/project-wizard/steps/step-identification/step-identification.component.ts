@@ -225,6 +225,8 @@ export class StepIdentificationComponent implements OnInit {
     let initialOrgType = null;
     if (this.initialData?.organizationType?.id) {
       initialOrgType = this.initialData.organizationType.id;
+      console.log('initialData.organizationType:', JSON.stringify(this.initialData.organizationType, null, 2));
+      console.log('initialOrgType:', initialOrgType);
     }
 
     this.form = this.fb.group({
@@ -250,6 +252,9 @@ export class StepIdentificationComponent implements OnInit {
       endDate: [this.initialData?.endDate || defaultEnd],
       submissionDeadline: [this.initialData?.submissionDeadline || defaultDeadline]
     }, { validators: [this.dateRangeValidator] });
+
+    console.log('organizationTypes disponibles:', this.organizationTypes());
+    console.log('organizationType form value:', this.form.get('organizationType')?.value);
 
     // Handle department changes to load municipalities
     this.form.get('department')?.valueChanges.subscribe((deptId) => {

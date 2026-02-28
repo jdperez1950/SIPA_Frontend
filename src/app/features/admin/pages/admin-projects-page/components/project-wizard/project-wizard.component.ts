@@ -140,7 +140,7 @@ export class ProjectWizardComponent {
       municipalityName: getNombreOrCodigo(municipioParam) || project.municipality || '',
       
       organizationName: safeStr(project.organizationName) || orgData?.name || '',
-      organizationType: orgType ? { id: orgType.id, nombre: orgType.nombre } : { id: '', nombre: '' },
+      organizationType: orgType ? { id: orgType.id, nombre: orgType.nombre, tipo: orgType.tipo, codigo: orgType.codigo } : { id: '', nombre: '', tipo: '', codigo: '' },
       organizationIdentifier: orgData?.identifier || '',
       verificationDigit: orgData?.digitoVerificacion?.toString() ?? '',
       organizationEmail: orgData?.email || '',
