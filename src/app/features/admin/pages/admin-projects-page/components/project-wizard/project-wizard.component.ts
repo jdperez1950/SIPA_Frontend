@@ -126,6 +126,7 @@ export class ProjectWizardComponent {
 
     // Parse project fields from backend
     this.identificationData.set({
+      organizationId: orgData?.id,
       description: safeStr(project.description) || '',
       projectValue: project.projectValue || 0,
       housingCount: project.housingCount || 0,
@@ -144,7 +145,7 @@ export class ProjectWizardComponent {
       organizationIdentifier: orgData?.identifier || '',
       verificationDigit: orgData?.digitoVerificacion?.toString() ?? '',
       organizationEmail: orgData?.email || '',
-      website: orgData?.website || '',
+      website: orgData?.paginaWeb || '',
       organizationDescription: orgData?.description || '',
       organizationAddress: orgData?.address || '',
       
@@ -265,11 +266,25 @@ export class ProjectWizardComponent {
         const updateRequest: ProjectRequest = {
           id: this.initialData.id,
           Description: data.description,
-          technicalTable: this.technicalTableAssignments().map(a => ({
-            axisId: a.eje,
-            advisorId: a.consultor.id
-          })),
+          HousingCount: data.housingCount,
+          BeneficiariesCount: data.beneficiariesCount,
+          TieneTerreno: data.tieneTerreno,
+          LandDescription: data.landDescription,
+          projectValue: data.projectValue,
+          TieneFinanciacion: data.tieneFinanciacion,
+          FinancingDescription: data.financingDescription,
           Organization: {
+            id: data.organizationId,
+            name: data.organizationName,
+            type: data.organizationType,
+            identifier: data.organizationIdentifier,
+            digitoVerificacion: parseInt(data.verificationDigit) || 0,
+            email: data.organizationEmail,
+            paginaWeb: data.website,
+            region: data.departmentId,
+            municipality: data.municipality,
+            address: data.organizationAddress,
+            description: data.organizationDescription,
             organizationTeam: this.responseTeam().map(m => ({
               userId: m.userId,
               name: m.name,
@@ -281,7 +296,11 @@ export class ProjectWizardComponent {
               phone: m.phone,
               representativeType: m.representativeType
             }))
-          }
+          },
+          technicalTable: this.technicalTableAssignments().map(a => ({
+            axisId: a.eje,
+            advisorId: a.consultor.id
+          }))
         };
 
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
@@ -309,6 +328,7 @@ export class ProjectWizardComponent {
           TieneFinanciacion: data.tieneFinanciacion,
           FinancingDescription: data.financingDescription,
           Organization: {
+            id: data.organizationId,
             name: data.organizationName,
             type: data.organizationType,
             identifier: data.organizationIdentifier,
@@ -373,10 +393,10 @@ export class ProjectWizardComponent {
       return;
     }
     
-    // If organization changes, we might need to reset Step 4
+    // If organization changes, we might need to reset Step 4 (only in creation mode)
     const prev = this.identificationData();
-    if (prev && prev.organizationIdentifier !== data.organizationIdentifier) {
-      this.responseTeam.set([]); // Reset response team
+    if (prev && prev.organizationIdentifier !== data.organizationIdentifier && !this.initialData) {
+      this.responseTeam.set([]); // Reset response team only in creation mode
     }
     this.identificationData.set(data);
   }

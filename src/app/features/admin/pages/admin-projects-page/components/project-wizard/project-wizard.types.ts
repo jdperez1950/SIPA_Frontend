@@ -9,6 +9,7 @@ export interface WizardState {
 }
 
 export interface IdentificationData {
+  organizationId?: string;
   description: string;
   projectValue: number;
   housingCount: number;

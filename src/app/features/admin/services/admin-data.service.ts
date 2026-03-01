@@ -254,7 +254,7 @@ export class AdminDataService {
   }
 
   updateProject(id: string, request: ProjectRequest): Observable<Project> {
-    return this.http.patch<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
+    return this.http.post<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
       map(response => response.data),
       tap(updatedProject => {
         this.projects.update(current => current.map(p => p.id === id ? updatedProject : p));
