@@ -130,9 +130,17 @@
         >
           @if (isSaving()) {
             <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
-            Finalizando...
+            @if (initialData) {
+              Actualizando...
+            } @else {
+              Finalizando...
+            }
           } @else {
-            Finalizar
+            @if (initialData) {
+              Actualizar
+            } @else {
+              Finalizar
+            }
             <span class="material-symbols-rounded text-lg">check</span>
           }
         </button>

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
 import { IdentificationData, ParametroSelect } from '../../project-wizard.types';
 import { ParametroBaseService } from '../../../../../../../../core/services/parametro-base.service';
+import { CurrencyFormatDirective } from '../../../../../../../../core/directives/currency-format.directive';
 import {
   nitFormatValidator,
   getNitFormatErrorMessage,
@@ -15,7 +16,7 @@ import {
 @Component({
   selector: 'app-step-identification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomDropdownComponent],
+  imports: [CommonModule, ReactiveFormsModule, CustomDropdownComponent, CurrencyFormatDirective],
   templateUrl: './step-identification.component.html',
   styleUrls: ['./step-identification.component.css']
 })
@@ -95,16 +96,26 @@ export class StepIdentificationComponent implements OnInit {
             }
         }
 
+        // Handle organization type when tiposOrganizacion are loaded
+        const orgTypes = this.parametroBaseService.tiposOrganizacion();
+        if (orgTypes.length > 0 && this.initialData && this.form) {
+          const currentOrgType = this.form.get('organizationType')?.value;
+          const orgTypeId = this.initialData.organizationType?.id || this.initialData.organizationType;
+          console.log('orgTypes loaded:', orgTypes);
+          console.log('currentOrgType:', currentOrgType);
+          console.log('orgTypeId from initialData:', orgTypeId);
+          
+          if (orgTypeId && currentOrgType !== orgTypeId) {
+            this.form.patchValue({ organizationType: orgTypeId }, { emitEvent: false });
+            console.log('Patched organizationType:', orgTypeId);
+          }
+        }
+
         // Handle verification digit and other fields when initialData changes
         if (this.initialData && this.form) {
           const currentVerificationDigit = this.form.get('verificationDigit')?.value;
           if (this.initialData.verificationDigit && currentVerificationDigit !== this.initialData.verificationDigit) {
             this.form.patchValue({ verificationDigit: this.initialData.verificationDigit }, { emitEvent: false });
-          }
-
-          const currentOrgType = this.form.get('organizationType')?.value;
-          if (this.initialData.organizationType?.id && currentOrgType !== this.initialData.organizationType.id) {
-            this.form.patchValue({ organizationType: this.initialData.organizationType.id }, { emitEvent: false });
           }
 
           const currentOrgIdentifier = this.form.get('organizationIdentifier')?.value;

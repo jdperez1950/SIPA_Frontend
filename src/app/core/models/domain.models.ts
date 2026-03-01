@@ -188,47 +188,43 @@ export interface ProjectTeamMember {
   consultor: ParametroSelect | null;
 }
 
-export interface CreateProjectRequest {
-  id: string | null;
-  Description: string;
-  HousingCount: number;
-  BeneficiariesCount: number;
-  TieneTerreno: ParametroSelect | null;
-  LandDescription: string;
-  projectValue: number;
-  TieneFinanciacion: ParametroSelect | null;
-  FinancingDescription: string;
-  Organization: {
-    name: string;
-    type: ParametroSelect | null;
-    identifier: string;
-    digitoVerificacion: number;
-    email: string;
-    paginaWeb: string;
-    region: ParametroSelect | null;
-    municipality: ParametroSelect | null;
-    address: string;
-    description: string;
-    organizationTeam: ProjectResponseTeamMember[];
+export interface ProjectRequest {
+  id?: string;
+  Description?: string;
+  HousingCount?: number;
+  BeneficiariesCount?: number;
+  TieneTerreno?: ParametroSelect | null;
+  LandDescription?: string;
+  projectValue?: number;
+  TieneFinanciacion?: ParametroSelect | null;
+  FinancingDescription?: string;
+  Organization?: {
+    name?: string;
+    type?: ParametroSelect | null;
+    identifier?: string;
+    digitoVerificacion?: number;
+    email?: string;
+    paginaWeb?: string;
+    region?: ParametroSelect | null;
+    municipality?: ParametroSelect | null;
+    address?: string;
+    description?: string;
+    organizationTeam?: ProjectResponseTeamMember[];
   };
   projectTeam?: ProjectTeamMember[];
+  technicalTable?: TechnicalTableMember[];
+  startDate?: string;
+  endDate?: string;
+  submissionDeadline?: string;
+  status?: ProjectStatus;
+  viabilityStatus?: ViabilityScenario;
+  advisorId?: string;
+  activeAxes?: string[];
 }
 
 export interface TechnicalTableMember {
   axisId: string;
   advisorId: string;
-}
-
-export interface UpdateProjectRequest {
-  id: string;
-  name?: string;
-  description?: string;
-  status?: ProjectStatus;
-  viabilityStatus?: ViabilityScenario;
-  advisorId?: string;
-  activeAxes?: string[];
-  technicalTable?: TechnicalTableMember[];
-  responseTeam?: ProjectResponseTeamMember[];
 }
 
 // Deprecated or Legacy DTOs (kept for compatibility if needed, but prefer Requests above)

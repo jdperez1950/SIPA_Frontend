@@ -6,7 +6,7 @@ import { StepResponseTeamComponent } from './steps/step-response-team/step-respo
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
 import { ParametroBaseService } from '../../../../../../core/services/parametro-base.service';
-import { CreateProjectRequest, Project, UpdateProjectRequest } from '../../../../../../core/models/domain.models';
+import { ProjectRequest, Project } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
   TechnicalTableAssignment, 
@@ -114,8 +114,8 @@ export class ProjectWizardComponent {
     const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
 
     // Map organization type from code to GUID
-    const orgTypeCode = orgData?.type;
-    const orgType = orgTypeCode ? this.parametroBaseService.tiposOrganizacion().find((t: any) => t.codigo === orgTypeCode) : null;
+    const orgTypeId = orgData?.type?.id;
+    const orgType = orgTypeId ? this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === orgTypeId) : null;
 
     // Backend returns municipality and region as ParametroBase objects
     const deptParam = orgData?.region;
@@ -228,39 +228,10 @@ export class ProjectWizardComponent {
 
     this.isSaving.set(true);
 
-    // Already exists -> Update (Step 1 fields) but preserve others from Signals
-    const updateRequest: UpdateProjectRequest = {
-      id: this.initialData.id,
-      name: data.description,
-      technicalTable: this.technicalTableAssignments().map(a => ({
-        axisId: a.eje,
-        advisorId: a.consultor.id
-      })),
-      responseTeam: this.responseTeam().map(m => ({
-        userId: m.userId,
-        name: m.name,
-        email: m.email,
-        profile: m.profile,
-        documentType: m.documentType,
-        documentNumber: m.documentNumber,
-        nombre: m.nombre,
-        phone: m.phone,
-        representativeType: m.representativeType
-      }))
-    };
-
-    this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
-          next: (project) => {
-            this.initialData = project;
-            this.alertService.success('Datos actualizados');
-            this.currentStep.update(s => s + 1);
-            this.isSaving.set(false);
-          },
-          error: () => {
-            this.alertService.error('Error al actualizar el proyecto');
-            this.isSaving.set(false);
-          }
-        });
+    // En modo edición, solo avanzamos al siguiente paso sin guardar
+    // Los datos se guardarán al finalizar el wizard
+    this.currentStep.update(s => s + 1);
+    this.isSaving.set(false);
   }
 
   prevStep() {
@@ -290,24 +261,26 @@ export class ProjectWizardComponent {
 
       if (this.initialData) {
         // Edit Mode -> Update
-        const updateRequest: UpdateProjectRequest = {
+        const updateRequest: ProjectRequest = {
           id: this.initialData.id,
-          name: data.description,
+          Description: data.description,
           technicalTable: this.technicalTableAssignments().map(a => ({
             axisId: a.eje,
             advisorId: a.consultor.id
           })),
-          responseTeam: this.responseTeam().map(m => ({
-            userId: m.userId,
-            name: m.name,
-            email: m.email,
-            profile: m.profile,
-            documentType: m.documentType,
-            documentNumber: m.documentNumber,
-            nombre: m.nombre,
-            phone: m.phone,
-            representativeType: m.representativeType
-          }))
+          Organization: {
+            organizationTeam: this.responseTeam().map(m => ({
+              userId: m.userId,
+              name: m.name,
+              email: m.email,
+              profile: m.profile,
+              documentType: m.documentType,
+              documentNumber: m.documentNumber,
+              nombre: m.nombre,
+              phone: m.phone,
+              representativeType: m.representativeType
+            }))
+          }
         };
 
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
@@ -325,8 +298,7 @@ export class ProjectWizardComponent {
         // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
         console.log('DATA desde formulario:', JSON.stringify(data, null, 2));
         
-        const createRequest: CreateProjectRequest = {
-          id: null,
+        const createRequest: ProjectRequest = {
           Description: data.description,
           HousingCount: data.housingCount,
           BeneficiariesCount: data.beneficiariesCount,
@@ -419,42 +391,7 @@ export class ProjectWizardComponent {
   updateResponseTeam(members: ResponseTeamMember[]) {
     this.responseTeam.set(members);
     
-    // Auto-save changes immediately when members are updated (added/removed)
-    if (this.initialData) {
-      this.saveResponseTeam();
-    }
-  }
-
-  saveResponseTeam() {
-    const data = this.identificationData();
-    if (!data || !this.initialData) return;
-
-    const updateRequest: UpdateProjectRequest = {
-      id: this.initialData.id,
-      name: data.description,
-      technicalTable: this.technicalTableAssignments().map(a => ({
-        axisId: a.eje,
-        advisorId: a.consultor.id
-      })),
-      responseTeam: this.responseTeam().map(m => ({
-        userId: m.userId,
-        name: m.name,
-        email: m.email,
-        profile: m.profile,
-        documentType: m.documentType,
-        documentNumber: m.documentNumber,
-        nombre: m.nombre,
-        phone: m.phone,
-        representativeType: m.representativeType
-      }))
-    };
-
-    this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
-      next: (project) => {
-        this.initialData = project; 
-        this.alertService.success('Equipo actualizado correctamente');
-      },
-      error: () => this.alertService.error('Error al actualizar el equipo')
-    });
+    // En modo edición, no guardamos automáticamente
+    // Los cambios se guardarán al finalizar el wizard
   }
 }

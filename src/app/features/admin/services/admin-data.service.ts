@@ -2,7 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, PaginatedResponse, CreateOrganizationDTO, CreateProjectRequest, UpdateProjectRequest, ApiResponse } from '../../../core/models/domain.models';
+import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, CreateOrganizationDTO, PaginatedResponse, ProjectRequest, ApiResponse } from '../../../core/models/domain.models';
 import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { RegisterRequest } from '../../../core/auth/models/auth.models';
@@ -259,7 +259,7 @@ export class AdminDataService {
     );
   }
 
-  createProject(request: CreateProjectRequest): Observable<Project> {
+  createProject(request: ProjectRequest): Observable<Project> {
     
     return this.http.post<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
       map(response => response.data),
@@ -273,8 +273,8 @@ export class AdminDataService {
     );
   }
 
-  updateProject(id: string, request: UpdateProjectRequest): Observable<Project> {
-    return this.http.patch<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe( // API uses PATCH /projects with ID in body or query? Doc says PATCH /projects usually implies ID in body, but let's check. 
+  updateProject(id: string, request: ProjectRequest): Observable<Project> {
+    return this.http.patch<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
       map(response => response.data),
       tap(updatedProject => {
         this.projects.update(current => current.map(p => p.id === id ? updatedProject : p));
