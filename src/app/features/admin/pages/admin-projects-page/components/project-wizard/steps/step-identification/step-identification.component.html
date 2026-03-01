@@ -297,7 +297,7 @@
 
     <!-- Tiene Terreno -->
     <div class="space-y-2 mb-6">
-      <label for="tieneTerreno" class="block text-sm font-medium text-gray-700">¿Cuenta con terreno para el proyecto?</label>
+      <label for="tieneTerreno" class="block text-sm font-medium text-gray-700">¿Cuenta con terreno para el proyecto? <span class="text-red-500">*</span></label>
       <app-custom-dropdown
         id="tieneTerreno"
         [items]="tieneTerrenoOptions()"
@@ -308,6 +308,9 @@
         [enableSearch]="false"
         (valueChange)="form.get('tieneTerreno')?.setValue($event); form.get('tieneTerreno')?.markAsTouched()"
       ></app-custom-dropdown>
+      @if (form.get('tieneTerreno')?.invalid && form.get('tieneTerreno')?.touched) {
+        <p class="text-xs text-red-500 mt-1">{{ getTieneTerrenoErrorMessage() }}</p>
+      }
     </div>
 
     <!-- Land Description -->
@@ -327,13 +330,13 @@
         }
       </div>
       @if (form.get('landDescription')?.invalid && form.get('landDescription')?.touched) {
-        <p class="text-xs text-red-500 mt-1">Mínimo 10 caracteres</p>
+        <p class="text-xs text-red-500 mt-1">{{ getLandDescriptionErrorMessage() }}</p>
       }
     </div>
 
     <!-- Tiene Financiacion -->
     <div class="space-y-2 mb-6">
-      <label for="tieneFinanciacion" class="block text-sm font-medium text-gray-700">¿Tiene financiación?</label>
+      <label for="tieneFinanciacion" class="block text-sm font-medium text-gray-700">¿Tiene financiación? <span class="text-red-500">*</span></label>
       <app-custom-dropdown
         id="tieneFinanciacion"
         [items]="tieneFinanciacionOptions()"
@@ -344,6 +347,9 @@
         [enableSearch]="false"
         (valueChange)="form.get('tieneFinanciacion')?.setValue($event); form.get('tieneFinanciacion')?.markAsTouched()"
       ></app-custom-dropdown>
+      @if (form.get('tieneFinanciacion')?.invalid && form.get('tieneFinanciacion')?.touched) {
+        <p class="text-xs text-red-500 mt-1">{{ getTieneFinanciacionErrorMessage() }}</p>
+      }
     </div>
 
     <!-- Financing Description -->
@@ -362,7 +368,7 @@
           <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
         }
         @if (form.get('financingDescription')?.invalid && form.get('financingDescription')?.touched) {
-          <p class="text-xs text-red-500 mt-1">Mínimo 10 caracteres</p>
+          <p class="text-xs text-red-500 mt-1">{{ getFinancingDescriptionErrorMessage() }}</p>
         }
       </div>
     </div>

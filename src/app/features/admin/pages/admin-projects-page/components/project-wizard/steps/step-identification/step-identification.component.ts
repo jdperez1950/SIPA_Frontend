@@ -245,9 +245,9 @@ export class StepIdentificationComponent implements OnInit {
       housingCount: [this.initialData?.housingCount || 0],
       beneficiariesCount: [this.initialData?.beneficiariesCount || 0],
       projectValue: [this.initialData?.projectValue || 0],
-      tieneTerreno: [this.initialData?.tieneTerreno?.id || ''],
+      tieneTerreno: [this.initialData?.tieneTerreno?.id || '', Validators.required],
       landDescription: [this.initialData?.landDescription || '', Validators.minLength(10)],
-      tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || ''],
+      tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || '', Validators.required],
       financingDescription: [this.initialData?.financingDescription || '', Validators.minLength(10)],
       department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
       municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
@@ -472,7 +472,51 @@ export class StepIdentificationComponent implements OnInit {
     if (control.hasError('minlength')) {
       return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
     }
-    
+
+    return '';
+  }
+
+  getLandDescriptionErrorMessage(): string {
+    const control = this.form.get('landDescription');
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('minlength')) {
+      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
+    }
+
+    return '';
+  }
+
+  getFinancingDescriptionErrorMessage(): string {
+    const control = this.form.get('financingDescription');
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('minlength')) {
+      return getMinLengthErrorMessage(control.errors['minlength'].requiredLength);
+    }
+
+    return '';
+  }
+
+  getTieneTerrenoErrorMessage(): string {
+    const control = this.form.get('tieneTerreno');
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
+    return '';
+  }
+
+  getTieneFinanciacionErrorMessage(): string {
+    const control = this.form.get('tieneFinanciacion');
+    if (!control || !control.errors) return '';
+
+    if (control.hasError('required')) {
+      return getRequiredErrorMessage();
+    }
+
     return '';
   }
 }
