@@ -176,58 +176,55 @@ export interface ProjectResponseTeamMember {
   name: string;
   email: string;
   profile: string;
-  documentType: ParametroSelect;
+  documentType: ParametroSelect | null;
   documentNumber: string;
   nombre: string;
   phone: string;
-  representativeType: ParametroSelect;
+  representativeType: ParametroSelect | null;
 }
 
 export interface ProjectTeamMember {
   eje: string;
-  consultor: ParametroSelect;
+  consultor: ParametroSelect | null;
 }
 
-export interface CreateProjectRequest {
-  id: string | null;
-  housingCount: number;
-  beneficiariesCount: number;
-  tieneTerreno: ParametroSelect;
-  landDescription: string;
-  projectValue: number;
-  tieneFinanciacion: ParametroSelect;
-  financingDescription: string;
-  organization: {
-    name: string;
-    type: ParametroSelect;
-    identifier: string;
-    digitoVerificacion: number;
-    email: string;
-    paginaWeb: string;
-    region: ParametroSelect;
-    municipality: ParametroSelect;
-    address: string;
-    description: string;
-    organizationTeam: ProjectResponseTeamMember[];
+export interface ProjectRequest {
+  id?: string;
+  Description?: string;
+  HousingCount?: number;
+  BeneficiariesCount?: number;
+  TieneTerreno?: ParametroSelect | null;
+  LandDescription?: string;
+  projectValue?: number;
+  TieneFinanciacion?: ParametroSelect | null;
+  FinancingDescription?: string;
+  Organization?: {
+    name?: string;
+    type?: ParametroSelect | null;
+    identifier?: string;
+    digitoVerificacion?: number;
+    email?: string;
+    paginaWeb?: string;
+    region?: ParametroSelect | null;
+    municipality?: ParametroSelect | null;
+    address?: string;
+    description?: string;
+    organizationTeam?: ProjectResponseTeamMember[];
   };
-  projectTeam: ProjectTeamMember[];
+  projectTeam?: ProjectTeamMember[];
+  technicalTable?: TechnicalTableMember[];
+  startDate?: string;
+  endDate?: string;
+  submissionDeadline?: string;
+  status?: ProjectStatus;
+  viabilityStatus?: ViabilityScenario;
+  advisorId?: string;
+  activeAxes?: string[];
 }
 
 export interface TechnicalTableMember {
   axisId: string;
   advisorId: string;
-}
-
-export interface UpdateProjectRequest {
-  id: string;
-  name?: string;
-  description?: string;
-  status?: ProjectStatus;
-  viabilityStatus?: ViabilityScenario;
-  advisorId?: string;
-  activeAxes?: string[];
-  technicalTable?: TechnicalTableMember[];
-  responseTeam?: ProjectResponseTeamMember[];
 }
 
 // Deprecated or Legacy DTOs (kept for compatibility if needed, but prefer Requests above)

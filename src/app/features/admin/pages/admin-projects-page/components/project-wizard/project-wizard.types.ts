@@ -10,20 +10,19 @@ export interface WizardState {
 
 export interface IdentificationData {
   description: string;
-  projectBriefDescription: string;
   projectValue: number;
   housingCount: number;
   beneficiariesCount: number;
-  tieneTerreno: ParametroSelect;
+  tieneTerreno: ParametroSelect | null;
   landDescription: string;
-  tieneFinanciacion: ParametroSelect;
+  tieneFinanciacion: ParametroSelect | null;
   financingDescription: string;
-  departmentId: ParametroSelect;
+  departmentId: ParametroSelect | null;
   departmentName: string;
   municipality: ParametroSelect | null;
   municipalityName: string | null;
   organizationName: string;
-  organizationType: ParametroSelect;
+  organizationType: ParametroSelect | null;
   organizationIdentifier: string;
   verificationDigit: string;
   organizationEmail: string;
@@ -38,6 +37,8 @@ export interface IdentificationData {
 export interface ParametroSelect {
   id: string;
   nombre: string;
+  tipo?: string;
+  codigo?: string;
 }
 
 export interface EvaluationAxis {
@@ -55,11 +56,11 @@ export interface TechnicalTableAssignment {
 export interface ResponseTeamMember {
   userId?: string;
   name: string;
-  documentType: ParametroSelect;
+  documentType: ParametroSelect | null;
   documentNumber: string;
   email: string;
   phone: string;
   nombre: string;
   profile: string;
-  representativeType: ParametroSelect;
+  representativeType: ParametroSelect | null;
 }

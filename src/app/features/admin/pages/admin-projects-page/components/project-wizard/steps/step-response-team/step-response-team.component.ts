@@ -52,19 +52,33 @@ export class StepResponseTeamComponent implements OnInit {
   documentTypes = computed(() =>
     this.parametroBaseService.tiposDocumento().map(d => ({
       id: d.id,
-      nombre: d.nombre
+      nombre: d.nombre,
+      tipo: d.tipo,
+      codigo: d.codigo
     }))
   );
 
   responsiblePositions = computed(() =>
     this.parametroBaseService.tiposEncargado().map(c => ({
       id: c.id,
-      nombre: c.nombre
+      nombre: c.nombre,
+      tipo: c.tipo,
+      codigo: c.codigo
     }))
   );
 
   ngOnInit() {
     this.initForm();
+  }
+
+  getDocumentTypeName(id: string): string {
+    const docType = this.documentTypes().find(d => d.id === id);
+    return docType?.nombre || id;
+  }
+
+  getResponsiblePositionName(id: string): string {
+    const position = this.responsiblePositions().find(p => p.id === id);
+    return position?.nombre || id;
   }
 
   private initForm() {
@@ -272,12 +286,12 @@ export class StepResponseTeamComponent implements OnInit {
         ...currentEditing,
         name: formValue.name,
         email: formValue.email,
-        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
+        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '', tipo: docTypeParam?.tipo, codigo: docTypeParam?.codigo } : null,
         documentNumber: formValue.documentNumber,
         phone: formValue.phone,
         nombre: formValue.name,
         profile: formValue.profile,
-        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '' } : { id: '', nombre: '' }
+        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '', tipo: responsibleParam?.tipo, codigo: responsibleParam?.codigo } : null
       };
 
       const updatedList = this.selectedMembers.map(m =>
@@ -303,12 +317,12 @@ export class StepResponseTeamComponent implements OnInit {
       const newMember: ResponseTeamMember = {
         name: formValue.name,
         email: formValue.email,
-        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '' } : { id: '', nombre: '' },
+        documentType: formValue.documentType ? { id: formValue.documentType, nombre: docTypeParam?.nombre || '', tipo: docTypeParam?.tipo, codigo: docTypeParam?.codigo } : null,
         documentNumber: formValue.documentNumber,
         phone: formValue.phone,
         nombre: formValue.name,
         profile: formValue.profile,
-        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '' } : { id: '', nombre: '' }
+        representativeType: formValue.responsiblePosition ? { id: formValue.responsiblePosition, nombre: responsibleParam?.nombre || '', tipo: responsibleParam?.tipo, codigo: responsibleParam?.codigo } : null
       };
 
       const updatedList = [...this.selectedMembers, newMember];
@@ -335,11 +349,11 @@ export class StepResponseTeamComponent implements OnInit {
     this.userForm.patchValue({
       documentType: member.documentType?.id || '',
       documentNumber: member.documentNumber,
-      name: member.name,
+      name: member.nombre || member.name,
       email: member.email,
       phone: member.phone,
       responsiblePosition: member.representativeType?.id || '',
-      profile: member.profile || ''
+      profile: member.profile
     });
     this.documentType.set(member.documentType?.id || '');
   }

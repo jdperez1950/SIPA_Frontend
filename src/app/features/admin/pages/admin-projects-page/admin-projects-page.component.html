@@ -89,15 +89,21 @@
                   {{ getStatusLabel(project.status) }}
                 </span>
               </div>
-              <!-- Project Name -->
-              <h3 class="text-lg font-bold text-gray-900 leading-tight">
-                {{ project.name || 'Proyecto sin nombre' }}
-              </h3>
-              <!-- Organization Name -->
-              <p class="text-sm font-medium text-gray-600 mt-0.5">
+                            <!-- Organization Name -->
+              <p class="text-sm font-medium text-gray-600 mt-1">
                 {{ project.organizationName || project.organization?.name || project.organization || 'Organización desconocida' }}
               </p>
               
+              <!-- Project Description -->
+              <p class="text-sm text-gray-700 mt-1">
+                {{ truncateDescription(project?.description || '', project.id) }}
+              </p>
+              @if (shouldShowReadMore(project?.description || '')) {
+                <button (click)="toggleDescription(project.id)" class="text-xs text-blue-600 hover:text-blue-800 mt-1">
+                  {{ isDescriptionExpanded(project.id) ? 'Ver menos' : 'Ver más' }}
+                </button>
+              }
+
               <div class="flex items-center gap-1 text-sm text-gray-500 mt-2">
                 <span class="material-symbols-rounded text-sm">location_on</span>
                 {{ project.municipality || project.organization?.municipality?.nombre || '-' }}
