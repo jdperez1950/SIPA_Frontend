@@ -6,7 +6,7 @@ import { StepResponseTeamComponent } from './steps/step-response-team/step-respo
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
 import { ParametroBaseService } from '../../../../../../core/services/parametro-base.service';
-import { ProjectRequest, Project } from '../../../../../../core/models/domain.models';
+import { ProjectRequest, Project, ProjectResponseTeamMember } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
   TechnicalTableAssignment, 
@@ -153,17 +153,18 @@ export class ProjectWizardComponent {
       submissionDeadline: safeStr(project.submissionDeadline).split('T')[0]
     });
 
-    // Load response team data
-    if (project.responseTeam && project.responseTeam.length > 0) {
-      this.responseTeam.set(project.responseTeam.map(m => ({
+    // Load response team data from organization.organizationTeam
+    const orgTeam = orgData?.organizationTeam;
+    if (orgTeam && orgTeam.length > 0) {
+      this.responseTeam.set(orgTeam.map((m: ProjectResponseTeamMember) => ({
         userId: m.userId,
-        name: m.name,
+        name: m.nombre || m.name,
         documentType: m.documentType || { id: '', nombre: '' },
         documentNumber: m.documentNumber,
         email: m.email,
         phone: m.phone || '',
         nombre: m.nombre || m.name,
-        profile: m.profile,
+        profile: m.profile || '',
         representativeType: m.representativeType || { id: '', nombre: '' }
       })));
     }

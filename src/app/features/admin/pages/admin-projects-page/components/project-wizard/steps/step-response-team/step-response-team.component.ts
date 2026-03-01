@@ -71,6 +71,16 @@ export class StepResponseTeamComponent implements OnInit {
     this.initForm();
   }
 
+  getDocumentTypeName(id: string): string {
+    const docType = this.documentTypes().find(d => d.id === id);
+    return docType?.nombre || id;
+  }
+
+  getResponsiblePositionName(id: string): string {
+    const position = this.responsiblePositions().find(p => p.id === id);
+    return position?.nombre || id;
+  }
+
   private initForm() {
     this.userForm = this.fb.group({
       documentType: ['', Validators.required],
@@ -339,11 +349,11 @@ export class StepResponseTeamComponent implements OnInit {
     this.userForm.patchValue({
       documentType: member.documentType?.id || '',
       documentNumber: member.documentNumber,
-      name: member.name,
+      name: member.nombre || member.name,
       email: member.email,
       phone: member.phone,
       responsiblePosition: member.representativeType?.id || '',
-      profile: member.profile || ''
+      profile: member.profile
     });
     this.documentType.set(member.documentType?.id || '');
   }
