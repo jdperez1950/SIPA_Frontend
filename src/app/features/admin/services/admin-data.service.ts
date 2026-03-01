@@ -34,11 +34,11 @@ export class AdminDataService {
     if (role) params.role = role;
     if (status) params.status = status;
 
-    console.log('getUsers params:', params);
+
 
     return this.authService.getUsers(params).pipe(
       map(response => {
-        console.log('getUsers response:', response);
+
         if (response.success && response.data) {
           return {
             data: response.data.data,
@@ -64,7 +64,7 @@ export class AdminDataService {
         };
       }),
       catchError(error => {
-        console.error('Error fetching users', error);
+
         return of({
           data: [],
           meta: {
@@ -139,15 +139,7 @@ export class AdminDataService {
       const startIndex = (page - 1) * pageSize;
       const paginatedData = cachedData.slice(startIndex, startIndex + pageSize);
 
-      console.log('Using cached data for pagination:', {
-        totalItems,
-        requestedPage: page,
-        pageSize,
-        startIndex,
-        endIndex: startIndex + pageSize,
-        paginatedCount: paginatedData.length,
-        totalPages
-      });
+
 
       return of({
         data: paginatedData,
@@ -169,17 +161,14 @@ export class AdminDataService {
     if (query) params = params.set('search', query);
     if (status) params = params.set('status', status);
 
-    console.log('getProjects params:', params.toString());
 
     return this.http.get<any>(`${this.apiUrl}/projects`, { params }).pipe(
       map(response => {
-        console.log('Full response structure from /api/projects (admin):', JSON.stringify(response, null, 2));
+
         
         if (response.success && response.data) {
           const apiResponse = response.data;
-          console.log('admin - apiResponse.data:', apiResponse.data);
-          console.log('admin - apiResponse.total:', apiResponse.total);
-          
+
           // Mock progress values to 0% to avoid errors
           const allProjects = (apiResponse.data || []).map((project: any) => ({
             ...project,
@@ -209,16 +198,7 @@ export class AdminDataService {
             const startIndex = (page - 1) * pageSize;
             const paginatedData = allProjects.slice(startIndex, startIndex + pageSize);
 
-            console.log('Frontend pagination applied with caching:', {
-              totalItems,
-              itemsReturned,
-              requestedPage: page,
-              pageSize,
-              startIndex,
-              endIndex: startIndex + pageSize,
-              paginatedCount: paginatedData.length,
-              totalPages
-            });
+
 
             return {
               data: paginatedData,
@@ -250,7 +230,7 @@ export class AdminDataService {
         };
       }),
       catchError(error => {
-        console.error('Error fetching projects', error);
+
         return of({
           data: [],
           meta: { totalItems: 0, itemCount: 0, itemsPerPage: pageSize, totalPages: 0, currentPage: page }
