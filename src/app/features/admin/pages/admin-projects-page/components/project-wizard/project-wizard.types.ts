@@ -24,8 +24,8 @@ export interface IdentificationData {
   municipalityName: string | null;
   organizationName: string;
   organizationType: ParametroSelect | null;
-  organizationIdentifier: string;
-  verificationDigit: string;
+  organizationIdentifier?: string;
+  verificationDigit?: string;
   organizationEmail: string;
   website: string;
   organizationDescription: string;
