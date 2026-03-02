@@ -118,12 +118,15 @@ export class StepIdentificationComponent implements OnInit {
             this.form.patchValue({ verificationDigit: this.initialData.verificationDigit }, { emitEvent: false });
           }
 
-          const currentOrgIdentifier = this.form.get('organizationIdentifier')?.value;
-          if (this.initialData.organizationIdentifier && currentOrgIdentifier !== this.initialData.organizationIdentifier) {
-            this.form.patchValue({ organizationIdentifier: this.initialData.organizationIdentifier }, { emitEvent: false });
-          }
+
         }
       });
+  }
+
+  private emitFormData() {
+    if (this.form && this.form.value) {
+      this.emitDataChange(this.form.value);
+    }
   }
 
   ngOnInit() {
@@ -159,51 +162,80 @@ export class StepIdentificationComponent implements OnInit {
           }
         }
         
-        // Find organization type code from GUID
-        const orgType = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
-        
-        const deptParam = this.parametroBaseService.departamentos().find(d => d.id === deptId);
-        const municipioParam = this.municipios.find(m => m.id === municipalityId);
-        console.log('municipioParam encontrado:', municipioParam);
-        const orgTypeParam = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
-        const tieneTerrenoParam = this.tieneTerrenoOptions().find(t => t.id === value.tieneTerreno);
-        const tieneFinanciacionParam = this.tieneFinanciacionOptions().find(t => t.id === value.tieneFinanciacion);
-
-        this.dataChange.emit({
-          description: value.description,
-          projectValue: value.projectValue || 0,
-          housingCount: value.housingCount || 0,
-          beneficiariesCount: value.beneficiariesCount || 0,
-          tieneTerreno: tieneTerrenoParam ? { id: tieneTerrenoParam.id, nombre: tieneTerrenoParam.nombre, tipo: tieneTerrenoParam.tipo, codigo: tieneTerrenoParam.codigo } : null,
-          landDescription: value.landDescription || '',
-          tieneFinanciacion: tieneFinanciacionParam ? { id: tieneFinanciacionParam.id, nombre: tieneFinanciacionParam.nombre, tipo: tieneFinanciacionParam.tipo, codigo: tieneFinanciacionParam.codigo } : null,
-          financingDescription: value.financingDescription || '',
-          departmentId: deptParam ? { id: deptParam.id, nombre: deptParam.nombre, tipo: deptParam.tipo, codigo: deptParam.codigo } : null,
-          departmentName: deptParam?.nombre || '',
-          municipality: municipioParam ? { id: municipioParam.id, nombre: municipioParam.nombre, tipo: municipioParam.tipo, codigo: municipioParam.codigo } : null,
-          municipalityName: municipioParam?.nombre || null,
-          organizationName: value.organizationName,
-          organizationType: orgTypeParam ? { id: orgTypeParam.id, nombre: orgTypeParam.nombre, tipo: orgTypeParam.tipo, codigo: orgTypeParam.codigo } : null,
-          organizationIdentifier: value.organizationIdentifier,
-          verificationDigit: value.verificationDigit,
-          organizationEmail: value.organizationEmail,
-          website: value.website,
-          organizationDescription: value.organizationDescription,
-          organizationAddress: value.organizationAddress,
-          startDate: value.startDate,
-          endDate: value.endDate,
-          submissionDeadline: value.submissionDeadline
-        });
+        this.emitDataChange(value);
       } else {
         // Emit null to indicate invalid state
         this.dataChange.emit(null as any);
       }
     });
+  }
 
-    // Trigger initial validation if data is pre-loaded
-    if (this.form.valid) {
-      this.form.updateValueAndValidity({ emitEvent: true });
+  private emitDataChange(value: any) {
+    // Find department and municipality IDs and names
+    const deptId = value.department;
+    const deptName = this.parametroBaseService.departamentos().find(d => d.id === deptId)?.nombre || '';
+    
+    // Municipality - find ID from loaded municipalities or use as-is (manual entry)
+    let municipalityId: string | null = null;
+    let municipalityName: string | null = null;
+    
+    if (this.isManualMunicipality) {
+      municipalityId = null;
+      municipalityName = value.municipality || null;
+    } else {
+      const municipio = this.municipios.find(m => m.id === value.municipality);
+      if (municipio) {
+        municipalityId = municipio.id;
+        municipalityName = municipio.nombre;
+      } else {
+        municipalityId = value.municipality || null;
+        municipalityName = this.municipios.find(m => m.id === value.municipality)?.nombre || value.municipality || null;
+      }
     }
+    
+    // Find organization type code from GUID
+    const orgType = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
+    
+    const deptParam = this.parametroBaseService.departamentos().find(d => d.id === deptId);
+    let municipioParam = this.municipios.find(m => m.id === municipalityId);
+    console.log('municipioParam encontrado:', municipioParam);
+    
+    // If not found in loaded municipios and we have initialData, use it
+    if (!municipioParam && this.initialData?.municipality?.id) {
+      municipioParam = this.initialData.municipality;
+      console.log('Using initialData municipality:', municipioParam);
+    }
+    
+    const orgTypeParam = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
+    const tieneTerrenoParam = this.tieneTerrenoOptions().find(t => t.id === value.tieneTerreno);
+    const tieneFinanciacionParam = this.tieneFinanciacionOptions().find(t => t.id === value.tieneFinanciacion);
+
+    this.dataChange.emit({
+      organizationId: this.initialData?.organizationId || value.organizationId,
+      description: value.description,
+      projectValue: value.projectValue || 0,
+      housingCount: value.housingCount || 0,
+      beneficiariesCount: value.beneficiariesCount || 0,
+      tieneTerreno: tieneTerrenoParam ? { id: tieneTerrenoParam.id, nombre: tieneTerrenoParam.nombre, tipo: tieneTerrenoParam.tipo, codigo: tieneTerrenoParam.codigo } : null,
+      landDescription: value.landDescription || '',
+      tieneFinanciacion: tieneFinanciacionParam ? { id: tieneFinanciacionParam.id, nombre: tieneFinanciacionParam.nombre, tipo: tieneFinanciacionParam.tipo, codigo: tieneFinanciacionParam.codigo } : null,
+      financingDescription: value.financingDescription || '',
+      departmentId: deptParam ? { id: deptParam.id, nombre: deptParam.nombre, tipo: deptParam.tipo, codigo: deptParam.codigo } : null,
+      departmentName: deptParam?.nombre || '',
+      municipality: municipioParam ? { id: municipioParam.id, nombre: municipioParam.nombre, tipo: municipioParam.tipo, codigo: municipioParam.codigo } : null,
+      municipalityName: municipioParam?.nombre || null,
+      organizationName: value.organizationName,
+      organizationType: orgTypeParam ? { id: orgTypeParam.id, nombre: orgTypeParam.nombre, tipo: orgTypeParam.tipo, codigo: orgTypeParam.codigo } : null,
+      organizationIdentifier: value.organizationIdentifier,
+      verificationDigit: value.verificationDigit,
+      organizationEmail: value.organizationEmail,
+      website: value.website,
+      organizationDescription: value.organizationDescription,
+      organizationAddress: value.organizationAddress,
+      startDate: value.startDate,
+      endDate: value.endDate,
+      submissionDeadline: value.submissionDeadline
+    });
   }
 
   toggleManualMunicipality() {
@@ -253,8 +285,8 @@ export class StepIdentificationComponent implements OnInit {
       municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       organizationType: [initialOrgType, Validators.required],
-      organizationIdentifier: [this.initialData?.organizationIdentifier || '', [Validators.required, nitFormatValidator]],
-      verificationDigit: [this.initialData?.verificationDigit || '', Validators.required],
+      organizationIdentifier: [this.initialData?.organizationIdentifier || '', [nitFormatValidator]],
+      verificationDigit: [this.initialData?.verificationDigit || ''],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
       website: [this.initialData?.website || '', [Validators.pattern(/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}$/)]],
       organizationDescription: [this.initialData?.organizationDescription || '', [Validators.required, Validators.minLength(10)]],

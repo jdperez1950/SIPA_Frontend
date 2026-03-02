@@ -199,6 +199,7 @@ export interface ProjectRequest {
   TieneFinanciacion?: ParametroSelect | null;
   FinancingDescription?: string;
   Organization?: {
+    id?: string;
     name?: string;
     type?: ParametroSelect | null;
     identifier?: string;
