@@ -35,10 +35,25 @@ export class AuthService {
     this.setupAutoLogout();
   }
 
+  private lastActivity = 0;
+  private readonly ACTIVITY_THROTTLE = 1000; // 1 second
+
   private setupAutoLogout() {
     if (isPlatformBrowser(this.platformId)) {
       const resetTimer = () => {
+        const now = Date.now();
+        // Throttle to avoid excessive timer resets
+        if (now - this.lastActivity < this.ACTIVITY_THROTTLE) {
+          return;
+        }
+        this.lastActivity = now;
+
         if (this.isAuthenticated()) {
+          // If warning was shown and user is active, close the warning modal
+          if (this.warningShown) {
+             this.confirmationService.close();
+             this.warningShown = false;
+          }
           this.startInactivityTimer();
         }
       };

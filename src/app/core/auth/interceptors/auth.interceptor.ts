@@ -1,9 +1,9 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpEventType, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ConfirmationService } from '../../services/confirmation.service';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -47,6 +47,23 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   return next(request).pipe(
+    tap(event => {
+      // Check for new token in response headers (Sliding Session)
+      // This helps prevent expiration if the user is active but the token is expiring
+      if (event.type === HttpEventType.Response && event instanceof HttpResponse) {
+        const newToken = event.headers.get('Authorization') || event.headers.get('x-token') || event.headers.get('new-token');
+        if (newToken) {
+          try {
+            const tokenValue = newToken.replace('Bearer ', '');
+            if (typeof localStorage !== 'undefined' && tokenValue) {
+              localStorage.setItem('pavis_token', tokenValue);
+            }
+          } catch (e) {
+            console.error('Error updating token from header', e);
+          }
+        }
+      }
+    }),
     catchError((error: HttpErrorResponse) => {
       // Auto-logout on 401 Unauthorized, except for login endpoint
       if (error.status === 401 && !req.url.includes('/auth/login')) {
