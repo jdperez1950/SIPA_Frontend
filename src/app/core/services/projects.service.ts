@@ -13,7 +13,7 @@ export class ProjectsService {
 
   getProjects(
     page: number = 1,
-    pageSize: number = 10,
+    pageSize: number = 25,
     search: string = '',
     status?: string,
     viabilityStatus?: string
