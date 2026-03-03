@@ -24,12 +24,14 @@ import { CommonModule } from '@angular/common';
             <p class="text-sm text-gray-500 mb-6">{{ message }}</p>
 
             <div class="flex gap-3">
-              <button 
-                (click)="onCancel()"
-                class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                {{ cancelText }}
-              </button>
+              @if (showCancelButton) {
+                <button 
+                  (click)="onCancel()"
+                  class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  {{ cancelText }}
+                </button>
+              }
               <button 
                 (click)="onConfirm()"
                 class="flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
@@ -69,6 +71,7 @@ export class ConfirmationModalComponent {
   @Input() confirmText = 'Confirmar';
   @Input() cancelText = 'Cancelar';
   @Input() type: 'danger' | 'warning' | 'info' = 'warning';
+  @Input() showCancelButton = true;
 
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();

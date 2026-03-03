@@ -69,4 +69,8 @@ export class ConfirmationService {
       this.resolveRef = null;
     }
   }
+
+  close() {
+    this.onCancel();
+  }
 }

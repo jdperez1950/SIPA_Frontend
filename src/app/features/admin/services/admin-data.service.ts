@@ -24,30 +24,37 @@ export class AdminDataService {
 
   // --- Users Methods ---
 
-  getUsers(page: number = 1, pageSize: number = 10, query: string = '', role: string | null = null, status: string | null = null): Observable<PaginatedResponse<User>> {
+  getUsers(page: number = 1, pageSize: number = 25, query: string = '', role: string | null = null, status: string | null = null): Observable<PaginatedResponse<User>> {
     let params: any = {
       page: page,
       limit: pageSize
     };
 
-    if (query) params.search = query;
+    // Don't send search query to backend (filter in frontend instead)
     if (role) params.role = role;
     if (status) params.status = status;
 
-
-
     return this.authService.getUsers(params).pipe(
       map(response => {
-
         if (response.success && response.data) {
+          let allUsers = response.data.data;
+
+          // Frontend filter for search by name or email
+          if (query) {
+            const q = query.toLowerCase();
+            allUsers = allUsers.filter((user: User) => {
+              return user.name.toLowerCase().includes(q) || user.email.toLowerCase().includes(q);
+            });
+          }
+
           return {
-            data: response.data.data,
+            data: allUsers,
             meta: {
-              totalItems: response.data.total,
-              itemCount: response.data.data.length,
+              totalItems: query ? allUsers.length : response.data.total,
+              itemCount: allUsers.length,
               itemsPerPage: response.data.limit,
-              totalPages: response.data.totalPages,
-              currentPage: response.data.page
+              totalPages: query ? Math.ceil(allUsers.length / pageSize) : response.data.totalPages,
+              currentPage: page
             }
           };
         }
@@ -126,13 +133,14 @@ export class AdminDataService {
   private cachedStatus = signal<any>(null);
   private cachedTotal = signal<number>(0);
 
-  getProjects(page: number = 1, pageSize: number = 10, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
+  getProjects(page: number = 1, pageSize: number = 25, query: string = '', status: any = null): Observable<PaginatedResponse<Project>> {
     // Check if we have cached data with same filters
     const cachedData = this.cachedProjects();
     const sameQuery = this.cachedQuery() === query;
     const sameStatus = this.cachedStatus() === status;
 
-    if (cachedData && sameQuery && sameStatus) {
+    // Don't use cache if there's a search query (filtering changes results)
+    if (cachedData && sameQuery && sameStatus && !query) {
       // Use cached data and paginate in frontend
       const totalItems = this.cachedTotal();
       const totalPages = Math.ceil(totalItems / pageSize);
@@ -158,19 +166,18 @@ export class AdminDataService {
       .set('page', page.toString())
       .set('limit', pageSize.toString());
 
-    if (query) params = params.set('search', query);
+    // Don't send search query to backend (backend doesn't support it properly)
+    // We'll filter in frontend instead
     if (status) params = params.set('status', status);
 
 
     return this.http.get<any>(`${this.apiUrl}/projects`, { params }).pipe(
       map(response => {
-
-        
         if (response.success && response.data) {
           const apiResponse = response.data;
 
           // Mock progress values to 0% to avoid errors
-          const allProjects = (apiResponse.data || []).map((project: any) => ({
+          let allProjects = (apiResponse.data || []).map((project: any) => ({
             ...project,
             progress: project.progress || {
               technical: 0,
@@ -179,8 +186,18 @@ export class AdminDataService {
               social: 0
             }
           }));
-          
-          const totalItems = apiResponse.total || allProjects.length;
+
+          // Frontend filter for search by organization name or project description
+          if (query) {
+            const q = query.toLowerCase();
+            allProjects = allProjects.filter((project: any) => {
+              const orgName = project.organizationName || project.organization?.name || project.organization || '';
+              const description = project.description || '';
+              return orgName.toLowerCase().includes(q) || description.toLowerCase().includes(q);
+            });
+          }
+
+          const totalItems = query ? allProjects.length : (apiResponse.total || allProjects.length);
 
           // Backend workaround: If backend returns more items than expected, cache and paginate in frontend
           const itemsReturned = allProjects.length;

@@ -9,6 +9,7 @@
   [confirmText]="confirmationService.config().confirmText || 'Confirmar'"
   [cancelText]="confirmationService.config().cancelText || 'Cancelar'"
   [type]="confirmationService.config().type || 'warning'"
+  [showCancelButton]="confirmationService.config().showCancelButton ?? true"
   (confirm)="confirmationService.onConfirm()"
   (cancel)="confirmationService.onCancel()"
 />

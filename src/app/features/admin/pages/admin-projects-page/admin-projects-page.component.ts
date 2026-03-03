@@ -31,7 +31,7 @@ export class AdminProjectsPageComponent implements OnInit {
 
   // Pagination State
   currentPage = signal(1);
-  pageSize = signal(10);
+  pageSize = signal(25);
   totalItems = signal(0);
 
   // Data

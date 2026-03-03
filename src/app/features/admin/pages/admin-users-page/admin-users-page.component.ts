@@ -114,21 +114,11 @@ export class AdminUsersPageComponent implements OnInit {
     });
   }
 
-  // Computed Filtered Users -> Now just returns users() because filtering happens in load/service
-  // But wait, if we want to filter by Role, we should ideally send it to backend.
-  // For the purpose of this mock, I will apply role filter on the UI but it only filters current page.
-  filteredUsers = computed(() => {
-    const role = this.selectedRole();
-    if (!role) return this.users();
-    return this.users().filter(u => u.role === role);
-  });
-
   // Actions
   filterByRole(role: UserRole | null) {
     this.selectedRole.set(role);
-    // We strictly should reload, but without service support it's tricky.
-    // Let's just keep client filtering on current page for simplicity
-    // unless user demands perfect pagination for filtered roles.
+    this.currentPage.set(1);
+    this.loadUsers();
   }
 
   openCreateModal() {
