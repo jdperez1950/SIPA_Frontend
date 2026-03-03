@@ -19,7 +19,7 @@ export interface QuestionOption {
 export interface EvidenceConfig {
   maxSizeMb: number;
   allowedFormats: string[];
-  requiresExpirationDate: boolean;
+  requiresExpirationDate?: boolean;
 }
 
 export interface QuestionDocumentRequirement {

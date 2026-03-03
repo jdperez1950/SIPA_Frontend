@@ -5,6 +5,8 @@ import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/cus
 import { IdentificationData, ParametroSelect } from '../../project-wizard.types';
 import { ParametroBaseService } from '../../../../../../../../core/services/parametro-base.service';
 import { CurrencyFormatDirective } from '../../../../../../../../core/directives/currency-format.directive';
+import { EvidenceUploaderComponent } from '../../../../../../../../features/project-workspace/components/evidence-uploader/evidence-uploader.component';
+import { EvidenceConfig } from '../../../../../../../../core/models/question.models';
 import {
   nitFormatValidator,
   getNitFormatErrorMessage,
@@ -16,7 +18,7 @@ import {
 @Component({
   selector: 'app-step-identification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomDropdownComponent, CurrencyFormatDirective],
+  imports: [CommonModule, ReactiveFormsModule, CustomDropdownComponent, CurrencyFormatDirective, EvidenceUploaderComponent],
   templateUrl: './step-identification.component.html',
   styleUrls: ['./step-identification.component.css']
 })
@@ -29,6 +31,11 @@ export class StepIdentificationComponent implements OnInit {
 
   form!: FormGroup;
   
+  legalFileConfig: EvidenceConfig = {
+    allowedFormats: ['.pdf'],
+    maxSizeMb: 10
+  };
+
   organizationTypes = computed(() =>
     this.parametroBaseService.tiposOrganizacion().map(t => ({
       id: t.id,
@@ -225,6 +232,9 @@ export class StepIdentificationComponent implements OnInit {
       municipality: municipioParam ? { id: municipioParam.id, nombre: municipioParam.nombre, tipo: municipioParam.tipo, codigo: municipioParam.codigo } : null,
       municipalityName: municipioParam?.nombre || null,
       organizationName: value.organizationName,
+      isLegallyConstituted: value.isLegallyConstituted,
+      legalRepresentativeCertificate: value.legalRepresentativeCertificate,
+      intentionAct: value.intentionAct,
       organizationType: orgTypeParam ? { id: orgTypeParam.id, nombre: orgTypeParam.nombre, tipo: orgTypeParam.tipo, codigo: orgTypeParam.codigo } : null,
       organizationIdentifier: value.organizationIdentifier,
       verificationDigit: value.verificationDigit,
@@ -284,8 +294,11 @@ export class StepIdentificationComponent implements OnInit {
       department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
       municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
+      isLegallyConstituted: [this.initialData?.isLegallyConstituted || '', Validators.required],
+      legalRepresentativeCertificate: [this.initialData?.legalRepresentativeCertificate || null],
+      intentionAct: [this.initialData?.intentionAct || null],
       organizationType: [initialOrgType, Validators.required],
-      organizationIdentifier: [this.initialData?.organizationIdentifier || '', [nitFormatValidator]],
+      organizationIdentifier: [this.initialData?.organizationIdentifier || ''],
       verificationDigit: [this.initialData?.verificationDigit || ''],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
       website: [this.initialData?.website || '', [Validators.pattern(/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}$/)]],
@@ -298,6 +311,14 @@ export class StepIdentificationComponent implements OnInit {
 
     console.log('organizationTypes disponibles:', this.organizationTypes());
     console.log('organizationType form value:', this.form.get('organizationType')?.value);
+
+    // Initial validation setup
+    this.updateLegalValidators(this.form.get('isLegallyConstituted')?.value);
+
+    // Subscribe to changes in isLegallyConstituted
+    this.form.get('isLegallyConstituted')?.valueChanges.subscribe(val => {
+      this.updateLegalValidators(val);
+    });
 
     // Handle department changes to load municipalities
     this.form.get('department')?.valueChanges.subscribe((deptId) => {
@@ -339,6 +360,51 @@ export class StepIdentificationComponent implements OnInit {
         this.form.get('municipality')?.setValue(null);
       }
     });
+  }
+
+  updateLegalValidators(isLegallyConstituted: string) {
+    const nitControl = this.form.get('organizationIdentifier');
+    const dvControl = this.form.get('verificationDigit');
+    const legalFileControl = this.form.get('legalRepresentativeCertificate');
+    const intentionFileControl = this.form.get('intentionAct');
+
+    if (isLegallyConstituted === 'SI') {
+      // NIT: 9 digits required
+      nitControl?.setValidators([Validators.required, Validators.pattern(/^\d{9}$/)]);
+      // DV: 1 digit required
+      dvControl?.setValidators([Validators.required, Validators.pattern(/^\d{1}$/)]);
+      
+      // File: Certificate required
+      legalFileControl?.setValidators([Validators.required]);
+      intentionFileControl?.clearValidators();
+      intentionFileControl?.setValue(null); // Clear other file
+    } else {
+      // NIT/DV: Not required
+      nitControl?.clearValidators();
+      dvControl?.clearValidators();
+      nitControl?.setValue('');
+      dvControl?.setValue('');
+
+      // File: Act required
+      intentionFileControl?.setValidators([Validators.required]);
+      legalFileControl?.clearValidators();
+      legalFileControl?.setValue(null); // Clear other file
+    }
+
+    nitControl?.updateValueAndValidity();
+    dvControl?.updateValueAndValidity();
+    legalFileControl?.updateValueAndValidity();
+    intentionFileControl?.updateValueAndValidity();
+  }
+
+  onLegalFileSelected(file: File) {
+    this.form.patchValue({ legalRepresentativeCertificate: file });
+    this.form.get('legalRepresentativeCertificate')?.markAsTouched();
+  }
+
+  onIntentionFileSelected(file: File) {
+    this.form.patchValue({ intentionAct: file });
+    this.form.get('intentionAct')?.markAsTouched();
   }
 
   // Remove duplicated and old listener

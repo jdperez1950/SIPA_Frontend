@@ -30,6 +30,9 @@ export interface IdentificationData {
   website: string;
   organizationDescription: string;
   organizationAddress: string;
+  isLegallyConstituted?: string;
+  legalRepresentativeCertificate?: File | null;
+  intentionAct?: File | null;
   startDate: string;
   endDate: string;
   submissionDeadline: string;
