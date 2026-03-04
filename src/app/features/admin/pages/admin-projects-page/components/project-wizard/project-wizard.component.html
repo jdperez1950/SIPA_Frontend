@@ -81,6 +81,7 @@
           @case (2) {
             @if (identificationData(); as data) {
               <app-step-response-team
+                [organizationId]="data.organizationId"
                 [organizationName]="data.organizationName"
                 [selectedMembers]="responseTeam()"
                 (selectionChange)="updateResponseTeam($event)"

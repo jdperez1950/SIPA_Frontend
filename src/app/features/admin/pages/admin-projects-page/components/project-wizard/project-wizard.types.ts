@@ -32,7 +32,9 @@ export interface IdentificationData {
   organizationAddress: string;
   isLegallyConstituted?: string;
   legalRepresentativeCertificate?: File | null;
+  legalRepresentativeCertificateFileId?: string; // ID del archivo subido
   intentionAct?: File | null;
+  intentionActFileId?: string; // ID del archivo subido
   startDate: string;
   endDate: string;
   submissionDeadline: string;

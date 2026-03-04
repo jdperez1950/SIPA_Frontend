@@ -15,6 +15,8 @@ import {
   getMinLengthErrorMessage,
 } from '../../../../../../../../shared/validators';
 
+import { FileService } from '../../../../../../../../core/services/file.service';
+
 @Component({
   selector: 'app-step-identification',
   standalone: true,
@@ -28,6 +30,7 @@ export class StepIdentificationComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   public parametroBaseService = inject(ParametroBaseService);
+  private fileService = inject(FileService);
 
   form!: FormGroup;
   
@@ -296,7 +299,9 @@ export class StepIdentificationComponent implements OnInit {
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
       isLegallyConstituted: [this.initialData?.isLegallyConstituted || '', Validators.required],
       legalRepresentativeCertificate: [this.initialData?.legalRepresentativeCertificate || null],
+      legalRepresentativeCertificateFileId: [(this.initialData as any)?.legalRepresentativeCertificateFileId || ''],
       intentionAct: [this.initialData?.intentionAct || null],
+      intentionActFileId: [(this.initialData as any)?.intentionActFileId || ''],
       organizationType: [initialOrgType, Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || ''],
       verificationDigit: [this.initialData?.verificationDigit || ''],
@@ -377,18 +382,14 @@ export class StepIdentificationComponent implements OnInit {
       // File: Certificate required
       legalFileControl?.setValidators([Validators.required]);
       intentionFileControl?.clearValidators();
-      intentionFileControl?.setValue(null); // Clear other file
     } else {
       // NIT/DV: Not required
       nitControl?.clearValidators();
       dvControl?.clearValidators();
-      nitControl?.setValue('');
-      dvControl?.setValue('');
 
       // File: Act required
       intentionFileControl?.setValidators([Validators.required]);
       legalFileControl?.clearValidators();
-      legalFileControl?.setValue(null); // Clear other file
     }
 
     nitControl?.updateValueAndValidity();

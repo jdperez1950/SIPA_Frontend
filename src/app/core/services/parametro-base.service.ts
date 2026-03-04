@@ -195,8 +195,9 @@ export class ParametroBaseService {
   private _nivelesAmbiente = signal<ParametroBase[]>([]);
   private _tiposEstablecimientoAmbiente = signal<ParametroBase[]>([]);
   private _estadosEstablecimientoAmbiente = signal<ParametroBase[]>([]);
+  private _tiposDocumentoOrganizacion = signal<ParametroBase[]>([]);
 
-  public tiposDocumento = computed(() => 
+  public tiposDocumento = computed(() =>
     this._tiposDocumento()
       .filter(p => p.deletedAt === null)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
@@ -240,6 +241,12 @@ export class ParametroBaseService {
 
   public proyectoTerreno = computed(() =>
     this._proyectoTerreno()
+      .filter(p => p.deletedAt === null)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  );
+
+  public tiposDocumentoOrganizacion = computed(() =>
+    this._tiposDocumentoOrganizacion()
       .filter(p => p.deletedAt === null)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
@@ -293,6 +300,10 @@ export class ParametroBaseService {
 
     this.getByTipo('PROYECTO_FINANCIACION').subscribe(data => {
       this._proyectoFinanciacion.set(data);
+    });
+
+    this.getByTipo('TIPO_DOCUMENTO').subscribe(data => {
+      this._tiposDocumentoOrganizacion.set(data);
     });
   }
 
@@ -382,7 +393,110 @@ export class ParametroBaseService {
         case 'TIPO_ENCARGADO':
           this._tiposEncargado.set(data);
           break;
+        case 'TIPO_DOCUMENTO':
+          this._tiposDocumentoOrganizacion.set(data);
+          break;
       }
     });
+  }
+
+  getByCodigo(tipo: ParametroTipo, codigo: string): ParametroBase | null {
+    const signalMap: Record<ParametroTipo, () => ParametroBase[]> = {
+      'DEPARTAMENTO': () => this._departamentos(),
+      'MUNICIPIO': () => this._municipios().values().next().value || [],
+      'TIPO_DOCUMENTO_REPRESENTANTE': () => this._tiposDocumento(),
+      'ESTADO_CIVIL': () => this._estadosCivil(),
+      'SEXO': () => this._sexos(),
+      'NIVEL_ESCOLARIDAD': () => this._nivelesEscolaridad(),
+      'TIPO_PERSONA': () => this._tiposPersona(),
+      'TIPO_ORGANIZACION': () => this._tiposOrganizacion(),
+      'TIPO_ENCARGADO': () => this._tiposEncargado(),
+      'PROYECTO_TERRENO': () => this._proyectoTerreno(),
+      'PROYECTO_FINANCIACION': () => this._proyectoFinanciacion(),
+      'TIPO_VIVIENDA': () => this._tiposVivienda(),
+      'TENENCIA_VIVIENDA': () => this._tenenciasVivienda(),
+      'TIPO_SANEAMIENTO': () => this._tiposSaneamiento(),
+      'TIPO_SERVICIO': () => this._tiposServicio(),
+      'FUENTE_AGUA': () => this._fuentesAgua(),
+      'MATERIAL_PAREDES': () => this._materialesParedes(),
+      'MATERIAL_PISOS': () => this._materialesPisos(),
+      'TIPO_TEJADO': () => this._tiposTejado(),
+      'TIPO_COCINA': () => this._tiposCocina(),
+      'COMBUSTIBLE_COCINA': () => this._combustiblesCocina(),
+      'DISPOSICION_BASURAS': () => this._disposicionesBasuras(),
+      'TIPO_ACTIVIDAD_ECONOMICA': () => this._tiposActividadEconomica(),
+      'SITUACION_LABORAL': () => this._situacionesLaborales(),
+      'REGIMEN_SALUD': () => this._regimenesSalud(),
+      'TIPO_TRANSPORTE': () => this._tiposTransporte(),
+      'TIPO_RIESGO': () => this._tiposRiesgo(),
+      'NIVEL_RIESGO': () => this._nivelesRiesgo(),
+      'TIPO_PROBLEMA': () => this._tiposProblema(),
+      'TIPO_AYUDA': () => this._tiposAyuda(),
+      'FUENTE_RECURSO': () => this._fuentesRecurso(),
+      'TIPO_INGRESO': () => this._tiposIngreso(),
+      'TIPO_GASTO': () => this._tiposGasto(),
+      'TIPO_BIEN': () => this._tiposBien(),
+      'ESTADO_BIEN': () => this._estadosBien(),
+      'TIPO_SERVICIO_PUBLICO': () => this._tiposServicioPublico(),
+      'ESTADO_SERVICIO_PUBLICO': () => this._estadosServicioPublico(),
+      'TIPO_VIAL': () => this._tiposVial(),
+      'ESTADO_VIAL': () => this._estadosVial(),
+      'TIPO_TRANSPORTE_PUBLICO': () => this._tiposTransportePublico(),
+      'ESTADO_TRANSPORTE_PUBLICO': () => this._estadosTransportePublico(),
+      'TIPO_COMUNICACION': () => this._tiposComunicacion(),
+      'ESTADO_COMUNICACION': () => this._estadosComunicacion(),
+      'TIPO_EDUCACION': () => this._tiposEducacion(),
+      'NIVEL_EDUCATIVO': () => this._nivelesEducativos(),
+      'TIPO_ESTABLECIMIENTO': () => this._tiposEstablecimiento(),
+      'ESTADO_ESTABLECIMIENTO': () => this._estadosEstablecimiento(),
+      'TIPO_SALUD': () => this._tiposSalud(),
+      'NIVEL_ATENCION': () => this._nivelesAtencion(),
+      'TIPO_ESTABLECIMIENTO_SALUD': () => this._tiposEstablecimientoSalud(),
+      'ESTADO_ESTABLECIMIENTO_SALUD': () => this._estadosEstablecimientoSalud(),
+      'TIPO_RECREACION': () => this._tiposRecreacion(),
+      'NIVEL_RECREACION': () => this._nivelesRecreacion(),
+      'TIPO_ESTABLECIMIENTO_RECREACION': () => this._tiposEstablecimientoRecreacion(),
+      'ESTADO_ESTABLECIMIENTO_RECREACION': () => this._estadosEstablecimientoRecreacion(),
+      'TIPO_SEGURIDAD': () => this._tiposSeguridad(),
+      'NIVEL_SEGURIDAD': () => this._nivelesSeguridad(),
+      'TIPO_ESTABLECIMIENTO_SEGURIDAD': () => this._tiposEstablecimientoSeguridad(),
+      'ESTADO_ESTABLECIMIENTO_SEGURIDAD': () => this._estadosEstablecimientoSeguridad(),
+      'TIPO_ADMINISTRACION_PUBLICA': () => this._tiposAdministracionPublica(),
+      'NIVEL_ADMINISTRACION_PUBLICA': () => this._nivelesAdministracionPublica(),
+      'TIPO_ESTABLECIMIENTO_ADMINISTRACION_PUBLICA': () => this._tiposEstablecimientoAdministracionPublica(),
+      'ESTADO_ESTABLECIMIENTO_ADMINISTRACION_PUBLICA': () => this._estadosEstablecimientoAdministracionPublica(),
+      'TIPO_MERCADO': () => this._tiposMercado(),
+      'NIVEL_MERCADO': () => this._nivelesMercado(),
+      'TIPO_ESTABLECIMIENTO_MERCADO': () => this._tiposEstablecimientoMercado(),
+      'ESTADO_ESTABLECIMIENTO_MERCADO': () => this._estadosEstablecimientoMercado(),
+      'TIPO_FINANCIERO': () => this._tiposFinanciero(),
+      'NIVEL_FINANCIERO': () => this._nivelesFinanciero(),
+      'TIPO_ESTABLECIMIENTO_FINANCIERO': () => this._tiposEstablecimientoFinanciero(),
+      'ESTADO_ESTABLECIMIENTO_FINANCIERO': () => this._estadosEstablecimientoFinanciero(),
+      'TIPO_RELIGION': () => this._tiposReligion(),
+      'NIVEL_RELIGION': () => this._nivelesReligion(),
+      'TIPO_ESTABLECIMIENTO_RELIGION': () => this._tiposEstablecimientoReligion(),
+      'ESTADO_ESTABLECIMIENTO_RELIGION': () => this._estadosEstablecimientoReligion(),
+      'TIPO_CULTURA': () => this._tiposCultura(),
+      'NIVEL_CULTURA': () => this._nivelesCultura(),
+      'TIPO_ESTABLECIMIENTO_CULTURA': () => this._tiposEstablecimientoCultura(),
+      'ESTADO_ESTABLECIMIENTO_CULTURA': () => this._estadosEstablecimientoCultura(),
+      'TIPO_DEPORTE': () => this._tiposDeporte(),
+      'NIVEL_DEPORTE': () => this._nivelesDeporte(),
+      'TIPO_ESTABLECIMIENTO_DEPORTE': () => this._tiposEstablecimientoDeporte(),
+      'ESTADO_ESTABLECIMIENTO_DEPORTE': () => this._estadosEstablecimientoDeporte(),
+      'TIPO_TURISMO': () => this._tiposTurismo(),
+      'NIVEL_TURISMO': () => this._nivelesTurismo(),
+      'TIPO_ESTABLECIMIENTO_TURISMO': () => this._tiposEstablecimientoTurismo(),
+      'ESTADO_ESTABLECIMIENTO_TURISMO': () => this._estadosEstablecimientoTurismo(),
+      'TIPO_AMBIENTE': () => this._tiposAmbiente(),
+      'NIVEL_AMBIENTE': () => this._nivelesAmbiente(),
+      'TIPO_ESTABLECIMIENTO_AMBIENTE': () => this._tiposEstablecimientoAmbiente(),
+      'ESTADO_ESTABLECIMIENTO_AMBIENTE': () => this._estadosEstablecimientoAmbiente(),
+      'TIPO_DOCUMENTO': () => this._tiposDocumentoOrganizacion()
+    };
+
+    const items = signalMap[tipo]?.() || [];
+    return items.find(item => item.codigo === codigo) || null;
   }
 }

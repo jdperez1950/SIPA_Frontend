@@ -119,6 +119,7 @@ export interface ProjectProgress {
 export interface Project {
   id: string;
   code: string;
+  organizationId?: string; // API response field for organization ID
   name?: string; // Project Name (e.g., "vivienda el santander")
   description?: string; // Full project description
   organization: string | any; // Supports string (legacy/mock) or object (API)
@@ -210,6 +211,9 @@ export interface ProjectRequest {
     municipality?: ParametroSelect | null;
     address?: string;
     description?: string;
+    isLegallyConstituted?: string;
+    legalRepresentativeCertificateFileId?: string;
+    intentionActFileId?: string;
     organizationTeam?: ProjectResponseTeamMember[];
   };
   projectTeam?: ProjectTeamMember[];
