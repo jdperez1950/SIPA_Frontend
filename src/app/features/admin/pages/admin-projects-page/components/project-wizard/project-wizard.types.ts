@@ -1,3 +1,5 @@
+import { FinanciacionFuente } from './steps/step-identification/financing.models';
+
 export interface WizardState {
   currentStep: number;
   projectData: {
@@ -18,6 +20,7 @@ export interface IdentificationData {
   landDescription: string;
   tieneFinanciacion: ParametroSelect | null;
   financingDescription: string;
+  detalleFinanciacion?: FinanciacionFuente[];
   departmentId: ParametroSelect | null;
   departmentName: string;
   municipality: ParametroSelect | null;

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
 import { IdentificationData, ParametroSelect } from '../../project-wizard.types';
 import { ParametroBaseService } from '../../../../../../../../core/services/parametro-base.service';
@@ -16,6 +16,7 @@ import {
 } from '../../../../../../../../shared/validators';
 
 import { FileService } from '../../../../../../../../core/services/file.service';
+import { FUENTES_FINANCIACION, FinanciacionFuente } from './financing.models';
 
 @Component({
   selector: 'app-step-identification',
@@ -67,6 +68,8 @@ export class StepIdentificationComponent implements OnInit {
       codigo: t.codigo
     }))
   );
+
+  showDetalleFinanciacion = signal(false);
 
   // Lists for selects - Access service signal directly
   municipios: ParametroSelect[] = [];
@@ -222,6 +225,16 @@ export class StepIdentificationComponent implements OnInit {
     const tieneTerrenoParam = this.tieneTerrenoOptions().find(t => t.id === value.tieneTerreno);
     const tieneFinanciacionParam = this.tieneFinanciacionOptions().find(t => t.id === value.tieneFinanciacion);
 
+    // Filter and format detalleFinanciacion (only include rows with values)
+    const detalleFinanciacion = value.detalleFinanciacion
+      ?.filter((item: any) => item.dinero > 0 || item.especie > 0)
+      .map((item: any) => ({
+        id: item.id,
+        fuente: item.fuente,
+        dinero: item.dinero || 0,
+        especie: item.especie || 0
+      })) || [];
+
     this.dataChange.emit({
       organizationId: this.initialData?.organizationId || value.organizationId,
       description: value.description,
@@ -232,6 +245,7 @@ export class StepIdentificationComponent implements OnInit {
       landDescription: value.landDescription || '',
       tieneFinanciacion: tieneFinanciacionParam ? { id: tieneFinanciacionParam.id, nombre: tieneFinanciacionParam.nombre, tipo: tieneFinanciacionParam.tipo, codigo: tieneFinanciacionParam.codigo } : null,
       financingDescription: value.financingDescription || '',
+      detalleFinanciacion: detalleFinanciacion.length > 0 ? detalleFinanciacion : undefined,
       departmentId: deptParam ? { id: deptParam.id, nombre: deptParam.nombre, tipo: deptParam.tipo, codigo: deptParam.codigo } : null,
       departmentName: deptParam?.nombre || '',
       municipality: municipioParam ? { id: municipioParam.id, nombre: municipioParam.nombre, tipo: municipioParam.tipo, codigo: municipioParam.codigo } : null,
@@ -297,6 +311,17 @@ export class StepIdentificationComponent implements OnInit {
       landDescription: [this.initialData?.landDescription || '', Validators.minLength(10)],
       tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || '', Validators.required],
       financingDescription: [this.initialData?.financingDescription || '', Validators.minLength(10)],
+      detalleFinanciacion: this.fb.array(
+        FUENTES_FINANCIACION.map(fuente => {
+          const initialFuente = this.initialData?.detalleFinanciacion?.find(f => f.id === fuente.id);
+          return this.fb.group({
+            id: [fuente.id],
+            fuente: [fuente.fuente],
+            dinero: [initialFuente?.dinero || 0, [Validators.min(0)]],
+            especie: [initialFuente?.especie || 0, [Validators.min(0)]]
+          });
+        })
+      ),
       department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
       municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],
@@ -334,6 +359,14 @@ export class StepIdentificationComponent implements OnInit {
     this.form.get('tieneTerreno')?.valueChanges.subscribe(val => {
       this.updateTerrenoValidators(val);
     });
+
+    // Subscribe to changes in tieneFinanciacion to show/hide detalleFinanciacion
+    this.form.get('tieneFinanciacion')?.valueChanges.subscribe(val => {
+      this.updateFinanciacionVisibility(val);
+    });
+
+    // Initial visibility setup for financing detail
+    this.updateFinanciacionVisibility(this.form.get('tieneFinanciacion')?.value);
 
     // Handle department changes to load municipalities
     this.form.get('department')?.valueChanges.subscribe((deptId) => {
@@ -439,6 +472,33 @@ export class StepIdentificationComponent implements OnInit {
     }
 
     tradicionLibertadCertificadoControl?.updateValueAndValidity();
+  }
+
+  updateFinanciacionVisibility(tieneFinanciacionId: string) {
+    const financOption = this.tieneFinanciacionOptions().find(t => t.id === tieneFinanciacionId);
+    const tieneFinanciacion = financOption?.nombre?.toUpperCase().startsWith('SI') ?? false;
+
+    this.showDetalleFinanciacion.set(tieneFinanciacion);
+
+    const detalleArray = this.form.get('detalleFinanciacion') as FormArray;
+    
+    if (tieneFinanciacion) {
+      detalleArray.controls.forEach(control => {
+        control.get('dinero')?.setValidators([Validators.min(0)]);
+        control.get('especie')?.setValidators([Validators.min(0)]);
+        control.get('dinero')?.updateValueAndValidity();
+        control.get('especie')?.updateValueAndValidity();
+      });
+    } else {
+      detalleArray.controls.forEach(control => {
+        control.get('dinero')?.setValue(0);
+        control.get('especie')?.setValue(0);
+        control.get('dinero')?.clearValidators();
+        control.get('especie')?.clearValidators();
+        control.get('dinero')?.updateValueAndValidity();
+        control.get('especie')?.updateValueAndValidity();
+      });
+    }
   }
 
   // Remove duplicated and old listener
@@ -650,5 +710,31 @@ export class StepIdentificationComponent implements OnInit {
     }
 
     return '';
+  }
+
+  get detalleFinanciacionArray(): FormArray {
+    return this.form.get('detalleFinanciacion') as FormArray;
+  }
+
+  getDineroControl(index: number): FormControl {
+    return this.detalleFinanciacionArray.at(index).get('dinero') as FormControl;
+  }
+
+  getEspecieControl(index: number): FormControl {
+    return this.detalleFinanciacionArray.at(index).get('especie') as FormControl;
+  }
+
+  totalDinero(): number {
+    return this.detalleFinanciacionArray.controls.reduce(
+      (total, control) => total + (control.get('dinero')?.value || 0),
+      0
+    );
+  }
+
+  totalEspecie(): number {
+    return this.detalleFinanciacionArray.controls.reduce(
+      (total, control) => total + (control.get('especie')?.value || 0),
+      0
+    );
   }
 }
