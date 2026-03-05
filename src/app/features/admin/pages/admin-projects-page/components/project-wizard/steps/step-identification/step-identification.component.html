@@ -386,6 +386,25 @@
       }
     </div>
 
+    <!-- Certificado de Tradición y Libertad - Condicional -->
+    @if (requiresTradicionLibertadCertificado()) {
+      <div class="space-y-2 mb-6">
+        <label class="block text-sm font-medium text-gray-700">Cargue el Certificado de Tradición y Libertad <span class="text-red-500">*</span></label>
+        <app-evidence-uploader 
+          [config]="legalFileConfig" 
+          (upload)="onTradicionLibertadCertificadoSelected($event)"
+        ></app-evidence-uploader>
+        @if (form.get('tradicionLibertadCertificado')?.invalid && form.get('tradicionLibertadCertificado')?.touched) {
+           <p class="text-xs text-red-500 mt-1">Este documento es obligatorio cuando cuenta con terreno.</p>
+        } @else if (form.get('tradicionLibertadCertificado')?.value) {
+           <p class="text-xs text-green-600 mt-1 flex items-center gap-1">
+             <span class="material-symbols-rounded text-sm">check_circle</span>
+             Archivo cargado: {{ form.get('tradicionLibertadCertificado')?.value.name }}
+           </p>
+        }
+      </div>
+    }
+
     <!-- Tiene Financiacion -->
     <div class="space-y-2 mb-6">
       <label for="tieneFinanciacion" class="block text-sm font-medium text-gray-700">¿Tiene financiación? <span class="text-red-500">*</span></label>

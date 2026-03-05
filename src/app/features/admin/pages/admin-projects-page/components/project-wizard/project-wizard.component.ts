@@ -411,6 +411,7 @@ export class ProjectWizardComponent {
 
     const certificateDocType = this.parametroBaseService.getByCodigo('TIPO_DOCUMENTO', 'DOC1');
     const actDocType = this.parametroBaseService.getByCodigo('TIPO_DOCUMENTO', 'DOC2');
+    const tradicionLibertadDocType = this.parametroBaseService.getByCodigo('TIPO_DOCUMENTO', 'DOC3');
 
     if (data.legalRepresentativeCertificate && certificateDocType) {
       uploads.push(
@@ -432,6 +433,19 @@ export class ProjectWizardComponent {
           data.intentionAct,
           actDocType.id,
           'Acta de Intención'
+        ).pipe(
+          map(() => void 0)
+        )
+      );
+    }
+
+    if (data.tradicionLibertadCertificado && tradicionLibertadDocType) {
+      uploads.push(
+        this.organizationDocumentService.uploadDocument(
+          organizationId,
+          data.tradicionLibertadCertificado,
+          tradicionLibertadDocType.id,
+          'Certificado de Tradición y Libertad'
         ).pipe(
           map(() => void 0)
         )

@@ -35,6 +35,8 @@ export interface IdentificationData {
   legalRepresentativeCertificateFileId?: string; // ID del archivo subido
   intentionAct?: File | null;
   intentionActFileId?: string; // ID del archivo subido
+  tradicionLibertadCertificado?: File | null;
+  tradicionLibertadCertificadoFileId?: string;
   startDate: string;
   endDate: string;
   submissionDeadline: string;

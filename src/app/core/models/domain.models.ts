@@ -214,6 +214,7 @@ export interface ProjectRequest {
     isLegallyConstituted?: string;
     legalRepresentativeCertificateFileId?: string;
     intentionActFileId?: string;
+    tradicionLibertadCertificadoFileId?: string;
     organizationTeam?: ProjectResponseTeamMember[];
   };
   projectTeam?: ProjectTeamMember[];

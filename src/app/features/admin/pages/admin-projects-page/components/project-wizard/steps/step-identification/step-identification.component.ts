@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed, input } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, computed, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
@@ -56,6 +56,8 @@ export class StepIdentificationComponent implements OnInit {
       codigo: t.codigo
     }))
   );
+
+  requiresTradicionLibertadCertificado = signal(false);
 
   tieneFinanciacionOptions = computed(() =>
     this.parametroBaseService.proyectoFinanciacion().map(t => ({
@@ -238,6 +240,7 @@ export class StepIdentificationComponent implements OnInit {
       isLegallyConstituted: value.isLegallyConstituted,
       legalRepresentativeCertificate: value.legalRepresentativeCertificate,
       intentionAct: value.intentionAct,
+      tradicionLibertadCertificado: value.tradicionLibertadCertificado,
       organizationType: orgTypeParam ? { id: orgTypeParam.id, nombre: orgTypeParam.nombre, tipo: orgTypeParam.tipo, codigo: orgTypeParam.codigo } : null,
       organizationIdentifier: value.organizationIdentifier,
       verificationDigit: value.verificationDigit,
@@ -302,6 +305,8 @@ export class StepIdentificationComponent implements OnInit {
       legalRepresentativeCertificateFileId: [(this.initialData as any)?.legalRepresentativeCertificateFileId || ''],
       intentionAct: [this.initialData?.intentionAct || null],
       intentionActFileId: [(this.initialData as any)?.intentionActFileId || ''],
+      tradicionLibertadCertificado: [this.initialData?.tradicionLibertadCertificado || null],
+      tradicionLibertadCertificadoFileId: [(this.initialData as any)?.tradicionLibertadCertificadoFileId || ''],
       organizationType: [initialOrgType, Validators.required],
       organizationIdentifier: [this.initialData?.organizationIdentifier || ''],
       verificationDigit: [this.initialData?.verificationDigit || ''],
@@ -323,6 +328,11 @@ export class StepIdentificationComponent implements OnInit {
     // Subscribe to changes in isLegallyConstituted
     this.form.get('isLegallyConstituted')?.valueChanges.subscribe(val => {
       this.updateLegalValidators(val);
+    });
+
+    // Subscribe to changes in tieneTerreno to validate tradicionLibertadCertificado
+    this.form.get('tieneTerreno')?.valueChanges.subscribe(val => {
+      this.updateTerrenoValidators(val);
     });
 
     // Handle department changes to load municipalities
@@ -406,6 +416,29 @@ export class StepIdentificationComponent implements OnInit {
   onIntentionFileSelected(file: File) {
     this.form.patchValue({ intentionAct: file });
     this.form.get('intentionAct')?.markAsTouched();
+  }
+
+  onTradicionLibertadCertificadoSelected(file: File) {
+    this.form.patchValue({ tradicionLibertadCertificado: file });
+    this.form.get('tradicionLibertadCertificado')?.markAsTouched();
+  }
+
+  updateTerrenoValidators(tieneTerrenoId: string) {
+    const tradicionLibertadCertificadoControl = this.form.get('tradicionLibertadCertificado');
+    
+    // Find the terreno option with ID tieneTerrenoId to check if it's "SI"
+    const terrenoOption = this.tieneTerrenoOptions().find(t => t.id === tieneTerrenoId);
+    const esSi = terrenoOption?.nombre?.toUpperCase() === 'SI';
+
+    this.requiresTradicionLibertadCertificado.set(esSi);
+
+    if (esSi) {
+      tradicionLibertadCertificadoControl?.setValidators([Validators.required]);
+    } else {
+      tradicionLibertadCertificadoControl?.clearValidators();
+    }
+
+    tradicionLibertadCertificadoControl?.updateValueAndValidity();
   }
 
   // Remove duplicated and old listener
