@@ -75,8 +75,6 @@ export class QuestionMapperService {
     frontendResponse: QuestionResponse,
     projectId: string
   ): SaveAnswerRequest {
-    const question = this.questionCache.get(frontendResponse.questionId);
-    
     return {
       project: {
         id: projectId
@@ -85,11 +83,7 @@ export class QuestionMapperService {
         id: frontendResponse.questionId
       },
       currentAnswer: {
-        id: frontendResponse.selectedOptionId || this.getOptionIdByValue(
-          frontendResponse.questionId,
-          frontendResponse.value
-        ),
-        optionText: frontendResponse.value
+        id: frontendResponse.selectedOptionId || frontendResponse.value
       }
     };
   }

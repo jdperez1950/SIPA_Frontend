@@ -79,6 +79,5 @@ export interface SaveAnswerRequest {
   };
   currentAnswer: {
     id: string;
-    optionText: string;
   };
 }
