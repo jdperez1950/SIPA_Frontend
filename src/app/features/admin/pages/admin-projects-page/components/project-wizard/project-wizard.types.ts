@@ -1,3 +1,5 @@
+import { FinanciacionFuente } from './steps/step-identification/financing.models';
+
 export interface WizardState {
   currentStep: number;
   projectData: {
@@ -18,6 +20,7 @@ export interface IdentificationData {
   landDescription: string;
   tieneFinanciacion: ParametroSelect | null;
   financingDescription: string;
+  detalleFinanciacion?: FinanciacionFuente[];
   departmentId: ParametroSelect | null;
   departmentName: string;
   municipality: ParametroSelect | null;
@@ -30,6 +33,13 @@ export interface IdentificationData {
   website: string;
   organizationDescription: string;
   organizationAddress: string;
+  isLegallyConstituted?: string;
+  legalRepresentativeCertificate?: File | null;
+  legalRepresentativeCertificateFileId?: string; // ID del archivo subido
+  intentionAct?: File | null;
+  intentionActFileId?: string; // ID del archivo subido
+  tradicionLibertadCertificado?: File | null;
+  tradicionLibertadCertificadoFileId?: string;
   startDate: string;
   endDate: string;
   submissionDeadline: string;

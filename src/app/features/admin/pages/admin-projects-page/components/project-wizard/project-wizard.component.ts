@@ -1,11 +1,13 @@
 import { Component, computed, EventEmitter, Input, Output, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin, of, map, Observable } from 'rxjs';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
 import { StepTechnicalTableComponent } from './steps/step-technical-table/step-technical-table.component';
 import { StepResponseTeamComponent } from './steps/step-response-team/step-response-team.component';
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
 import { ParametroBaseService } from '../../../../../../core/services/parametro-base.service';
+import { OrganizationDocumentService } from '../../../../../../core/services/organization-document.service';
 import { ProjectRequest, Project, ProjectResponseTeamMember } from '../../../../../../core/models/domain.models';
 import { 
   IdentificationData, 
@@ -37,6 +39,7 @@ export class ProjectWizardComponent {
   private alertService = inject(AlertService);
   private adminService = inject(AdminDataService);
   private parametroBaseService = inject(ParametroBaseService);
+  private organizationDocumentService: OrganizationDocumentService = inject(OrganizationDocumentService);
 
   // --- Constants ---
   readonly ALL_STEPS = [
@@ -285,6 +288,9 @@ export class ProjectWizardComponent {
             municipality: data.municipality,
             address: data.organizationAddress,
             description: data.organizationDescription,
+            isLegallyConstituted: data.isLegallyConstituted,
+            legalRepresentativeCertificateFileId: data.legalRepresentativeCertificateFileId,
+            intentionActFileId: data.intentionActFileId,
             organizationTeam: this.responseTeam().map(m => ({
               userId: m.userId,
               name: m.name,
@@ -339,6 +345,9 @@ export class ProjectWizardComponent {
             municipality: data.municipality,
             address: data.organizationAddress,
             description: data.organizationDescription,
+            isLegallyConstituted: data.isLegallyConstituted,
+            legalRepresentativeCertificateFileId: data.legalRepresentativeCertificateFileId,
+            intentionActFileId: data.intentionActFileId,
             organizationTeam: this.responseTeam().map(m => ({
               userId: m.userId,
               name: m.name,
@@ -361,9 +370,33 @@ export class ProjectWizardComponent {
 
         this.adminService.createProject(createRequest).subscribe({
           next: (project) => {
-            this.alertService.success('Proyecto creado exitosamente');
-            this.completed.emit();
-            this.isSaving.set(false);
+            console.log('Proyecto creado exitosamente:', project);
+            
+            const organizationId = project.organizationId || 
+                                   (typeof project.organization === 'string' ? project.organization : project.organization?.id) || 
+                                   createRequest.Organization?.id;
+            
+            if (!organizationId) {
+              console.error('No se pudo obtener el organizationId para subir documentos');
+              this.alertService.warning('Proyecto creado, pero no se pudieron subir los documentos (falta ID de organización)');
+              this.completed.emit();
+              this.isSaving.set(false);
+              return;
+            }
+            
+            this.uploadOrganizationDocuments(organizationId, data).subscribe({
+              next: () => {
+                this.alertService.success('Proyecto creado exitosamente');
+                this.completed.emit();
+                this.isSaving.set(false);
+              },
+              error: (error: any) => {
+                console.error('Error al subir documentos:', error);
+                this.alertService.warning('Proyecto creado, pero hubo un error al subir los documentos');
+                this.completed.emit();
+                this.isSaving.set(false);
+              }
+            });
           },
           error: () => {
             this.alertService.error('Error al crear el proyecto');
@@ -371,6 +404,59 @@ export class ProjectWizardComponent {
           }
         });
       }
+  }
+
+  private uploadOrganizationDocuments(organizationId: string, data: IdentificationData): Observable<void> {
+    const uploads: Observable<void>[] = [];
+
+    const certificateDocType = this.parametroBaseService.getByCodigo('TIPO_DOCUMENTO', 'DOC1');
+    const actDocType = this.parametroBaseService.getByCodigo('TIPO_DOCUMENTO', 'DOC2');
+    const tradicionLibertadDocType = this.parametroBaseService.getByCodigo('TIPO_DOCUMENTO', 'DOC3');
+
+    if (data.legalRepresentativeCertificate && certificateDocType) {
+      uploads.push(
+        this.organizationDocumentService.uploadDocument(
+          organizationId,
+          data.legalRepresentativeCertificate,
+          certificateDocType.id,
+          'Certificado de Existencia y Representación Legal'
+        ).pipe(
+          map(() => void 0)
+        )
+      );
+    }
+
+    if (data.intentionAct && actDocType) {
+      uploads.push(
+        this.organizationDocumentService.uploadDocument(
+          organizationId,
+          data.intentionAct,
+          actDocType.id,
+          'Acta de Intención'
+        ).pipe(
+          map(() => void 0)
+        )
+      );
+    }
+
+    if (data.tradicionLibertadCertificado && tradicionLibertadDocType) {
+      uploads.push(
+        this.organizationDocumentService.uploadDocument(
+          organizationId,
+          data.tradicionLibertadCertificado,
+          tradicionLibertadDocType.id,
+          'Certificado de Tradición y Libertad'
+        ).pipe(
+          map(() => void 0)
+        )
+      );
+    }
+
+    if (uploads.length === 0) {
+      return of(void 0);
+    }
+
+    return forkJoin(uploads).pipe(map(() => void 0));
   }
 
   onModalAlertConfirm() {

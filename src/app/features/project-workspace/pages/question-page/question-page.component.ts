@@ -1,14 +1,19 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 import { QuestionManagerService } from '../../services/question-manager.service';
+import { ProjectContextService } from '../../services/project-context.service';
 import { AssistanceLogEntry, QuestionDefinition } from '../../../../core/models/question.models';
 import { DynamicInputComponent } from './components/dynamic-input/dynamic-input.component';
 import { EvidenceUploaderComponent } from '../../components/evidence-uploader/evidence-uploader.component';
 import { FormsModule } from '@angular/forms';
 import { TechnicalAssistanceLogComponent } from '../../components/technical-assistance-log/technical-assistance-log.component';
+import { FileService } from '../../../../core/services/file.service';
+import { LoadingService } from '../../../../core/services/loading.service';
+import { ProjectsService } from '../../../../core/services/projects.service';
+import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-colors.config';
 
 @Component({
   selector: 'app-question-page',
@@ -16,16 +21,30 @@ import { TechnicalAssistanceLogComponent } from '../../components/technical-assi
   imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, TechnicalAssistanceLogComponent, FormsModule],
   templateUrl: './question-page.component.html'
 })
-export class QuestionPageComponent {
+export class QuestionPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   questionManager = inject(QuestionManagerService);
+  private projectContextService = inject(ProjectContextService);
+  private fileService = inject(FileService);
+  private loadingService = inject(LoadingService);
+  private projectsService = inject(ProjectsService);
 
   currentQuestionId = toSignal(
     this.route.paramMap.pipe(
       map(params => {
-        const id = params.get('questionId'); // Parameter name in routes is 'questionId'
+        const id = params.get('questionId');
         console.log('Route param questionId:', id);
+        return id;
+      })
+    )
+  );
+
+  projectId = toSignal(
+    this.route.paramMap.pipe(
+      map(params => {
+        const id = params.get('projectId');
+        console.log('Route param projectId:', id);
         return id;
       })
     )
@@ -40,17 +59,56 @@ export class QuestionPageComponent {
     return q;
   });
 
+  isLoading = signal(false);
+  projectName = signal<string>('');
+  axisColors = AXIS_COLORS;
+
+  async ngOnInit() {
+    const pid = this.projectId();
+    if (pid) {
+      try {
+        this.isLoading.set(true);
+        this.loadingService.show('Cargando preguntas...');
+        
+        const project = await this.projectsService.getProjectById(pid).toPromise();
+        if (project) {
+          this.projectContextService.setProject(project);
+        }
+        
+        await this.questionManager.loadQuestions(pid);
+
+        const qid = this.currentQuestionId();
+        if (!qid) {
+          const firstQuestionId = this.questionManager['questions']()[0]?.id;
+          if (firstQuestionId) {
+            if (pid) {
+              this.router.navigate(['project', pid, 'question', firstQuestionId], { relativeTo: this.route.parent });
+            } else {
+              this.router.navigate(['question', firstQuestionId], { relativeTo: this.route });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        this.loadingService.show('Error al cargar las preguntas');
+        setTimeout(() => this.loadingService.hide(), 3000);
+      } finally {
+        this.isLoading.set(false);
+        this.loadingService.hide();
+      }
+    } else {
+      console.error('No projectId found in route');
+    }
+  }
+
   getAssistanceLog(questionId: string): AssistanceLogEntry[] {
     const response = this.questionManager.getResponse(questionId);
-    // console.log(`Getting logs for ${questionId}:`, response?.assistanceLog); // Debug log
     return response?.assistanceLog || [];
   }
 
   onAssistanceResponse(questionId: string, event: { entryId: string, message: string }) {
     console.log(`Respuesta a bitácora en pregunta ${questionId}:`, event);
     
-    // Aquí actualizamos el estado local (optimistic update)
-    // En una implementación real, llamaríamos al servicio
     const currentResponse = this.questionManager.getResponse(questionId);
     if (currentResponse && currentResponse.assistanceLog) {
       const updatedLog = currentResponse.assistanceLog.map(entry => {
@@ -58,7 +116,7 @@ export class QuestionPageComponent {
           return {
             ...entry,
             response: {
-              responderName: 'Usuario Actual', // Tomar del AuthService
+              responderName: 'Usuario Actual',
               responseDate: new Date().toISOString(),
               message: event.message
             }
@@ -78,24 +136,12 @@ export class QuestionPageComponent {
     return question.evidenceConfig;
   }
 
-  getAxisColorText(axisId: string): string {
-    switch (axisId) {
-      case 'SOCIAL': return 'text-blue-600';
-      case 'FINANCIERO': return 'text-green-600';
-      case 'TECNICO': return 'text-purple-600';
-      case 'JURIDICO': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
+  getAxisColorText(axisName: string): string {
+    return getAxisColorByName(axisName).textColor;
   }
 
-  getAxisBgClass(axisId: string): string {
-    switch (axisId) {
-      case 'SOCIAL': return 'bg-blue-500';
-      case 'FINANCIERO': return 'bg-green-600';
-      case 'TECNICO': return 'bg-purple-600';
-      case 'JURIDICO': return 'bg-red-600';
-      default: return 'bg-gray-500';
-    }
+  getAxisBgClass(axisName: string): string {
+    return getAxisColorByName(axisName).bgColor;
   }
 
   getCurrentValue(questionId: string): any {
@@ -120,20 +166,29 @@ export class QuestionPageComponent {
     return resp?.observation || '';
   }
 
+  shouldShowAssistanceLog(questionId: string): boolean {
+    const resp = this.questionManager.getResponse(questionId);
+    const hasResponse = resp !== null && resp !== undefined && resp.value !== null && resp.value !== undefined && resp.value !== '';
+    const hasLogEntries = resp !== null && resp !== undefined && resp.assistanceLog !== undefined && resp.assistanceLog.length > 0;
+    return hasResponse || hasLogEntries;
+  }
+
   isObservationEnabled(questionId: string): boolean {
-    // Enable observation only if a response has been selected
     const val = this.getCurrentValue(questionId);
     return val !== null && val !== undefined && val !== '';
   }
 
+  formatAxisName(axisName: string): string {
+    return axisName.charAt(0).toUpperCase() + axisName.slice(1).toLowerCase();
+  }
+
   onValueChange(questionId: string, value: any) {
-    // Construct partial response
     const existing = this.questionManager.getResponse(questionId);
     this.questionManager.saveResponse({
       questionId,
       value,
       evidence: existing?.evidence,
-      observation: existing?.observation, // Preserve observation
+      observation: existing?.observation,
       evaluationStatus: existing?.evaluationStatus || 'PENDING',
       lastUpdated: new Date().toISOString()
     });
@@ -151,36 +206,48 @@ export class QuestionPageComponent {
     });
   }
 
-  onEvidenceUpload(questionId: string, file: File, requirementId?: string) {
-    const existing = this.questionManager.getResponse(questionId);
-    
-    // Create new evidence item
-    const newEvidence = {
-      requirementId: requirementId,
-      fileUrl: 'mock-url/' + file.name,
-      fileName: file.name,
-      uploadDate: new Date().toISOString()
-    };
+  async onEvidenceUpload(questionId: string, file: File, requirementId?: string) {
+    try {
+      this.loadingService.show('Cargando archivo...');
+      
+      const uploadResult = await this.fileService.uploadFile(file).toPromise();
+      
+      if (!uploadResult) {
+        throw new Error('Error al cargar el archivo');
+      }
 
-    // Append to existing evidence array or create new one
-    const currentEvidence = existing?.evidence || [];
-    
-    // If requirementId exists and multiple is false, replace existing
-    // Logic to be refined based on requirement config, but for now simple append
-    
-    this.questionManager.saveResponse({
-      questionId,
-      value: existing?.value,
-      observation: existing?.observation,
-      evidence: [...currentEvidence, newEvidence],
-      evaluationStatus: 'PENDING',
-      lastUpdated: new Date().toISOString()
-    });
+      const fileUrl = this.fileService.getFileUrl(uploadResult.fileId);
+      
+      const existing = this.questionManager.getResponse(questionId);
+      const newEvidence = {
+        requirementId: requirementId,
+        fileUrl: fileUrl,
+        fileName: file.name,
+        uploadDate: new Date().toISOString()
+      };
+
+      const currentEvidence = existing?.evidence || [];
+      
+      this.questionManager.saveResponse({
+        questionId,
+        value: existing?.value,
+        observation: existing?.observation,
+        evidence: [...currentEvidence, newEvidence],
+        evaluationStatus: 'PENDING',
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error uploading evidence:', error);
+      this.loadingService.show('Error al cargar el archivo');
+      setTimeout(() => this.loadingService.hide(), 3000);
+    } finally {
+      this.loadingService.hide();
+    }
   }
 
   getEvidenceForRequirement(questionId: string, requirementId: string) {
-    const evidence = this.getCurrentValue(questionId)?.evidence || [];
-    // @ts-ignore
+    const response = this.questionManager.getResponse(questionId);
+    const evidence = response?.evidence || [];
     return evidence.filter(e => e.requirementId === requirementId);
   }
 
@@ -199,30 +266,53 @@ export class QuestionPageComponent {
 
   nextQuestion(currentId: string) {
     const nextId = this.questionManager.getNextQuestionId(currentId);
+    const pid = this.projectId();
     if (nextId) {
-      this.router.navigate(['../../question', nextId], { relativeTo: this.route });
+      if (pid) {
+        this.router.navigate(['project', pid, 'question', nextId], { relativeTo: this.route.parent });
+      } else {
+        this.router.navigate(['question', nextId], { relativeTo: this.route });
+      }
     }
   }
 
   prevQuestion(currentId: string) {
     const prevId = this.questionManager.getPreviousQuestionId(currentId);
+    const pid = this.projectId();
     if (prevId) {
-      this.router.navigate(['../../question', prevId], { relativeTo: this.route });
+      if (pid) {
+        this.router.navigate(['project', pid, 'question', prevId], { relativeTo: this.route.parent });
+      } else {
+        this.router.navigate(['question', prevId], { relativeTo: this.route });
+      }
     }
   }
 
   canSend(questionId: string): boolean {
     const response = this.questionManager.getResponse(questionId);
-    // Basic validation: needs a value.
-    // If evidence is required, logic could be stricter here.
     return !!response && response.value !== null && response.value !== undefined && response.value !== '';
   }
 
-  sendAndNext(questionId: string) {
+  async sendAndNext(questionId: string) {
+    const pid = this.projectId();
+    if (!pid) {
+      console.error('No projectId available for submission');
+      return;
+    }
+
     const response = this.questionManager.getResponse(questionId);
     if (response) {
-      this.questionManager.submitResponse(response);
-      this.nextQuestion(questionId);
+      try {
+        this.loadingService.show('Guardando respuesta...');
+        await this.questionManager.submitResponse(response, pid);
+        this.nextQuestion(questionId);
+      } catch (error) {
+        console.error('Error submitting response:', error);
+        this.loadingService.show('Error al guardar la respuesta');
+        setTimeout(() => this.loadingService.hide(), 3000);
+      } finally {
+        this.loadingService.hide();
+      }
     }
   }
 

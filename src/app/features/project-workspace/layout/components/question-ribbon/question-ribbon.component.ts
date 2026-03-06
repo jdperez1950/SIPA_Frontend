@@ -1,7 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { QuestionManagerService } from '../../../services/question-manager.service';
+import { getAxisColorByName } from '../../../../../core/config/axis-colors.config';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map, filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-question-ribbon',
@@ -11,16 +14,22 @@ import { QuestionManagerService } from '../../../services/question-manager.servi
     <nav class="flex flex-wrap gap-1" aria-label="Navegación de preguntas">
       @for (q of questionManager.activeQuestions(); track q.id) {
         <a 
-          [routerLink]="['/workspace/question', q.id]"
-          routerLinkActive="ring-2 ring-offset-1 ring-gray-400 font-bold scale-105 shadow-md"
+          [routerLink]="getQuestionLink(q.id)"
+          routerLinkActive="ring-4 ring-offset-2 ring-gray-800 font-bold scale-110 shadow-lg border-2 border-white"
           #rla="routerLinkActive"
           [attr.aria-current]="rla.isActive ? 'page' : null"
-          [class]="getAxisColorClass(q.axisId)"
-          class="w-10 h-10 flex items-center justify-center text-white text-sm font-medium rounded hover:opacity-90 transition-all cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
-          [attr.aria-label]="'Pregunta ' + q.order + ', Eje ' + q.axisId"
-          [title]="'Eje: ' + q.axisId"
+          [ngClass]="[
+            getAxisColor(q.axisName || q.axisId).bgColor,
+            rla.isActive ? 'opacity-100 z-10' : 'opacity-80 hover:opacity-90'
+          ]"
+          class="w-10 h-10 flex items-center justify-center text-white text-sm font-medium rounded transition-all cursor-pointer select-none focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-gray-800 relative"
+          [attr.aria-label]="'Pregunta ' + q.order + ', Eje ' + (q.axisName || q.axisId) + (rla.isActive ? ', Pregunta actual' : '')"
+          [title]="'Eje: ' + (q.axisName || q.axisId) + ' - Pregunta ' + q.order + (rla.isActive ? ' (Pregunta actual)' : '')"
         >
           {{ q.order }}
+          @if (rla.isActive) {
+            <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
+          }
         </a>
       }
     </nav>
@@ -28,14 +37,35 @@ import { QuestionManagerService } from '../../../services/question-manager.servi
 })
 export class QuestionRibbonComponent {
   questionManager = inject(QuestionManagerService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  
+  projectId = toSignal(
+    this.route.paramMap.pipe(
+      map(params => params.get('projectId'))
+    )
+  );
 
-  getAxisColorClass(axisId: string): string {
-    switch (axisId) {
-      case 'SOCIAL': return 'bg-blue-500';
-      case 'FINANCIERO': return 'bg-green-600';
-      case 'TECNICO': return 'bg-purple-600';
-      case 'JURIDICO': return 'bg-red-600';
-      default: return 'bg-gray-500';
+  currentUrl = toSignal(
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      map(() => this.router.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  getQuestionLink(questionId: string) {
+    const url = this.currentUrl();
+    const match = url?.match(/\/project\/([^\/]+)\//);
+    const pid = match ? match[1] : null;
+    
+    if (pid) {
+      return ['/workspace/project', pid, 'question', questionId];
     }
+    return ['/workspace/question', questionId];
+  }
+
+  getAxisColor(axisName: string) {
+    return getAxisColorByName(axisName);
   }
 }

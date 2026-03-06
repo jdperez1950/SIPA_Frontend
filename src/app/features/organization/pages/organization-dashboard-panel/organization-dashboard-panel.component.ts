@@ -103,7 +103,7 @@ export class OrganizationDashboardPanelComponent implements OnInit {
   }
 
   fillSurvey(project: Project) {
-    this.router.navigate(['/workspace/project', project.id, 'question', 'q1']);
+    this.router.navigate(['/workspace/project', project.id, 'question']);
   }
 
   filterByStatus(status: ProjectStatus | null) {

@@ -127,7 +127,7 @@ export class AdminDataService {
   }
   
   // New methods for Project Wizard
-  private readonly MAX_BACKEND_ITEMS_BEFORE_FRONTEND_PAGINATION = 10;
+  private readonly MAX_BACKEND_ITEMS_BEFORE_FRONTEND_PAGINATION = 25;
   private cachedProjects = signal<Project[] | null>(null);
   private cachedQuery = signal<string>('');
   private cachedStatus = signal<any>(null);

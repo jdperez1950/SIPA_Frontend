@@ -46,43 +46,97 @@
         }
       </div>
 
-      <!-- Organization Identifier & Verification Digit -->
+      <!-- Legal Constitution -->
       <div class="space-y-2">
-        <label for="organizationIdentifier" class="block text-sm font-medium text-gray-700">Identificación (NIT/Código)</label>
-        <div class="relative">
-          <input 
-            type="text" 
-            id="organizationIdentifier"
-            formControlName="organizationIdentifier"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            placeholder="Ej. 8999990001 (10 dígitos sin puntos ni guiones)"
-            [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched}"
-          >
-          @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
-            <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
-          }
-        </div>
-        @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
-          <p class="text-xs text-red-500 mt-1">{{ getOrganizationIdentifierErrorMessage() }}</p>
-        }
-      </div>
-
-      <!-- Verification Digit -->
-      <div class="space-y-2">
-        <label for="verificationDigit" class="block text-sm font-medium text-gray-700">Dígito de Verificación</label>
+        <label for="isLegallyConstituted" class="block text-sm font-medium text-gray-700">¿Su organización está legalmente constituida? <span class="text-red-500">*</span></label>
         <select 
-          id="verificationDigit"
-          formControlName="verificationDigit"
+          id="isLegallyConstituted" 
+          formControlName="isLegallyConstituted" 
           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
-          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('verificationDigit')?.invalid && form.get('verificationDigit')?.touched}"
         >
           <option value="">Seleccione...</option>
-          @for (digit of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digit) {
-            <option [value]="digit.toString()">{{ digit }}</option>
-          }
+          <option value="SI">Sí</option>
+          <option value="NO">No</option>
         </select>
-
       </div>
+
+      @if (form.get('isLegallyConstituted')?.value === 'SI') {
+        <!-- Organization Identifier & Verification Digit -->
+        <div class="space-y-2">
+          <label for="organizationIdentifier" class="block text-sm font-medium text-gray-700">Número de Identificación Tributaria - NIT <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="organizationIdentifier"
+              formControlName="organizationIdentifier"
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Ej. 899999000 (9 dígitos sin dígito de verificación)"
+              [ngClass]="{'border-red-300 focus:ring-red-200': form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched}"
+            >
+            @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
+              <span class="absolute right-3 top-3 text-red-500 material-symbols-rounded">error</span>
+            }
+          </div>
+          @if (form.get('organizationIdentifier')?.invalid && form.get('organizationIdentifier')?.touched) {
+            <p class="text-xs text-red-500 mt-1">El NIT debe tener exactamente 9 dígitos numéricos.</p>
+          }
+        </div>
+
+        <!-- Verification Digit -->
+        <div class="space-y-2">
+          <label for="verificationDigit" class="block text-sm font-medium text-gray-700">Dígito de verificación del NIT <span class="text-red-500">*</span></label>
+          <select 
+            id="verificationDigit"
+            formControlName="verificationDigit"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
+            [ngClass]="{'border-red-300 focus:ring-red-200': form.get('verificationDigit')?.invalid && form.get('verificationDigit')?.touched}"
+          >
+            <option value="">Seleccione...</option>
+            @for (digit of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digit) {
+              <option [value]="digit.toString()">{{ digit }}</option>
+            }
+          </select>
+          @if (form.get('verificationDigit')?.invalid && form.get('verificationDigit')?.touched) {
+            <p class="text-xs text-red-500 mt-1">Debe seleccionar el dígito de verificación.</p>
+          }
+        </div>
+
+        <!-- Legal Certificate File -->
+        <div class="space-y-2 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Cargue el certificado de Existencia y Representación Legal <span class="text-red-500">*</span></label>
+          <app-evidence-uploader 
+            [config]="legalFileConfig" 
+            (upload)="onLegalFileSelected($event)"
+          ></app-evidence-uploader>
+          @if (form.get('legalRepresentativeCertificate')?.invalid && form.get('legalRepresentativeCertificate')?.touched) {
+             <p class="text-xs text-red-500 mt-1">Este documento es obligatorio.</p>
+          } @else if (form.get('legalRepresentativeCertificate')?.value) {
+             <p class="text-xs text-green-600 mt-1 flex items-center gap-1">
+               <span class="material-symbols-rounded text-sm">check_circle</span>
+               Archivo cargado: {{ form.get('legalRepresentativeCertificate')?.value.name }}
+             </p>
+          }
+        </div>
+      }
+
+      @if (form.get('isLegallyConstituted')?.value === 'SI') {
+        <!-- Intention Act File -->
+        <div class="space-y-2 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Cargue acta o documento que demuestre la intención del grupo de personas de adelantar el trámite ante la autoridad competente. (En formato PDF menor a 10MB) <span class="text-red-500">*</span></label>
+          <app-evidence-uploader 
+            [config]="legalFileConfig" 
+            (upload)="onIntentionFileSelected($event)"
+          ></app-evidence-uploader>
+          @if (form.get('intentionAct')?.invalid && form.get('intentionAct')?.touched) {
+             <p class="text-xs text-red-500 mt-1">Este documento es obligatorio.</p>
+          } @else if (form.get('intentionAct')?.value) {
+             <p class="text-xs text-green-600 mt-1 flex items-center gap-1">
+               <span class="material-symbols-rounded text-sm">check_circle</span>
+               Archivo cargado: {{ form.get('intentionAct')?.value.name }}
+             </p>
+          }
+        </div>
+      }
 
       <!-- Department -->
       <div class="space-y-2">
@@ -332,6 +386,25 @@
       }
     </div>
 
+    <!-- Certificado de Tradición y Libertad - Condicional -->
+    @if (requiresTradicionLibertadCertificado()) {
+      <div class="space-y-2 mb-6">
+        <label class="block text-sm font-medium text-gray-700">Cargue el Certificado de Tradición y Libertad <span class="text-red-500">*</span></label>
+        <app-evidence-uploader 
+          [config]="legalFileConfig" 
+          (upload)="onTradicionLibertadCertificadoSelected($event)"
+        ></app-evidence-uploader>
+        @if (form.get('tradicionLibertadCertificado')?.invalid && form.get('tradicionLibertadCertificado')?.touched) {
+           <p class="text-xs text-red-500 mt-1">Este documento es obligatorio cuando cuenta con terreno.</p>
+        } @else if (form.get('tradicionLibertadCertificado')?.value) {
+           <p class="text-xs text-green-600 mt-1 flex items-center gap-1">
+             <span class="material-symbols-rounded text-sm">check_circle</span>
+             Archivo cargado: {{ form.get('tradicionLibertadCertificado')?.value.name }}
+           </p>
+        }
+      </div>
+    }
+
     <!-- Tiene Financiacion -->
     <div class="space-y-2 mb-6">
       <label for="tieneFinanciacion" class="block text-sm font-medium text-gray-700">¿Tiene financiación? <span class="text-red-500">*</span></label>
@@ -370,6 +443,80 @@
         }
       </div>
     </div>
+
+    <!-- Financing Detail Table -->
+    @if (showDetalleFinanciacion()) {
+      <div class="space-y-2 mb-6">
+        <label class="block text-sm font-medium text-gray-700">
+          Detalle en valores aproximados (del año vigente) en pesos los aportes por fuente y tipo
+        </label>
+        
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-100 w-1/3">
+                  Fuente
+                </th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-100">
+                  Dinero ($)
+                </th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-100">
+                  Especie ($)
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @for (row of detalleFinanciacionArray.controls; track row; let i = $index) {
+                <tr [class.bg-gray-50]="i % 2 === 0">
+                  <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                    {{ row.get('fuente')?.value }}
+                  </td>
+                  
+                  <td class="px-4 py-3 text-sm">
+                    <input 
+                      type="number" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right"
+                      [formControl]="getDineroControl(i)"
+                      min="0"
+                      placeholder="0"
+                      currencyFormat
+                    >
+                  </td>
+                  
+                  <td class="px-4 py-3 text-sm">
+                    <input 
+                      type="number" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right"
+                      [formControl]="getEspecieControl(i)"
+                      min="0"
+                      placeholder="0"
+                      currencyFormat
+                    >
+                  </td>
+                </tr>
+              }
+              
+              <tr class="bg-blue-50 font-semibold">
+                <td class="px-4 py-3 text-sm text-gray-900">
+                  Total
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-900">
+                  ${{ totalDinero() | number:'.0' }}
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-900">
+                  ${{ totalEspecie() | number:'.0' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <p class="text-xs text-gray-500 mt-2">
+          Ingrese los valores aproximados en pesos colombianos. Los campos en blanco se consideran como $0.
+        </p>
+      </div>
+    }
   </div>
 
   <!-- Dates Section (Hidden - Auto-filled) -->
