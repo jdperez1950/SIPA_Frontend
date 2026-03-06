@@ -1,19 +1,17 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { QuestionDefinition, QuestionResponse, QuestionDependency } from '../../../core/models/question.models';
-import { MOCK_QUESTIONS } from '../../../core/data/mock/questions.mock';
+import { QuestionService } from '../../../core/services/question.service';
+import { QuestionMapperService } from '../../../core/services/question-mapper.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuestionManagerService {
-  // State
   private questions = signal<QuestionDefinition[]>([]);
   private responses = signal<Map<string, QuestionResponse>>(new Map());
   
-  // Selectors
   readonly allQuestions = this.questions.asReadonly();
   
-  // Computed: Active questions based on dependencies
   readonly activeQuestions = computed(() => {
     const all = this.questions();
     const responses = this.responses();
@@ -21,7 +19,6 @@ export class QuestionManagerService {
     return all.filter(q => this.evaluateDependencies(q, responses));
   });
 
-  // Computed: Progress (answered / active)
   readonly progress = computed(() => {
     const active = this.activeQuestions();
     const responses = this.responses();
@@ -35,15 +32,13 @@ export class QuestionManagerService {
     return Math.round((answeredCount / active.length) * 100);
   });
 
-  constructor() {
-    // Mock data for development
-    this.loadMockQuestions();
-    
-    // Initialize some responses with mock data for bitacora testing
+  constructor(
+    private questionService: QuestionService,
+    private questionMapper: QuestionMapperService
+  ) {
     this.responses.update(map => {
       const newMap = new Map(map);
       
-      // Mock log for Question 1
       newMap.set('q1', {
         questionId: 'q1',
         value: 'SI',
@@ -78,28 +73,56 @@ export class QuestionManagerService {
     });
   }
 
-  /**
-   * Evaluates if a question should be shown based on its dependencies
-   */
   private evaluateDependencies(question: QuestionDefinition, responses: Map<string, QuestionResponse>): boolean {
     if (!question.dependencies || question.dependencies.length === 0) {
       return true;
     }
-
-    // Default behavior: AND logic (all dependencies must be met to SHOW)
-    // If action is HIDE, any match hides it.
     
     for (const dep of question.dependencies) {
       const parentResponse = responses.get(dep.dependentOnQuestionId);
       const parentValue = parentResponse?.value;
       
-      const match = parentValue === dep.triggerValue; // Simple equality for now
+      const match = parentValue === dep.triggerValue;
       
       if (dep.action === 'SHOW' && !match) return false;
       if (dep.action === 'HIDE' && match) return false;
     }
     
     return true;
+  }
+
+  async loadQuestions(projectId: string): Promise<void> {
+    try {
+      const response = await this.questionService
+        .getQuestionsByProject(projectId)
+        .toPromise();
+
+      if (!response || (!response.success && !Array.isArray(response.data))) {
+        throw new Error('Error loading questions');
+      }
+
+      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+
+      const frontendQuestions = data.map((answer: any) =>
+        this.questionMapper.mapBackendToFrontend(answer.question)
+      );
+
+      this.questions.set(frontendQuestions);
+
+      data.forEach((answer: any) => {
+        if (answer.currentAnswer) {
+          const frontendResponse = this.questionMapper.mapBackendResponse(answer);
+          this.responses.update(map => {
+            const newMap = new Map(map);
+            newMap.set(answer.question.id, frontendResponse);
+            return newMap;
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error loading questions:', error);
+      throw error;
+    }
   }
 
   getQuestion(id: string): QuestionDefinition | undefined {
@@ -118,22 +141,32 @@ export class QuestionManagerService {
     });
   }
 
-  submitResponse(response: QuestionResponse): void {
-    // This is where we would call the backend API to persist the response
-    // For now, we just log the data as requested
-    console.log('--- ENVIANDO RESPUESTA AL BACKEND ---');
-    console.log('Payload:', {
-      questionId: response.questionId,
-      value: response.value,
-      observation: response.observation,
-      evidenceCount: response.evidence?.length || 0,
-      evidence: response.evidence?.map(e => ({
-        requirementId: e.requirementId,
-        fileName: e.fileName
-      })),
-      timestamp: new Date().toISOString()
-    });
-    console.log('-------------------------------------');
+  async submitResponse(
+    response: QuestionResponse,
+    projectId: string
+  ): Promise<void> {
+    try {
+      const backendRequest = this.questionMapper.mapFrontendToBackend(
+        response,
+        projectId
+      );
+
+      const result = await this.questionService
+        .saveAnswer(backendRequest)
+        .toPromise();
+
+      if (!result?.success) {
+        throw new Error('Error saving answer');
+      }
+
+      this.saveResponse({
+        ...response,
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      throw error;
+    }
   }
 
   getNextQuestionId(currentId: string): string | null {
@@ -154,10 +187,5 @@ export class QuestionManagerService {
       return active[currentIndex - 1].id;
     }
     return null;
-  }
-
-  private loadMockQuestions() {
-    // Load from external mock file
-    this.questions.set(MOCK_QUESTIONS);
   }
 }

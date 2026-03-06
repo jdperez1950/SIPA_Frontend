@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { QuestionRibbonComponent } from './components/question-ribbon/question-ribbon.component';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { ProjectContextService } from '../services/project-context.service';
 
 
 @Component({
@@ -20,7 +21,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
           <div class="flex justify-between items-center mb-4">
             <div>
               <h1 class="text-xl font-bold text-gray-800 tracking-tight">Panel de Respuestas</h1>
-              <div class="text-xs text-gray-500 mt-1">Organización: ACME Corp | Proyecto: Construcción de Vivienda Fase 1</div>
+              <div class="text-xs text-gray-500 mt-1">{{ contextInfo() }}</div>
             </div>
             
             <div class="flex gap-3 items-center">
@@ -54,9 +55,23 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
   `
 })
 export class WorkspaceLayoutComponent {
+  private projectContextService = inject(ProjectContextService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
+
+  contextInfo = computed(() => {
+    const org = this.projectContextService.organizationName();
+    const proj = this.projectContextService.projectName();
+    
+    if (org && proj) {
+      return `Organización: ${org} | Proyecto: ${proj}`;
+    } else if (org) {
+      return `Organización: ${org}`;
+    } else {
+      return 'Cargando información del proyecto...';
+    }
+  });
 
   logout() {
     this.confirmationService.confirm({

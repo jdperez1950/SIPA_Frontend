@@ -12,12 +12,16 @@ export const PROJECT_WORKSPACE_ROUTES: Routes = [
         component: QuestionPageComponent
       },
       {
+        path: 'project/:projectId/question',
+        component: QuestionPageComponent
+      },
+      {
         path: 'question/:questionId',
         component: QuestionPageComponent
       },
       {
         path: '',
-        redirectTo: 'question/q1', // Default to first question logic to be improved
+        redirectTo: '../projects',
         pathMatch: 'full'
       }
     ]

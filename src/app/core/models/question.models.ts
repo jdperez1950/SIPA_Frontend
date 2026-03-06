@@ -14,6 +14,8 @@ export interface QuestionDependency {
 export interface QuestionOption {
   label: string;
   value: any;
+  helpText?: string;
+  weight?: number;
 }
 
 export interface EvidenceConfig {
@@ -32,22 +34,25 @@ export interface QuestionDocumentRequirement {
 
 export interface QuestionDefinition {
   id: string;
-  axisId: string; // 'SOCIAL', 'FINANCIERO', etc.
+  axisId: string;
   order: number;
-  code: string; // New: 'HAB', etc.
+  code: string;
   text: string;
-  description?: string; // New: Contexto legal/técnico
-  category?: string; // New: "Viabilidad / Norma urbanística"
-  subcategory?: string; // New: "Uso de vivienda"
+  description?: string;
+  category?: string;
+  subcategory?: string;
   helpText?: string;
   controlType: QuestionControlType;
   options?: QuestionOption[];
   requiresEvidence: boolean;
-  requiredDocuments?: QuestionDocumentRequirement[]; // New: Lista de documentos específicos
+  requiredDocuments?: QuestionDocumentRequirement[];
   evidenceConfig?: EvidenceConfig;
-  evidenceText?: string; // Deprecated in favor of requiredDocuments, kept for backward compat
-  feedback?: { matchValue: any; text: string }[]; // New: "Según si respuesta, considere"
+  evidenceText?: string;
+  feedback?: { matchValue: any; text: string }[];
   dependencies?: QuestionDependency[];
+  limitDate?: string;
+  weight?: number;
+  axisName?: string;
 }
 
 export interface EvidenceUpload {
@@ -77,10 +82,16 @@ export type EvaluationStatus = 'PENDING' | 'VALIDATED' | 'RETURNED' | 'IN_PROCES
 export interface QuestionResponse {
   questionId: string;
   value: any;
-  observation?: string; // New: Campo "Descripción / Observaciones" del usuario
-  evidence?: EvidenceUpload[]; // Changed: Array de evidencias
+  observation?: string;
+  evidence?: EvidenceUpload[];
   evaluationStatus?: EvaluationStatus;
   evaluatorObservation?: string;
-  assistanceLog?: AssistanceLogEntry[]; // New: Bitácora de asistencia
+  assistanceLog?: AssistanceLogEntry[];
   lastUpdated: string;
+  selectedOptionId?: string;
+  userId?: string;
+  userName?: string;
+  priority?: string;
+  validity?: string;
+  progressPercentage?: number;
 }
