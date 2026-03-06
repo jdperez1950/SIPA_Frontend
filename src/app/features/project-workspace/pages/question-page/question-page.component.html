@@ -8,19 +8,13 @@
         </svg>
         Nomenclatura de Colores por Eje
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-        @for (color of [
-          { name: 'Social', bgColor: 'bg-blue-500', textColor: 'text-blue-600', borderColor: 'border-blue-500' },
-          { name: 'Financiero', bgColor: 'bg-green-600', textColor: 'text-green-600', borderColor: 'border-green-600' },
-          { name: 'Técnico', bgColor: 'bg-purple-600', textColor: 'text-purple-600', borderColor: 'border-purple-600' },
-          { name: 'Jurídico', bgColor: 'bg-red-600', textColor: 'text-red-600', borderColor: 'border-red-600' },
-          { name: 'Habitabilidad', bgColor: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' }
-        ]; track color.name) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        @for (axis of axisColors; track axis.name) {
           <div class="flex items-center gap-2 p-2 border rounded-lg hover:shadow-sm transition-shadow">
-            <div class="w-8 h-8 flex items-center justify-center text-white text-xs font-bold rounded {{ color.bgColor }}">
-              {{ color.name.charAt(0) }}
+            <div class="w-8 h-8 flex items-center justify-center text-white text-xs font-bold rounded {{ axis.bgColor }}">
+              {{ axis.name.charAt(0) }}
             </div>
-            <span class="text-sm font-medium text-gray-700">{{ color.name }}</span>
+            <span class="text-sm font-medium text-gray-700">{{ formatAxisName(axis.name) }}</span>
           </div>
         }
       </div>

@@ -13,7 +13,7 @@ import { TechnicalAssistanceLogComponent } from '../../components/technical-assi
 import { FileService } from '../../../../core/services/file.service';
 import { LoadingService } from '../../../../core/services/loading.service';
 import { ProjectsService } from '../../../../core/services/projects.service';
-import { getAxisColorByName } from '../../../../core/config/axis-colors.config';
+import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-colors.config';
 
 @Component({
   selector: 'app-question-page',
@@ -61,6 +61,7 @@ export class QuestionPageComponent implements OnInit {
 
   isLoading = signal(false);
   projectName = signal<string>('');
+  axisColors = AXIS_COLORS;
 
   async ngOnInit() {
     const pid = this.projectId();
@@ -175,6 +176,10 @@ export class QuestionPageComponent implements OnInit {
   isObservationEnabled(questionId: string): boolean {
     const val = this.getCurrentValue(questionId);
     return val !== null && val !== undefined && val !== '';
+  }
+
+  formatAxisName(axisName: string): string {
+    return axisName.charAt(0).toUpperCase() + axisName.slice(1).toLowerCase();
   }
 
   onValueChange(questionId: string, value: any) {

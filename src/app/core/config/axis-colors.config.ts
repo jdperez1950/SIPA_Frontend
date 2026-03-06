@@ -7,6 +7,12 @@ export interface AxisColor {
 
 export const AXIS_COLORS: AxisColor[] = [
   {
+    name: 'SUELO',
+    bgColor: 'bg-gray-500',
+    textColor: 'text-gray-600',
+    borderColor: 'border-gray-500'
+  },
+  {
     name: 'SOCIAL',
     bgColor: 'bg-blue-500',
     textColor: 'text-blue-600',
@@ -35,6 +41,12 @@ export const AXIS_COLORS: AxisColor[] = [
     bgColor: 'bg-amber-500',
     textColor: 'text-amber-600',
     borderColor: 'border-amber-500'
+  },
+  {
+    name: 'PRECONSTRUCCION',
+    bgColor: 'bg-teal-500',
+    textColor: 'text-teal-600',
+    borderColor: 'border-teal-500'
   }
 ];
 
