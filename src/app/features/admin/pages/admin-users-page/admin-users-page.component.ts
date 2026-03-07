@@ -106,9 +106,9 @@ export class AdminUsersPageComponent implements OnInit {
         
         this.isLoading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading users', err);
-        this.alertService.error('Error al cargar usuarios');
+      error: (error) => {
+        const errorMessage = error?.error?.message || error?.message || 'Error al cargar usuarios';
+        this.alertService.error(errorMessage);
         this.isLoading.set(false);
       }
     });
@@ -171,8 +171,9 @@ export class AdminUsersPageComponent implements OnInit {
           this.alertService.success(`Usuario ${updatedUser.name} actualizado correctamente.`);
           setTimeout(() => this.closeModal(), 500);
         },
-        error: (err) => {
-          this.alertService.error('Error al actualizar usuario');
+        error: (error) => {
+          const errorMessage = error?.error?.message || error?.message || 'Error al actualizar usuario';
+          this.alertService.error(errorMessage);
           this.isLoading.set(false);
         }
       });
@@ -192,8 +193,9 @@ export class AdminUsersPageComponent implements OnInit {
           this.alertService.success(`Usuario ${newUser.name} creado correctamente.`);
           setTimeout(() => this.closeModal(), 500);
         },
-        error: (err) => {
-          this.alertService.error('Error al crear usuario');
+        error: (error) => {
+          const errorMessage = error?.error?.message || error?.message || 'Error al crear usuario';
+          this.alertService.error(errorMessage);
           this.isLoading.set(false);
         }
       });
@@ -217,9 +219,9 @@ export class AdminUsersPageComponent implements OnInit {
             }
             this.isLoading.set(false);
           },
-          error: (err) => {
-            console.error('Error resetting password', err);
-            this.alertService.error('Error al enviar la solicitud.');
+          error: (error) => {
+            const errorMessage = error?.error?.message || error?.message || 'Error al enviar la solicitud.';
+            this.alertService.error(errorMessage);
             this.isLoading.set(false);
           }
         });
@@ -247,8 +249,9 @@ export class AdminUsersPageComponent implements OnInit {
             const statusType = updatedUser.status === 'ACTIVE' ? 'success' : 'warning';
             this.alertService.show(statusType, `Usuario ${user.name} ha sido ${statusAction}.`);
           },
-          error: (err) => {
-            this.alertService.error('Error al cambiar estado del usuario');
+          error: (error) => {
+            const errorMessage = error?.error?.message || error?.message || 'Error al cambiar estado del usuario';
+            this.alertService.error(errorMessage);
           }
         });
       }

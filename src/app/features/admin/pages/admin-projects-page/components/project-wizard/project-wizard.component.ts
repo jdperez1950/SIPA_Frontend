@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, Input, Output, signal, effect, inject } from '@angular/core';
+import { Component, computed, EventEmitter, Input, Output, signal, effect, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin, of, map, Observable } from 'rxjs';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
@@ -35,6 +35,7 @@ export class ProjectWizardComponent {
   @Input() mode: WizardMode = 'FULL';
   @Input() initialData: Project | null = null;
   @Output() completed = new EventEmitter<void>();
+  @ViewChild(StepIdentificationComponent) stepIdentificationComponent!: StepIdentificationComponent;
   
   private alertService = inject(AlertService);
   private adminService = inject(AdminDataService);
@@ -95,8 +96,6 @@ export class ProjectWizardComponent {
   }
 
   loadInitialData(project: Project) {
-    console.log('loadInitialData - Full project object:', JSON.stringify(project, null, 2));
-    
     // Backend response structure:
     // project.name -> Nombre real del proyecto (Ej: "CosiPet")
     // project.code -> Código del proyecto (Ej: "PRJ-2026-0029")
@@ -110,8 +109,6 @@ export class ProjectWizardComponent {
     // Let's handle it safely.
     
     const orgData = project.organizationData || (typeof project.organization === 'object' ? project.organization : null);
-    
-    console.log('loadInitialData - orgData:', JSON.stringify(orgData, null, 2));
     
     // Helper to safely get string
     const safeStr = (val: any) => (val && typeof val === 'string') ? val : '';
@@ -204,7 +201,13 @@ export class ProjectWizardComponent {
   }
 
   nextStep() {
+    // console.log('🔍 [nextStep] Intentando avanzar al siguiente paso');
+    // console.log('🔍 [nextStep] Paso actual:', this.currentStep());
+    // console.log('🔍 [nextStep] isCurrentStepValid:', this.isCurrentStepValid());
+    // console.log('🔍 [nextStep] identificationData:', this.identificationData());
+    
     if (!this.isCurrentStepValid()) {
+      // console.log('❌ [nextStep] Paso actual NO válido. Mostrando errores...');
       this.alertService.error('Por favor complete todos los campos obligatorios del paso actual.');
       this.markStepAsTouched();
       return;
@@ -310,20 +313,20 @@ export class ProjectWizardComponent {
         };
 
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
-          next: () => {
-            this.alertService.success('Proyecto actualizado exitosamente');
+          next: (response) => {
+            const message = response.message || 'Proyecto actualizado exitosamente';
+            this.alertService.success(message);
             this.completed.emit();
             this.isSaving.set(false);
           },
-          error: () => {
-            this.alertService.error('Error al actualizar el proyecto');
+          error: (error) => {
+            const errorMessage = error?.error?.message || error?.message || 'Error al actualizar el proyecto';
+            this.alertService.error(errorMessage);
             this.isSaving.set(false);
           }
         });
       } else {
         // Create Mode -> Create FULL PROJECT (Step 1 + Step 2)
-        console.log('DATA desde formulario:', JSON.stringify(data, null, 2));
-        
         const createRequest: ProjectRequest = {
           Description: data.description,
           HousingCount: data.housingCount,
@@ -366,18 +369,14 @@ export class ProjectWizardComponent {
           // }))
         };
 
-        console.log('CREATE REQUEST enviado al backend:', JSON.stringify(createRequest, null, 2));
-
         this.adminService.createProject(createRequest).subscribe({
-          next: (project) => {
-            console.log('Proyecto creado exitosamente:', project);
-            
+          next: (response) => {
+            const project = response.data;
             const organizationId = project.organizationId || 
                                    (typeof project.organization === 'string' ? project.organization : project.organization?.id) || 
                                    createRequest.Organization?.id;
             
             if (!organizationId) {
-              console.error('No se pudo obtener el organizationId para subir documentos');
               this.alertService.warning('Proyecto creado, pero no se pudieron subir los documentos (falta ID de organización)');
               this.completed.emit();
               this.isSaving.set(false);
@@ -386,20 +385,21 @@ export class ProjectWizardComponent {
             
             this.uploadOrganizationDocuments(organizationId, data).subscribe({
               next: () => {
-                this.alertService.success('Proyecto creado exitosamente');
+                const message = response.message || 'Proyecto creado exitosamente';
+                this.alertService.success(message);
                 this.completed.emit();
                 this.isSaving.set(false);
               },
               error: (error: any) => {
-                console.error('Error al subir documentos:', error);
                 this.alertService.warning('Proyecto creado, pero hubo un error al subir los documentos');
                 this.completed.emit();
                 this.isSaving.set(false);
               }
             });
           },
-          error: () => {
-            this.alertService.error('Error al crear el proyecto');
+          error: (error) => {
+            const errorMessage = error?.error?.message || error?.message || 'Error al crear el proyecto';
+            this.alertService.error(errorMessage);
             this.isSaving.set(false);
           }
         });
@@ -464,11 +464,20 @@ export class ProjectWizardComponent {
   }
 
   markStepAsTouched() {
-    // This method would trigger form validation display in child components
-    // Since we are using Signals and separate components, we might need a mechanism 
-    // to broadcast "validate now" or rely on the fact that users have likely interacted.
-    // For a robust solution, we could emit an event to the active step component.
-    console.log('Marking step as touched for validation');
+    // console.log('🔍 [markStepAsTouched] Marcando todos los campos como touched para mostrar errores');
+    switch (this.currentStep()) {
+      case 1:
+        if (this.stepIdentificationComponent) {
+          this.stepIdentificationComponent.markAllAsTouched();
+        }
+        break;
+      case 2:
+        // TODO: Implement for Step 2 if needed
+        break;
+      case 3:
+        // TODO: Implement for Step 3 if needed
+        break;
+    }
   }
 
   // --- Data Updates ---

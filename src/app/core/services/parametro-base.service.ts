@@ -104,7 +104,7 @@ export class ParametroBaseService {
 
   public departamentos = computed(() => 
     this._departamentos()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
   private _estadosCivil = signal<ParametroBase[]>([]);
@@ -199,61 +199,61 @@ export class ParametroBaseService {
 
   public tiposDocumento = computed(() =>
     this._tiposDocumento()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public estadosCivil = computed(() => 
     this._estadosCivil()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public sexos = computed(() => 
     this._sexos()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public nivelesEscolaridad = computed(() => 
     this._nivelesEscolaridad()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public tiposPersona = computed(() => 
     this._tiposPersona()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public tiposOrganizacion = computed(() => 
     this._tiposOrganizacion()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public tiposEncargado = computed(() =>
     this._tiposEncargado()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public proyectoTerreno = computed(() =>
     this._proyectoTerreno()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public tiposDocumentoOrganizacion = computed(() =>
     this._tiposDocumentoOrganizacion()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
   public proyectoFinanciacion = computed(() =>
     this._proyectoFinanciacion()
-      .filter(p => p.deletedAt === null)
+      .filter(p => !p.deletedAt)
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
@@ -352,7 +352,7 @@ export class ParametroBaseService {
     return this.getByTipoAndPadreId('MUNICIPIO', departamentoId).pipe(
       map(municipios => 
         municipios
-          .filter(m => m.deletedAt === null)
+          .filter(m => !m.deletedAt)
           .sort((a, b) => a.nombre.localeCompare(b.nombre))
       )
     );

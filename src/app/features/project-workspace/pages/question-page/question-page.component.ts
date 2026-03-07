@@ -13,6 +13,7 @@ import { TechnicalAssistanceLogComponent } from '../../components/technical-assi
 import { FileService } from '../../../../core/services/file.service';
 import { LoadingService } from '../../../../core/services/loading.service';
 import { ProjectsService } from '../../../../core/services/projects.service';
+import { AlertService } from '../../../../core/services/alert.service';
 import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-colors.config';
 
 @Component({
@@ -29,6 +30,7 @@ export class QuestionPageComponent implements OnInit {
   private fileService = inject(FileService);
   private loadingService = inject(LoadingService);
   private projectsService = inject(ProjectsService);
+  private alertService = inject(AlertService);
 
   currentQuestionId = toSignal(
     this.route.paramMap.pipe(
@@ -70,9 +72,9 @@ export class QuestionPageComponent implements OnInit {
         this.isLoading.set(true);
         this.loadingService.show('Cargando preguntas...');
         
-        const project = await this.projectsService.getProjectById(pid).toPromise();
-        if (project) {
-          this.projectContextService.setProject(project);
+        const response = await this.projectsService.getProjectById(pid).toPromise();
+        if (response?.data) {
+          this.projectContextService.setProject(response.data);
         }
         
         await this.questionManager.loadQuestions(pid);
@@ -304,13 +306,18 @@ export class QuestionPageComponent implements OnInit {
     if (response) {
       try {
         this.loadingService.show('Guardando respuesta...');
-        await this.questionManager.submitResponse(response, pid);
+        const result = await this.questionManager.submitResponse(response, pid);
+        
+        this.alertService.success(result.message, 3000);
+        this.loadingService.hide();
+        
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         this.nextQuestion(questionId);
       } catch (error) {
         console.error('Error submitting response:', error);
-        this.loadingService.show('Error al guardar la respuesta');
-        setTimeout(() => this.loadingService.hide(), 3000);
-      } finally {
+        const errorMessage = error instanceof Error ? error.message : 'Error al guardar la respuesta';
+        this.alertService.error(errorMessage, 4000);
         this.loadingService.hide();
       }
     }

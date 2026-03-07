@@ -144,7 +144,7 @@ export class QuestionManagerService {
   async submitResponse(
     response: QuestionResponse,
     projectId: string
-  ): Promise<void> {
+  ): Promise<{ success: boolean; message: string }> {
     try {
       const backendRequest = this.questionMapper.mapFrontendToBackend(
         response,
@@ -156,13 +156,19 @@ export class QuestionManagerService {
         .toPromise();
 
       if (!result?.success) {
-        throw new Error('Error saving answer');
+        const errorMessage = result?.message || 'Error saving answer';
+        throw new Error(errorMessage);
       }
 
       this.saveResponse({
         ...response,
         lastUpdated: new Date().toISOString()
       });
+
+      return {
+        success: true,
+        message: result?.message || 'Respuesta guardada exitosamente'
+      };
     } catch (error) {
       console.error('Error submitting response:', error);
       throw error;

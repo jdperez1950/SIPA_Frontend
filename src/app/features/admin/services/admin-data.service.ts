@@ -256,28 +256,28 @@ export class AdminDataService {
     );
   }
 
-  createProject(request: ProjectRequest): Observable<Project> {
+  createProject(request: ProjectRequest): Observable<ApiResponse<Project>> {
     
     return this.http.post<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
-      map(response => response.data),
-      tap(newProject => {
-        this.projects.update(current => [newProject, ...current]);
+      tap(response => {
+        if (response.success && response.data) {
+          this.projects.update(current => [response.data, ...current]);
+        }
       }),
       catchError(error => {
-        console.error('Error creating project (API)', error);
         return throwError(() => error);
       })
     );
   }
 
-  updateProject(id: string, request: ProjectRequest): Observable<Project> {
+  updateProject(id: string, request: ProjectRequest): Observable<ApiResponse<Project>> {
     return this.http.post<ApiResponse<Project>>(`${this.apiUrl}/projects`, request).pipe(
-      map(response => response.data),
-      tap(updatedProject => {
-        this.projects.update(current => current.map(p => p.id === id ? updatedProject : p));
+      tap(response => {
+        if (response.success && response.data) {
+          this.projects.update(current => current.map(p => p.id === id ? response.data : p));
+        }
       }),
       catchError(error => {
-        console.error('Error updating project', error);
         return throwError(() => error);
       })
     );

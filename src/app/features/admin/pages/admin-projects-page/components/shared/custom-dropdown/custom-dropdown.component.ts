@@ -63,10 +63,8 @@ export class CustomDropdownComponent {
   }
 
   ngOnChanges() {
-    console.log('ngOnChanges - selectedValue:', this.selectedValue, 'items:', this.items);
     if (this.selectedValue) {
       this.selectedItem = this.items.find(item => item.id === this.selectedValue) || null;
-      console.log('ngOnChanges - selectedItem:', this.selectedItem);
     } else {
       this.selectedItem = null;
     }
