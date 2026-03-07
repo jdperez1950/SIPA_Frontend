@@ -69,11 +69,9 @@ export class ProjectsService {
     );
   }
 
-  getProjectById(id: string): Observable<Project> {
+  getProjectById(id: string): Observable<ApiResponse<Project>> {
     return this.http.get<ApiResponse<Project>>(`${this.apiUrl}/projects/${id}`).pipe(
-      map(response => response.data),
       catchError(error => {
-        console.error('Error fetching project', error);
         return throwError(() => error);
       })
     );

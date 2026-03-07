@@ -277,26 +277,11 @@ export class StepResponseTeamComponent implements OnInit {
     const formValue = this.userForm.value;
     const currentEditing = this.editingMember();
 
-    // Debug: Imprimir información de los miembros actuales
-    console.log('=== DEBUG - Validación Representante Legal ===');
-    console.log('selectedMembers:', this.selectedMembers);
-    console.log('Detalles de miembros:');
-    this.selectedMembers.forEach((member, index) => {
-      console.log(`Miembro ${index}:`, {
-        nombre: member.nombre,
-        representativeType: member.representativeType,
-        representativeTypeName: member.representativeType?.nombre,
-        representativeTypeCodigo: member.representativeType?.codigo
-      });
-    });
-
     // Validación: Si existe un Representante legal, no permitir agregar más miembros
     const hasLegalRep = this.selectedMembers.some(member => 
       member.representativeType?.nombre?.toLowerCase().includes('representante legal') || 
       member.representativeType?.nombre?.toLowerCase().includes('representante')
     );
-    
-    console.log('hasLegalRep:', hasLegalRep);
 
     // Si ya existe un representante legal, bloquear cualquier adición adicional
     if (hasLegalRep) {

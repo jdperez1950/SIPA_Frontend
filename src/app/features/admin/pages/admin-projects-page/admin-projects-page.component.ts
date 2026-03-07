@@ -71,8 +71,9 @@ export class AdminProjectsPageComponent implements OnInit {
         this.totalItems.set(total);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        this.alertService.error('Error al cargar los proyectos. Por favor intente nuevamente.');
+      error: (error) => {
+        const errorMessage = error?.error?.message || error?.message || 'Error al cargar los proyectos. Por favor intente nuevamente.';
+        this.alertService.error(errorMessage);
         this.isLoading.set(false);
         this.projects.set([]); // Ensure empty state on error
       }
@@ -102,13 +103,15 @@ export class AdminProjectsPageComponent implements OnInit {
   editProject(project: Project) {
     this.isLoading.set(true);
     this.projectsService.getProjectById(project.id).subscribe({
-      next: (fullProject) => {
+      next: (response) => {
+        const fullProject = response.data;
         this.selectedProject.set(fullProject);
         this.toggleWizard(true);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.alertService.error('Error al cargar el proyecto');
+      error: (error) => {
+        const errorMessage = error?.error?.message || error?.message || 'Error al cargar el proyecto';
+        this.alertService.error(errorMessage);
         this.isLoading.set(false);
       }
     });
@@ -153,8 +156,9 @@ export class AdminProjectsPageComponent implements OnInit {
         this.isLoading.set(false);
         this.closeAssignModal();
       },
-      error: (err) => {
-        this.alertService.error('Error al asignar el asesor. Por favor intente nuevamente.');
+      error: (error) => {
+        const errorMessage = error?.error?.message || error?.message || 'Error al asignar el asesor. Por favor intente nuevamente.';
+        this.alertService.error(errorMessage);
         this.isLoading.set(false);
         this.closeAssignModal();
       }
