@@ -143,10 +143,22 @@ export class StepIdentificationComponent implements OnInit {
     this.form.valueChanges.subscribe(value => {
       // Debug form state
       if (this.form.invalid) {
-        // ... (debug code)
+        // console.log('❌ [form.valueChanges] Formulario INVÁLIDO');
+        // console.log('  - Form errors:', this.form.errors);
+        
+        // Show ALL field errors (not just dirty/touched)
+        Object.keys(this.form.controls).forEach(key => {
+          const control = this.form.get(key);
+          if (control?.invalid) {
+            // console.log(`  - ${key} inválido:`, control.errors, `(dirty: ${control.dirty}, touched: ${control.touched})`);
+          }
+        });
       }
       
       if (this.form.valid) {
+        // console.log('✅ [form.valueChanges] Formulario VÁLIDO. Emitiendo datos...');
+        // console.log('  - isLegallyConstituted:', value.isLegallyConstituted);
+        
         // Find department and municipality IDs and names
         const deptId = value.department;
         const deptName = this.parametroBaseService.departamentos().find(d => d.id === deptId)?.nombre || '';
@@ -171,6 +183,7 @@ export class StepIdentificationComponent implements OnInit {
         
         this.emitDataChange(value);
       } else {
+        // console.log('❌ [form.valueChanges] Emitiendo NULL (formulario inválido)');
         // Emit null to indicate invalid state
         this.dataChange.emit(null as any);
       }
@@ -205,12 +218,10 @@ export class StepIdentificationComponent implements OnInit {
     
     const deptParam = this.parametroBaseService.departamentos().find(d => d.id === deptId);
     let municipioParam = this.municipios.find(m => m.id === municipalityId);
-    console.log('municipioParam encontrado:', municipioParam);
     
     // If not found in loaded municipios and we have initialData, use it
     if (!municipioParam && this.initialData?.municipality?.id) {
       municipioParam = this.initialData.municipality;
-      console.log('Using initialData municipality:', municipioParam);
     }
     
     const orgTypeParam = this.parametroBaseService.tiposOrganizacion().find((t: any) => t.id === value.organizationType);
@@ -290,8 +301,6 @@ export class StepIdentificationComponent implements OnInit {
     let initialOrgType = null;
     if (this.initialData?.organizationType?.id) {
       initialOrgType = this.initialData.organizationType.id;
-      console.log('initialData.organizationType:', JSON.stringify(this.initialData.organizationType, null, 2));
-      console.log('initialOrgType:', initialOrgType);
     }
 
     this.form = this.fb.group({
@@ -328,16 +337,13 @@ export class StepIdentificationComponent implements OnInit {
       organizationIdentifier: [this.initialData?.organizationIdentifier || ''],
       verificationDigit: [this.initialData?.verificationDigit || ''],
       organizationEmail: [this.initialData?.organizationEmail || '', [Validators.required, Validators.email]],
-      website: [this.initialData?.website || '', [Validators.pattern(/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}$/)]],
+      website: [this.initialData?.website || '', [Validators.pattern(/^(https?:\/\/)?[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}(\/.*)?$/)]],
       organizationDescription: [this.initialData?.organizationDescription || '', [Validators.required, Validators.minLength(10)]],
       organizationAddress: [this.initialData?.organizationAddress || '', Validators.required],
       startDate: [this.initialData?.startDate || defaultStart],
       endDate: [this.initialData?.endDate || defaultEnd],
       submissionDeadline: [this.initialData?.submissionDeadline || defaultDeadline]
     }, { validators: [this.dateRangeValidator] });
-
-    console.log('organizationTypes disponibles:', this.organizationTypes());
-    console.log('organizationType form value:', this.form.get('organizationType')?.value);
 
     // Initial validation setup
     this.updateLegalValidators(this.form.get('isLegallyConstituted')?.value);
@@ -403,12 +409,21 @@ export class StepIdentificationComponent implements OnInit {
   }
 
   updateLegalValidators(isLegallyConstituted: string) {
+    // console.log('🔍 [updateLegalValidators] isLegallyConstituted:', isLegallyConstituted);
+    
     const nitControl = this.form.get('organizationIdentifier');
     const dvControl = this.form.get('verificationDigit');
     const legalFileControl = this.form.get('legalRepresentativeCertificate');
     const intentionFileControl = this.form.get('intentionAct');
 
-    if (isLegallyConstituted === 'SI') {
+    // console.log('🔍 [updateLegalValidators] Estado de controles ANTES:');
+    // console.log('  - NIT valid:', nitControl?.valid, 'errors:', nitControl?.errors, 'value:', nitControl?.value);
+    // console.log('  - DV valid:', dvControl?.valid, 'errors:', dvControl?.errors, 'value:', dvControl?.value);
+    // console.log('  - LegalFile valid:', legalFileControl?.valid, 'errors:', legalFileControl?.errors, 'value:', legalFileControl?.value);
+    // console.log('  - IntentionFile valid:', intentionFileControl?.valid, 'errors:', intentionFileControl?.errors, 'value:', intentionFileControl?.value);
+
+    if (isLegallyConstituted === 'Sí') {
+      // console.log('✅ [updateLegalValidators] SÍ: Activando validadores para NIT, DV y LegalFile');
       // NIT: 9 digits required
       nitControl?.setValidators([Validators.required, Validators.pattern(/^\d{9}$/)]);
       // DV: 1 digit required
@@ -417,20 +432,34 @@ export class StepIdentificationComponent implements OnInit {
       // File: Certificate required
       legalFileControl?.setValidators([Validators.required]);
       intentionFileControl?.clearValidators();
+      intentionFileControl?.setValue(null);
     } else {
+      // console.log('❌ [updateLegalValidators] NO: Desactivando validadores para NIT, DV, LegalFile e IntentionFile');
       // NIT/DV: Not required
       nitControl?.clearValidators();
       dvControl?.clearValidators();
 
-      // File: Act required
-      intentionFileControl?.setValidators([Validators.required]);
+      // File: Not required
+      intentionFileControl?.clearValidators();
       legalFileControl?.clearValidators();
+
+      // Reset values when switching to NO
+      nitControl?.setValue('');
+      dvControl?.setValue('');
+      legalFileControl?.setValue(null);
+      intentionFileControl?.setValue(null);
     }
 
     nitControl?.updateValueAndValidity();
     dvControl?.updateValueAndValidity();
     legalFileControl?.updateValueAndValidity();
     intentionFileControl?.updateValueAndValidity();
+
+    // console.log('🔍 [updateLegalValidators] Estado de controles DESPUÉS:');
+    // console.log('  - NIT valid:', nitControl?.valid, 'errors:', nitControl?.errors, 'value:', nitControl?.value);
+    // console.log('  - DV valid:', dvControl?.valid, 'errors:', dvControl?.errors, 'value:', dvControl?.value);
+    // console.log('  - LegalFile valid:', legalFileControl?.valid, 'errors:', legalFileControl?.errors, 'value:', legalFileControl?.value);
+    // console.log('  - IntentionFile valid:', intentionFileControl?.valid, 'errors:', intentionFileControl?.errors, 'value:', intentionFileControl?.value);
   }
 
   onLegalFileSelected(file: File) {
@@ -441,6 +470,12 @@ export class StepIdentificationComponent implements OnInit {
   onIntentionFileSelected(file: File) {
     this.form.patchValue({ intentionAct: file });
     this.form.get('intentionAct')?.markAsTouched();
+  }
+
+  markAllAsTouched() {
+    Object.keys(this.form.controls).forEach(key => {
+      this.form.get(key)?.markAsTouched();
+    });
   }
 
   onTradicionLibertadCertificadoSelected(file: File) {
@@ -461,6 +496,7 @@ export class StepIdentificationComponent implements OnInit {
       tradicionLibertadCertificadoControl?.setValidators([Validators.required]);
     } else {
       tradicionLibertadCertificadoControl?.clearValidators();
+      tradicionLibertadCertificadoControl?.setValue(null);
     }
 
     tradicionLibertadCertificadoControl?.updateValueAndValidity();
@@ -473,6 +509,7 @@ export class StepIdentificationComponent implements OnInit {
     this.showDetalleFinanciacion.set(tieneFinanciacion);
 
     const detalleArray = this.form.get('detalleFinanciacion') as FormArray;
+    const financingDescriptionControl = this.form.get('financingDescription');
     
     if (tieneFinanciacion) {
       detalleArray.controls.forEach(control => {
@@ -481,6 +518,8 @@ export class StepIdentificationComponent implements OnInit {
         control.get('dinero')?.updateValueAndValidity();
         control.get('especie')?.updateValueAndValidity();
       });
+      financingDescriptionControl?.setValidators([Validators.minLength(10)]);
+      financingDescriptionControl?.updateValueAndValidity();
     } else {
       detalleArray.controls.forEach(control => {
         control.get('dinero')?.setValue(0);
@@ -490,6 +529,9 @@ export class StepIdentificationComponent implements OnInit {
         control.get('dinero')?.updateValueAndValidity();
         control.get('especie')?.updateValueAndValidity();
       });
+      financingDescriptionControl?.clearValidators();
+      financingDescriptionControl?.setValue('');
+      financingDescriptionControl?.updateValueAndValidity();
     }
   }
 

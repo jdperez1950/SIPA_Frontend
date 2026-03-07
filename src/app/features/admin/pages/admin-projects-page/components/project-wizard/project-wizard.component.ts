@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, Input, Output, signal, effect, inject } from '@angular/core';
+import { Component, computed, EventEmitter, Input, Output, signal, effect, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin, of, map, Observable } from 'rxjs';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
@@ -35,6 +35,7 @@ export class ProjectWizardComponent {
   @Input() mode: WizardMode = 'FULL';
   @Input() initialData: Project | null = null;
   @Output() completed = new EventEmitter<void>();
+  @ViewChild(StepIdentificationComponent) stepIdentificationComponent!: StepIdentificationComponent;
   
   private alertService = inject(AlertService);
   private adminService = inject(AdminDataService);
@@ -200,7 +201,13 @@ export class ProjectWizardComponent {
   }
 
   nextStep() {
+    // console.log('🔍 [nextStep] Intentando avanzar al siguiente paso');
+    // console.log('🔍 [nextStep] Paso actual:', this.currentStep());
+    // console.log('🔍 [nextStep] isCurrentStepValid:', this.isCurrentStepValid());
+    // console.log('🔍 [nextStep] identificationData:', this.identificationData());
+    
     if (!this.isCurrentStepValid()) {
+      // console.log('❌ [nextStep] Paso actual NO válido. Mostrando errores...');
       this.alertService.error('Por favor complete todos los campos obligatorios del paso actual.');
       this.markStepAsTouched();
       return;
@@ -457,10 +464,20 @@ export class ProjectWizardComponent {
   }
 
   markStepAsTouched() {
-    // This method would trigger form validation display in child components
-    // Since we are using Signals and separate components, we might need a mechanism 
-    // to broadcast "validate now" or rely on the fact that users have likely interacted.
-    // For a robust solution, we could emit an event to the active step component.
+    // console.log('🔍 [markStepAsTouched] Marcando todos los campos como touched para mostrar errores');
+    switch (this.currentStep()) {
+      case 1:
+        if (this.stepIdentificationComponent) {
+          this.stepIdentificationComponent.markAllAsTouched();
+        }
+        break;
+      case 2:
+        // TODO: Implement for Step 2 if needed
+        break;
+      case 3:
+        // TODO: Implement for Step 3 if needed
+        break;
+    }
   }
 
   // --- Data Updates ---
