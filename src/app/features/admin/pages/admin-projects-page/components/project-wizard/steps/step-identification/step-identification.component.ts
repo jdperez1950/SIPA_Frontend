@@ -94,15 +94,11 @@ export class StepIdentificationComponent implements OnInit {
             const deptIdToUse = found?.id || deptValue;
             if (deptIdToUse && this.municipios.length === 0) {
                 this.parametroBaseService.getMunicipiosPorDepto(deptIdToUse).subscribe(municipios => {
-                    console.log('Municipios loaded:', municipios);
                     this.municipios = municipios.map(m => ({ id: m.id, nombre: m.nombre, tipo: m.tipo, codigo: m.codigo }));
-                    console.log('Mapped municipios:', this.municipios);
 
                     // Set municipality if we have initial data
-                    console.log('Initial municipality ID:', this.initialData?.municipality?.id);
                     if (this.initialData?.municipality?.id) {
                         const municipioFound = this.municipios.find(m => m.id === this.initialData!.municipality!.id);
-                        console.log('Municipio found:', municipioFound);
                         if (municipioFound) {
                             this.form.patchValue({ municipality: municipioFound.id }, { emitEvent: false });
                         }
@@ -116,13 +112,9 @@ export class StepIdentificationComponent implements OnInit {
         if (orgTypes.length > 0 && this.initialData && this.form) {
           const currentOrgType = this.form.get('organizationType')?.value;
           const orgTypeId = this.initialData.organizationType?.id || this.initialData.organizationType;
-          console.log('orgTypes loaded:', orgTypes);
-          console.log('currentOrgType:', currentOrgType);
-          console.log('orgTypeId from initialData:', orgTypeId);
           
           if (orgTypeId && currentOrgType !== orgTypeId) {
             this.form.patchValue({ organizationType: orgTypeId }, { emitEvent: false });
-            console.log('Patched organizationType:', orgTypeId);
           }
         }
 

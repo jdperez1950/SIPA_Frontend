@@ -72,9 +72,9 @@ export class QuestionPageComponent implements OnInit {
         this.isLoading.set(true);
         this.loadingService.show('Cargando preguntas...');
         
-        const project = await this.projectsService.getProjectById(pid).toPromise();
-        if (project) {
-          this.projectContextService.setProject(project);
+        const response = await this.projectsService.getProjectById(pid).toPromise();
+        if (response?.data) {
+          this.projectContextService.setProject(response.data);
         }
         
         await this.questionManager.loadQuestions(pid);
