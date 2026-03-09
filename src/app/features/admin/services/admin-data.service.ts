@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, CreateOrganizationDTO, PaginatedResponse, ProjectRequest, ApiResponse } from '../../../core/models/domain.models';
-import { USERS_MOCK } from '../../../core/data/mock/users.mock';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { RegisterRequest } from '../../../core/auth/models/auth.models';
 
@@ -16,7 +15,7 @@ export class AdminDataService {
   private apiUrl = environment.apiUrl;
 
   // State Signals (acting as cache/store)
-  private users = signal<User[]>(USERS_MOCK);
+  private users = signal<User[]>([]);
   private projects = signal<Project[]>([]);
   private organizations = signal<Organization[]>([]);
 

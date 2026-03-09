@@ -129,7 +129,8 @@ export class QuestionPageComponent implements OnInit {
 
       this.questionManager.saveResponse({
         ...currentResponse,
-        assistanceLog: updatedLog
+        assistanceLog: updatedLog,
+        isUnsaved: true
       });
     }
   }
@@ -192,7 +193,8 @@ export class QuestionPageComponent implements OnInit {
       evidence: existing?.evidence,
       observation: existing?.observation,
       evaluationStatus: existing?.evaluationStatus || 'PENDING',
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      isUnsaved: true
     });
   }
 
@@ -204,7 +206,8 @@ export class QuestionPageComponent implements OnInit {
       evidence: existing?.evidence,
       observation: observation,
       evaluationStatus: existing?.evaluationStatus || 'PENDING',
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      isUnsaved: true
     });
   }
 
@@ -236,7 +239,8 @@ export class QuestionPageComponent implements OnInit {
         observation: existing?.observation,
         evidence: [...currentEvidence, newEvidence],
         evaluationStatus: 'PENDING',
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        isUnsaved: true
       });
     } catch (error) {
       console.error('Error uploading evidence:', error);
@@ -262,7 +266,8 @@ export class QuestionPageComponent implements OnInit {
     this.questionManager.saveResponse({
       ...existing,
       evidence: newEvidence,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      isUnsaved: true
     });
   }
 

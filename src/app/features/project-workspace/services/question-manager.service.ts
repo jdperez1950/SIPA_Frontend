@@ -162,7 +162,8 @@ export class QuestionManagerService {
 
       this.saveResponse({
         ...response,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        isUnsaved: false
       });
 
       return {
