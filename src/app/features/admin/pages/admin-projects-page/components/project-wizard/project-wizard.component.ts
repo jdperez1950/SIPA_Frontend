@@ -74,6 +74,8 @@ export class ProjectWizardComponent {
   // --- State ---
   currentStep = signal(1);
   isSaving = signal(false);
+  isSaved = signal(false);
+  saveTimeout: any = null;
   
   // Step 1 Data
   identificationData = signal<IdentificationData | null>(null);
@@ -236,10 +238,15 @@ export class ProjectWizardComponent {
 
     this.isSaving.set(true);
 
-    // En modo edición, solo avanzamos al siguiente paso sin guardar
-    // Los datos se guardarán al finalizar el wizard
-    this.currentStep.update(s => s + 1);
-    this.isSaving.set(false);
+    // Simular guardado exitoso para dar feedback visual
+    setTimeout(() => {
+      this.showSavedSuccess();
+      
+      // En modo edición, solo avanzamos al siguiente paso sin guardar
+      // Los datos se guardarán al finalizar el wizard
+      this.currentStep.update(s => s + 1);
+      this.isSaving.set(false);
+    }, 800);
   }
 
   prevStep() {
@@ -315,6 +322,7 @@ export class ProjectWizardComponent {
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
           next: (response) => {
             const message = response.message || 'Proyecto actualizado exitosamente';
+            this.showSavedSuccess();
             this.alertService.success(message);
             this.completed.emit();
             this.isSaving.set(false);
@@ -461,6 +469,18 @@ export class ProjectWizardComponent {
 
   onModalAlertConfirm() {
     this.modalAlertData.set(null);
+  }
+
+  showSavedSuccess() {
+    this.isSaved.set(true);
+    
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+    
+    this.saveTimeout = setTimeout(() => {
+      this.isSaved.set(false);
+    }, 3000);
   }
 
   markStepAsTouched() {

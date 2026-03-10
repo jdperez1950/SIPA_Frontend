@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { QuestionManagerService } from '../../../services/question-manager.service';
 import { getAxisColorByName } from '../../../../../core/config/axis-colors.config';
+import { getQuestionStatusConfig, type QuestionResponseStatus } from '../../../../../core/config/question-status.config';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, filter } from 'rxjs/operators';
 
@@ -24,9 +25,13 @@ import { map, filter } from 'rxjs/operators';
           ]"
           class="w-10 h-10 flex items-center justify-center text-white text-sm font-medium rounded transition-all cursor-pointer select-none focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-gray-800 relative"
           [attr.aria-label]="'Pregunta ' + q.order + ', Eje ' + (q.axisName || q.axisId) + (rla.isActive ? ', Pregunta actual' : '')"
-          [title]="'Eje: ' + (q.axisName || q.axisId) + ' - Pregunta ' + q.order + (rla.isActive ? ' (Pregunta actual)' : '')"
+          [title]="getQuestionTooltip(q, rla.isActive)"
         >
-          {{ q.order }}
+          @if (getStatusIcon(q.id)) {
+            <span class="material-symbols-rounded text-lg">{{ getStatusIcon(q.id) }}</span>
+          } @else {
+            <span>{{ q.order }}</span>
+          }
           @if (rla.isActive) {
             <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
           }
@@ -67,5 +72,46 @@ export class QuestionRibbonComponent {
 
   getAxisColor(axisName: string) {
     return getAxisColorByName(axisName);
+  }
+
+  getResponseStatus(questionId: string): QuestionResponseStatus | null {
+    const response = this.questionManager.getResponse(questionId);
+    
+    if (!response) {
+      return null;
+    }
+    
+    // Si la respuesta no está guardada, no mostrar estado (volver a número)
+    if (response.isUnsaved) {
+      return null;
+    }
+    
+    if (response.evaluationStatus) {
+      return response.evaluationStatus;
+    }
+    
+    if (response.value !== null && response.value !== undefined && response.value !== '') {
+      return 'PENDING';
+    }
+    
+    return null;
+  }
+
+  getStatusIcon(questionId: string): string | null {
+    const status = this.getResponseStatus(questionId);
+    const config = getQuestionStatusConfig(status);
+    return config?.icon || null;
+  }
+
+  getStatusLabel(status: QuestionResponseStatus | null): string {
+    const config = getQuestionStatusConfig(status);
+    return config?.label || 'Sin responder';
+  }
+
+  getQuestionTooltip(q: any, isActive: boolean): string {
+    const status = this.getResponseStatus(q.id);
+    const statusText = this.getStatusLabel(status);
+    
+    return `Eje: ${q.axisName || q.axisId} - Pregunta ${q.order} (${statusText})${isActive ? ' - Pregunta actual' : ''}`;
   }
 }

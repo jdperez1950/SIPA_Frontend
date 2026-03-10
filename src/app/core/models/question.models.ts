@@ -94,4 +94,5 @@ export interface QuestionResponse {
   priority?: string;
   validity?: string;
   progressPercentage?: number;
+  isUnsaved?: boolean;
 }

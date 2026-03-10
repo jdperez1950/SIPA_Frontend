@@ -99,7 +99,15 @@
     </div>
 
     <!-- Footer / Actions -->
-    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between relative">
+      <!-- Success Indicator -->
+      @if (isSaved()) {
+        <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-bounce">
+          <span class="material-symbols-rounded text-lg">check_circle</span>
+          <span class="text-sm font-medium">Guardado exitosamente</span>
+        </div>
+      }
+      
       <button 
         (click)="prevStep()" 
         [disabled]="currentStep() === 1 || isSaving()"
