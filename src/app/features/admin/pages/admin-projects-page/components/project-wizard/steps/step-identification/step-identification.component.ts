@@ -16,7 +16,7 @@ import {
 } from '../../../../../../../../shared/validators';
 
 import { FileService } from '../../../../../../../../core/services/file.service';
-import { FUENTES_FINANCIACION, FinanciacionFuente } from './financing.models';
+import { FinanciacionFuente } from '../../../../../../../../core/models/domain.models';
 
 @Component({
   selector: 'app-step-identification',
@@ -69,6 +69,8 @@ export class StepIdentificationComponent implements OnInit {
     }))
   );
 
+  fuentesFinanciacion = this.parametroBaseService.fuentesFinanciacion;
+
   showDetalleFinanciacion = signal(false);
 
   // Lists for selects - Access service signal directly
@@ -76,6 +78,54 @@ export class StepIdentificationComponent implements OnInit {
   isManualMunicipality = false;
 
   constructor() {
+    // Effect to handle financing sources
+    effect(() => {
+      const sources = this.fuentesFinanciacion();
+      if (this.form && sources.length > 0) {
+        const detalleArray = this.form.get('detalleFinanciacion') as FormArray;
+        
+        // Only rebuild if empty or different length (simple check to avoid loop if possible)
+        // Or just clear and rebuild.
+        // We need to preserve existing values if possible (e.g. initialData loaded, or user input)
+        const currentValues = detalleArray.value as any[];
+        
+        detalleArray.clear();
+        
+        sources.forEach(source => {
+          let dinero = 0;
+          let especie = 0;
+          
+          // Check initialData first
+          const initialMatch = this.initialData?.detalleFinanciacion?.find(f => 
+            f.fuente?.id === source.id || 
+            (source.codigo && f.fuente?.id === source.codigo)
+          );
+          if (initialMatch) {
+            dinero = initialMatch.dinero;
+            especie = initialMatch.especie;
+          }
+          
+          // Check current form values (in case of re-render or updates)
+          const currentMatch = currentValues.find(v => v.id === source.id);
+          if (currentMatch) {
+             dinero = currentMatch.dinero;
+             especie = currentMatch.especie;
+          }
+
+          detalleArray.push(this.fb.group({
+            id: [source.id],
+            fuente: [source.nombre],
+            dinero: [dinero, [Validators.min(0)]],
+            especie: [especie, [Validators.min(0)]]
+          }));
+        });
+        
+        // Re-apply visibility logic
+        const tieneFinanciacionVal = this.form.get('tieneFinanciacion')?.value;
+        this.updateFinanciacionVisibility(tieneFinanciacionVal || '');
+      }
+    });
+
     // Effect to handle initial data loading when service is ready
     effect(() => {
         const depts = this.parametroBaseService.departamentos();
@@ -232,8 +282,10 @@ export class StepIdentificationComponent implements OnInit {
     const detalleFinanciacion = value.detalleFinanciacion
       ?.filter((item: any) => item.dinero > 0 || item.especie > 0)
       .map((item: any) => ({
-        id: item.id,
-        fuente: item.fuente,
+        fuente: { 
+          id: item.id,
+          nombre: item.fuente
+        },
         dinero: item.dinero || 0,
         especie: item.especie || 0
       })) || [];
@@ -312,17 +364,7 @@ export class StepIdentificationComponent implements OnInit {
       landDescription: [this.initialData?.landDescription || '', Validators.minLength(10)],
       tieneFinanciacion: [this.initialData?.tieneFinanciacion?.id || '', Validators.required],
       financingDescription: [this.initialData?.financingDescription || '', Validators.minLength(10)],
-      detalleFinanciacion: this.fb.array(
-        FUENTES_FINANCIACION.map(fuente => {
-          const initialFuente = this.initialData?.detalleFinanciacion?.find(f => f.id === fuente.id);
-          return this.fb.group({
-            id: [fuente.id],
-            fuente: [fuente.fuente],
-            dinero: [initialFuente?.dinero || 0, [Validators.min(0)]],
-            especie: [initialFuente?.especie || 0, [Validators.min(0)]]
-          });
-        })
-      ),
+      detalleFinanciacion: this.fb.array([]),
       department: [this.initialData?.departmentId?.id || initialDeptId, Validators.required],
       municipality: [this.initialData?.municipality?.id || initialMunicipio, Validators.required],
       organizationName: [this.initialData?.organizationName || '', [Validators.required, Validators.minLength(3)]],

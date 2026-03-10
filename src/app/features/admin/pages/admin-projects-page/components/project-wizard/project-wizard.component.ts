@@ -286,6 +286,7 @@ export class ProjectWizardComponent {
           projectValue: data.projectValue,
           TieneFinanciacion: data.tieneFinanciacion,
           FinancingDescription: data.financingDescription,
+          detalleFinanciacion: data.detalleFinanciacion,
           Organization: {
             id: data.organizationId,
             name: data.organizationName,
@@ -344,6 +345,7 @@ export class ProjectWizardComponent {
           projectValue: data.projectValue,
           TieneFinanciacion: data.tieneFinanciacion,
           FinancingDescription: data.financingDescription,
+          detalleFinanciacion: data.detalleFinanciacion,
           Organization: {
             id: data.organizationId,
             name: data.organizationName,

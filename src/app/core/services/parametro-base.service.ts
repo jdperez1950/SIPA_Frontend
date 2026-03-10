@@ -115,6 +115,7 @@ export class ParametroBaseService {
   private _tiposEncargado = signal<ParametroBase[]>([]);
   private _proyectoTerreno = signal<ParametroBase[]>([]);
   private _proyectoFinanciacion = signal<ParametroBase[]>([]);
+  private _fuentesFinanciacion = signal<ParametroBase[]>([]);
   private _tiposVivienda = signal<ParametroBase[]>([]);
   private _tenenciasVivienda = signal<ParametroBase[]>([]);
   private _tiposSaneamiento = signal<ParametroBase[]>([]);
@@ -257,6 +258,12 @@ export class ParametroBaseService {
       .sort((a, b) => a.nombre.localeCompare(b.nombre))
   );
 
+  public fuentesFinanciacion = computed(() =>
+    this._fuentesFinanciacion()
+      .filter(p => !p.deletedAt)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  );
+
   constructor() {
     this.loadBasicParameters();
   }
@@ -300,6 +307,10 @@ export class ParametroBaseService {
 
     this.getByTipo('PROYECTO_FINANCIACION').subscribe(data => {
       this._proyectoFinanciacion.set(data);
+    });
+
+    this.getByTipo('TIPO_FUENTE_FINANCIACION').subscribe(data => {
+      this._fuentesFinanciacion.set(data);
     });
 
     this.getByTipo('TIPO_DOCUMENTO').subscribe(data => {
@@ -413,6 +424,7 @@ export class ParametroBaseService {
       'TIPO_ENCARGADO': () => this._tiposEncargado(),
       'PROYECTO_TERRENO': () => this._proyectoTerreno(),
       'PROYECTO_FINANCIACION': () => this._proyectoFinanciacion(),
+      'TIPO_FUENTE_FINANCIACION': () => this._fuentesFinanciacion(),
       'TIPO_VIVIENDA': () => this._tiposVivienda(),
       'TENENCIA_VIVIENDA': () => this._tenenciasVivienda(),
       'TIPO_SANEAMIENTO': () => this._tiposSaneamiento(),

@@ -1,4 +1,4 @@
-import { FinanciacionFuente } from './steps/step-identification/financing.models';
+import { FinanciacionFuente } from '../../../../../../core/models/domain.models';
 
 export interface WizardState {
   currentStep: number;

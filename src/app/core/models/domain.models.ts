@@ -189,6 +189,15 @@ export interface ProjectTeamMember {
   consultor: ParametroSelect | null;
 }
 
+export interface FinanciacionFuente {
+  fuente: {
+    id: string;
+    nombre?: string;
+  };
+  dinero: number;
+  especie: number;
+}
+
 export interface ProjectRequest {
   id?: string;
   Description?: string;
@@ -199,6 +208,7 @@ export interface ProjectRequest {
   projectValue?: number;
   TieneFinanciacion?: ParametroSelect | null;
   FinancingDescription?: string;
+  detalleFinanciacion?: FinanciacionFuente[];
   Organization?: {
     id?: string;
     name?: string;
