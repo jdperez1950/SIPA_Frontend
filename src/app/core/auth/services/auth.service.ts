@@ -6,7 +6,7 @@ import { Observable, throwError, of } from 'rxjs';
 import { tap, map, catchError, delay, switchMap } from 'rxjs/operators';
 import { User } from '../../models/domain.models';
 import { environment } from '../../../../environments/environment';
-import { AuthResponse, LoginRequest, RegisterRequest, ValidateTokenResponse } from '../models/auth.models';
+import { AuthResponse, LoginRequest, RegisterRequest, ValidateTokenResponse, RefreshTokenResponse } from '../models/auth.models';
 import { ConfirmationService } from '../../services/confirmation.service';
 
 @Injectable({
@@ -19,6 +19,7 @@ export class AuthService {
   private confirmationService = inject(ConfirmationService);
   private apiUrl = environment.apiUrl;
   private readonly TOKEN_KEY = 'pavis_token';
+  private readonly REFRESH_TOKEN_KEY = 'pavis_refresh_token';
   private readonly USER_KEY = 'pavis_user';
   
   // Private signal for user state
@@ -77,6 +78,19 @@ export class AuthService {
 
   private periodicValidationTimer: any;
   private readonly TOKEN_VALIDATION_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+  private setRefreshToken(token: string) {
+    if (isPlatformBrowser(this.platformId) && token) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, token);
+    }
+  }
+
+  getRefreshToken(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    }
+    return null;
+  }
 
   private startInactivityTimer() {
     clearTimeout(this.logoutTimer);
@@ -194,6 +208,7 @@ export class AuthService {
       switchMap(response => {
         if (response.success && response.data && response.data.user && response.data.token) {
           this.setToken(response.data.token);
+          this.setRefreshToken(response.data.refreshToken); // Guardar refreshToken
           this.#currentUser.set(response.data.user);
           if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem(this.USER_KEY, JSON.stringify(response.data.user));
@@ -240,6 +255,7 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.USER_KEY);
       localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       sessionStorage.clear();
     }
   }
@@ -314,5 +330,11 @@ export class AuthService {
         return of(false);
       })
     );
+  }
+
+  refreshToken(currentToken: string): Observable<RefreshTokenResponse> {
+    return this.http.post<RefreshTokenResponse>(`${this.apiUrl}/auth/refresh`, {
+      token: currentToken
+    });
   }
 }

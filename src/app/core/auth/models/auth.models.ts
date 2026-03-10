@@ -17,7 +17,16 @@ export interface AuthResponse {
   message: string;
   data: {
     token: string;
+    refreshToken: string;
     user: User;
+  };
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
   };
 }
 

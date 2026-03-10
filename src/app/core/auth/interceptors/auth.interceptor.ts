@@ -1,10 +1,12 @@
-import { HttpInterceptorFn, HttpErrorResponse, HttpEventType, HttpResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpEventType, HttpResponse, HttpBackend, HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ConfirmationService } from '../../services/confirmation.service';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, switchMap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { RefreshTokenResponse } from '../models/auth.models';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Use explicit injection to avoid circular dependency
@@ -34,9 +36,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const router = inject(Router);
   const confirmationService = inject(ConfirmationService);
-  // We can't inject AuthService directly here if it causes circular dep.
-  // But we need it for logout logic.
-  // Let's inject it lazily inside the error block if possible, or just use Router and clear storage manually.
+  const httpBackend = inject(HttpBackend); // Inject HttpBackend to bypass interceptors
+
+  let refreshToken: string | null = null;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      refreshToken = localStorage.getItem('pavis_refresh_token');
+    }
+  } catch (e) {}
 
   let request = req;
 
@@ -65,24 +72,42 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
     }),
     catchError((error: HttpErrorResponse) => {
-      // Auto-logout on 401 Unauthorized, except for login endpoint
-      if (error.status === 401 && !req.url.includes('/auth/login')) {
-        // Manually clear session to avoid circular dep with AuthService.logout()
-        if (typeof localStorage !== 'undefined') {
-          localStorage.removeItem('pavis_user');
-          localStorage.removeItem('pavis_token');
-          sessionStorage.clear();
-        }
+      // Auto-logout on 401 Unauthorized, except for login and refresh endpoints
+      if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
         
-        // Show session expired message
-        confirmationService.alert({
-          title: 'Sesión Expirada',
-          message: 'Tu sesión ha caducado. Por favor, inicia sesión nuevamente.',
-          type: 'info',
-          confirmText: 'Entendido'
-        });
+        // Attempt to refresh token using the REFRESH TOKEN (not the expired access token)
+        if (refreshToken) {
+          const http = new HttpClient(httpBackend);
+          return http.post<RefreshTokenResponse>(`${environment.apiUrl}/auth/refresh`, { token: refreshToken }).pipe(
+            switchMap((response) => {
+              if (response.success && response.data && response.data.token) {
+                const newToken = response.data.token;
+                
+                // Update token in storage
+                if (typeof localStorage !== 'undefined') {
+                  localStorage.setItem('pavis_token', newToken);
+                }
+                
+                // Retry request with new token
+                const newReq = req.clone({
+                  headers: req.headers.set('Authorization', `Bearer ${newToken}`)
+                });
+                
+                return next(newReq);
+              }
+              // If refresh response is not successful, throw error to trigger logout
+              return throwError(() => error);
+            }),
+            catchError((refreshError) => {
+              // If refresh fails, perform logout
+              handleLogout(confirmationService, router);
+              return throwError(() => refreshError);
+            })
+          );
+        }
 
-        router.navigate(['/auth/login']);
+        // If no refresh token, just logout
+        handleLogout(confirmationService, router);
       }
       
       // Handle 403 Forbidden
@@ -99,3 +124,23 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     })
   );
 };
+
+function handleLogout(confirmationService: ConfirmationService, router: Router) {
+  // Manually clear session to avoid circular dep with AuthService.logout()
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('pavis_user');
+    localStorage.removeItem('pavis_token');
+    localStorage.removeItem('pavis_refresh_token');
+    sessionStorage.clear();
+  }
+  
+  // Show session expired message
+  confirmationService.alert({
+    title: 'Sesión Expirada',
+    message: 'Tu sesión ha caducado. Por favor, inicia sesión nuevamente.',
+    type: 'info',
+    confirmText: 'Entendido'
+  });
+
+  router.navigate(['/auth/login']);
+}
