@@ -1,9 +1,10 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, effect, signal, computed } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, effect, signal, computed, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ResponseTeamMember } from '../../project-wizard.types';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ResponseTeamMember, ParametroSelect } from '../../project-wizard.types';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService } from '../../../../../../../../core/services/confirmation.service';
 import { ParametroBaseService } from '../../../../../../../../core/services/parametro-base.service';
+import { CustomDropdownComponent } from '../../../shared/custom-dropdown/custom-dropdown.component';
 import {
   numericOnlyValidator,
   nitFormatValidator,
@@ -23,7 +24,7 @@ import {
 @Component({
   selector: 'app-step-response-team',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomDropdownComponent],
   templateUrl: './step-response-team.component.html',
   styles: []
 })
@@ -31,13 +32,16 @@ export class StepResponseTeamComponent implements OnInit {
   @Input() organizationId?: string;
   @Input({ required: true }) organizationName!: string;
   @Input({ required: true }) selectedMembers: ResponseTeamMember[] = [];
+  @Input() initialResponsible: ParametroSelect | null = null;
   @Output() selectionChange = new EventEmitter<ResponseTeamMember[]>();
+  @Output() responsibleChange = new EventEmitter<ParametroSelect | null>();
 
   private fb = inject(FormBuilder);
   private confirmationService = inject(ConfirmationService);
   private parametroBaseService = inject(ParametroBaseService);
 
   userForm!: FormGroup;
+  responsibleControl!: FormControl;
   isSearching = false;
   editingMember = signal<ResponseTeamMember | null>(null);
   isEditMode = computed(() => this.editingMember() !== null);
@@ -72,6 +76,14 @@ export class StepResponseTeamComponent implements OnInit {
     this.initForm();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['initialResponsible'] && !changes['initialResponsible'].firstChange) {
+      if (this.responsibleControl) {
+        this.responsibleControl.setValue(this.initialResponsible?.id || '', { emitEvent: false });
+      }
+    }
+  }
+
   getDocumentTypeName(id: string): string {
     const docType = this.documentTypes().find(d => d.id === id);
     return docType?.nombre || id;
@@ -83,6 +95,12 @@ export class StepResponseTeamComponent implements OnInit {
   }
 
   private initForm() {
+    this.responsibleControl = new FormControl(this.initialResponsible?.id || '', Validators.required);
+    this.responsibleControl.valueChanges.subscribe(value => {
+      const selected = this.responsiblePositions().find(p => p.id === value);
+      this.responsibleChange.emit(selected || null);
+    });
+
     this.userForm = this.fb.group({
       documentType: ['', Validators.required],
       documentNumber: ['', [Validators.required, Validators.minLength(5), numericOnlyValidator]],

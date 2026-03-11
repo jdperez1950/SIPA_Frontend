@@ -84,7 +84,9 @@
                 [organizationId]="data.organizationId"
                 [organizationName]="data.organizationName"
                 [selectedMembers]="responseTeam()"
+                [initialResponsible]="responsible()"
                 (selectionChange)="updateResponseTeam($event)"
+                (responsibleChange)="responsible.set($event)"
               ></app-step-response-team>
             }
           }

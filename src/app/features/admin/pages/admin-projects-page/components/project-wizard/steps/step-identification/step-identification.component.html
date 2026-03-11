@@ -53,11 +53,15 @@
           id="isLegallyConstituted" 
           formControlName="isLegallyConstituted" 
           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
+          [ngClass]="{'border-red-300 focus:ring-red-200': form.get('isLegallyConstituted')?.invalid && form.get('isLegallyConstituted')?.touched}"
         >
           <option value="">Seleccione...</option>
           <option value="SI">Sí</option>
           <option value="NO">No</option>
         </select>
+        @if (form.get('isLegallyConstituted')?.invalid && form.get('isLegallyConstituted')?.touched) {
+          <p class="text-xs text-red-500 mt-1">Debe seleccionar una opción</p>
+        }
       </div>
 
       @if (form.get('isLegallyConstituted')?.value === 'SI') {

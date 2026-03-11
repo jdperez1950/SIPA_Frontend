@@ -96,13 +96,26 @@ export class StepIdentificationComponent implements OnInit {
           let especie = 0;
           
           // Check initialData first
-          const initialMatch = this.initialData?.detalleFinanciacion?.find(f => 
-            f.fuente?.id === source.id || 
-            (source.codigo && f.fuente?.id === source.codigo)
+          // El backend devuelve null en fuente, asi que usamos el índice temporalmente si coincide
+          const initialMatch = this.initialData?.detalleFinanciacion?.find((f, index) => 
+            (f.fuente?.id === source.id) || 
+            (source.codigo && f.fuente?.codigo === source.codigo)
           );
+
           if (initialMatch) {
-            dinero = initialMatch.dinero;
-            especie = initialMatch.especie;
+            dinero = initialMatch.dinero || 0;
+            especie = initialMatch.especie || 0;
+          } else if (this.initialData?.detalleFinanciacion && this.initialData.detalleFinanciacion.length > 0) {
+             // Fallback por índice si la fuente es null (temporal mientras backend arregla)
+             // Asumimos que el orden es el mismo que fuentesFinanciacion
+             const index = sources.indexOf(source);
+             if (index >= 0 && index < this.initialData.detalleFinanciacion.length) {
+                const matchByIndex = this.initialData.detalleFinanciacion[index];
+                if (matchByIndex) {
+                    dinero = matchByIndex.dinero || 0;
+                    especie = matchByIndex.especie || 0;
+                }
+             }
           }
           
           // Check current form values (in case of re-render or updates)
@@ -114,7 +127,8 @@ export class StepIdentificationComponent implements OnInit {
 
           detalleArray.push(this.fb.group({
             id: [source.id],
-            fuente: [source.nombre],
+            fuente: [source.nombre], // Esto es solo display, no se envia
+            fuenteId: [source.id], // ID real para enviar
             dinero: [dinero, [Validators.min(0)]],
             especie: [especie, [Validators.min(0)]]
           }));
@@ -554,6 +568,8 @@ export class StepIdentificationComponent implements OnInit {
     const financingDescriptionControl = this.form.get('financingDescription');
     
     if (tieneFinanciacion) {
+      // Si tiene financiación, mantenemos los validadores
+      // NO SOBRESCRIBIMOS VALORES AQUI, solo actualizamos validez
       detalleArray.controls.forEach(control => {
         control.get('dinero')?.setValidators([Validators.min(0)]);
         control.get('especie')?.setValidators([Validators.min(0)]);
@@ -563,6 +579,7 @@ export class StepIdentificationComponent implements OnInit {
       financingDescriptionControl?.setValidators([Validators.minLength(10)]);
       financingDescriptionControl?.updateValueAndValidity();
     } else {
+      // Si NO tiene financiación, limpiamos valores y validadores
       detalleArray.controls.forEach(control => {
         control.get('dinero')?.setValue(0);
         control.get('especie')?.setValue(0);

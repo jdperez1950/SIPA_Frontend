@@ -143,6 +143,8 @@ export interface Project {
   landDescription?: string;
   tieneFinanciacion?: ParametroSelect;
   financingDescription?: string;
+  detalleFinanciacion?: FinanciacionFuente[];
+  responsible?: ParametroSelect;
 }
 
 export interface ApiResponse<T> {
@@ -193,6 +195,7 @@ export interface FinanciacionFuente {
   fuente: {
     id: string;
     nombre?: string;
+    codigo?: string;
   };
   dinero: number;
   especie: number;
@@ -236,6 +239,7 @@ export interface ProjectRequest {
   viabilityStatus?: ViabilityScenario;
   advisorId?: string;
   activeAxes?: string[];
+  responsible?: ParametroSelect | null;
 }
 
 export interface TechnicalTableMember {

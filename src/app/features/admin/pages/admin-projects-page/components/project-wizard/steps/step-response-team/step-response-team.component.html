@@ -9,6 +9,26 @@
     </p>
   </div>
 
+  <!-- Responsible Section -->
+  <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Encargado del Proyecto</h4>
+    <div class="space-y-2">
+      <label for="responsible" class="block text-sm font-medium text-gray-700">Seleccione el Encargado <span class="text-red-500">*</span></label>
+      <app-custom-dropdown
+          id="responsible"
+          [items]="responsiblePositions()"
+          placeholder="Seleccione..."
+          [invalid]="!!(responsibleControl.invalid && responsibleControl.touched)"
+          [selectedValue]="responsibleControl.value"
+          [enableSearch]="false"
+          (valueChange)="responsibleControl.setValue($event)"
+      ></app-custom-dropdown>
+       @if (responsibleControl.invalid && responsibleControl.touched) {
+          <p class="text-xs text-red-500 mt-1">El encargado es requerido</p>
+        }
+    </div>
+  </div>
+
   <!-- Form Section -->
   <form [formGroup]="userForm" (ngSubmit)="addMember()" class="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
     <div class="flex justify-between items-center mb-4">

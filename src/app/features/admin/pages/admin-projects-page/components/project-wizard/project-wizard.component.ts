@@ -12,7 +12,8 @@ import { ProjectRequest, Project, ProjectResponseTeamMember } from '../../../../
 import { 
   IdentificationData, 
   TechnicalTableAssignment, 
-  ResponseTeamMember 
+  ResponseTeamMember,
+  ParametroSelect
 } from './project-wizard.types';
 import { ModalAlertComponent, ModalAlertData } from '../../../../../../shared/components/modal-alert';
 
@@ -82,6 +83,7 @@ export class ProjectWizardComponent {
 
   // Step 2 Data
   responseTeam = signal<ResponseTeamMember[]>([]);
+  responsible = signal<ParametroSelect | null>(null);
 
   // Step 3 Data (Mesa Técnica)
   technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
@@ -127,29 +129,33 @@ export class ProjectWizardComponent {
     const getNombreOrCodigo = (param: any) => param?.nombre || param?.codigo || '';
 
     // Parse project fields from backend
+    this.responsible.set(project.responsible || null);
+    
     this.identificationData.set({
       organizationId: orgData?.id,
       description: safeStr(project.description) || '',
       projectValue: project.projectValue || 0,
       housingCount: project.housingCount || 0,
       beneficiariesCount: project.beneficiariesCount || 0,
-      tieneTerreno: project.tieneTerreno || { id: '', nombre: '' },
+      tieneTerreno: project.tieneTerreno || null,
       landDescription: safeStr(project.landDescription) || '',
-      tieneFinanciacion: project.tieneFinanciacion || { id: '', nombre: '' },
+      tieneFinanciacion: project.tieneFinanciacion || null,
       financingDescription: safeStr(project.financingDescription) || '',
-      departmentId: deptParam ? { id: deptParam.id, nombre: getNombreOrCodigo(deptParam) } : { id: '', nombre: project.state || '' },
+      detalleFinanciacion: project.detalleFinanciacion || [],
+      departmentId: deptParam ? { id: deptParam.id, nombre: getNombreOrCodigo(deptParam), tipo: deptParam.tipo, codigo: deptParam.codigo } : null,
       departmentName: getNombreOrCodigo(deptParam) || project.state || '',
-      municipality: municipioParam ? { id: municipioParam.id, nombre: getNombreOrCodigo(municipioParam) } : { id: '', nombre: project.municipality || '' },
+      municipality: municipioParam ? { id: municipioParam.id, nombre: getNombreOrCodigo(municipioParam), tipo: municipioParam.tipo, codigo: municipioParam.codigo } : null,
       municipalityName: getNombreOrCodigo(municipioParam) || project.municipality || '',
       
       organizationName: safeStr(project.organizationName) || orgData?.name || '',
-      organizationType: orgType ? { id: orgType.id, nombre: orgType.nombre, tipo: orgType.tipo, codigo: orgType.codigo } : { id: '', nombre: '', tipo: '', codigo: '' },
+      organizationType: orgType ? { id: orgType.id, nombre: orgType.nombre, tipo: orgType.tipo, codigo: orgType.codigo } : null,
       organizationIdentifier: orgData?.identifier || '',
       verificationDigit: orgData?.digitoVerificacion?.toString() ?? '',
       organizationEmail: orgData?.email || '',
       website: orgData?.paginaWeb || '',
       organizationDescription: orgData?.description || '',
       organizationAddress: orgData?.address || '',
+      isLegallyConstituted: orgData?.isLegallyConstituted || 'NO',
       
       startDate: safeStr(project.startDate).split('T')[0],
       endDate: safeStr(project.endDate).split('T')[0],
@@ -161,13 +167,13 @@ export class ProjectWizardComponent {
     if (orgTeam && orgTeam.length > 0) {
       this.responseTeam.set(orgTeam.map((m: ProjectResponseTeamMember) => ({
         userId: m.userId,
-        name: m.nombre || m.name,
+        name: m.phone || '', // El nombre viene erróneamente en el campo phone
         documentType: m.documentType || { id: '', nombre: '' },
         documentNumber: m.documentNumber,
         email: m.email,
-        phone: m.phone || '',
-        nombre: m.nombre || m.name,
-        profile: m.profile || '',
+        phone: m.profile || '', // El teléfono viene erróneamente en el campo profile
+        nombre: m.phone || '', // El nombre viene erróneamente en el campo phone
+        profile: m.name || m.nombre || '', // La descripción viene erróneamente en el campo name
         representativeType: m.representativeType || { id: '', nombre: '' }
       })));
     }
@@ -181,7 +187,7 @@ export class ProjectWizardComponent {
       case 1:
         return !!this.identificationData();
       case 2:
-        return this.responseTeam().length > 0;
+        return this.responseTeam().length > 0 && !!this.responsible();
       case 3:
         return true; // Mesa técnica es opcional
       default:
@@ -287,12 +293,13 @@ export class ProjectWizardComponent {
           TieneFinanciacion: data.tieneFinanciacion,
           FinancingDescription: data.financingDescription,
           detalleFinanciacion: data.detalleFinanciacion,
+          responsible: this.responsible(),
           Organization: {
             id: data.organizationId,
             name: data.organizationName,
             type: data.organizationType,
             identifier: data.organizationIdentifier,
-            digitoVerificacion: parseInt(data.verificationDigit || '0'),
+            digitoVerificacion: data.verificationDigit ? parseInt(data.verificationDigit) : undefined,
             email: data.organizationEmail,
             paginaWeb: data.website,
             region: data.departmentId,
@@ -346,12 +353,13 @@ export class ProjectWizardComponent {
           TieneFinanciacion: data.tieneFinanciacion,
           FinancingDescription: data.financingDescription,
           detalleFinanciacion: data.detalleFinanciacion,
+          responsible: this.responsible(),
           Organization: {
             id: data.organizationId,
             name: data.organizationName,
             type: data.organizationType,
             identifier: data.organizationIdentifier,
-            digitoVerificacion: parseInt(data.verificationDigit || '0'),
+            digitoVerificacion: data.verificationDigit ? parseInt(data.verificationDigit) : undefined,
             email: data.organizationEmail,
             paginaWeb: data.website,
             region: data.departmentId,
