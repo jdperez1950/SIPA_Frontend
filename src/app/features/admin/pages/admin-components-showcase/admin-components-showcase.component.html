@@ -1,0 +1,262 @@
+<div class="p-8 space-y-8">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">Showcase de Componentes UI</h1>
+    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Demo Mode</span>
+  </div>
+
+  <!-- SECCIÓN 1: ESTADÍSTICAS -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">1. Dashboard Stats Component</h2>
+    
+    <app-dashboard-stats [stats]="kpiStats">
+      <!-- Filtros proyectados -->
+      <select class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto">
+        <option>Todos los periodos</option>
+        <option>Último mes</option>
+        <option>Último trimestre</option>
+      </select>
+      
+      <div class="relative w-full sm:w-auto">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <span class="material-symbols-rounded text-lg">search</span>
+        </span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          (input)="filterProjects()"
+          placeholder="Buscar por código o nombre..." 
+          class="pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+        >
+      </div>
+    </app-dashboard-stats>
+  </section>
+
+  <!-- SECCIÓN 2: TABLA EXPANDIBLE -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">2. Expandable Table Component (Master-Detail)</h2>
+    
+    <app-expandable-table 
+      [data]="filteredProjects" 
+      [columns]="projectColumns"
+      [title]="'Proyectos Recientes'"
+      [selectable]="false"
+      (selectionChange)="handleSelectionChange($event)">
+
+      <!-- Template para Acciones de la Fila Principal (Dinámicas) -->
+      <ng-template #actionsTemplate let-row>
+        <div class="flex items-center gap-1">
+          <ng-container *ngFor="let action of availableRowActions">
+            <button 
+              *ngIf="row.availableActions?.includes(action.id)"
+              (click)="handleRowAction(action, row)"
+              [title]="action.label"
+              class="p-1 text-gray-500 rounded transition-colors"
+              [ngClass]="action.color">
+              <span class="material-symbols-rounded">{{ action.icon }}</span>
+            </button>
+          </ng-container>
+        </div>
+      </ng-template>
+
+      <!-- Template para el Detalle Expandido (Nivel 2: Ejes) -->
+      <ng-template #expandedRowTemplate let-project>
+        <div class="space-y-4">
+          <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <span class="material-symbols-rounded text-gray-400">category</span>
+            Ejes del Proyecto
+          </h4>
+
+          <!-- Mobile View (Accordion List) -->
+          <div class="block md:hidden space-y-3">
+            <ng-container *ngFor="let axis of project.axes">
+              <div class="border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                <!-- Axis Header -->
+                <div (click)="toggleAxisExpansion(axis)" 
+                     class="p-4 flex items-center justify-between cursor-pointer bg-gray-50 active:bg-gray-100 transition-colors">
+                  <div class="flex flex-col gap-1">
+                     <span class="font-semibold text-gray-800">{{ axis.name }}</span>
+                     <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs font-medium" 
+                          [ngClass]="{
+                            'bg-green-100 text-green-800': axis.status === 'VALIDATED',
+                            'bg-blue-100 text-blue-800': axis.status === 'PROCESS',
+                            'bg-red-100 text-red-800': axis.status === 'RETURNED',
+                            'bg-gray-100 text-gray-800': axis.status === 'PENDING'
+                          }">
+                          {{ axis.status }}
+                        </span>
+                        <span class="text-xs text-gray-500">{{ axis.questions?.length || 0 }} preguntas</span>
+                     </div>
+                  </div>
+                  <button class="w-8 h-8 flex items-center justify-center text-gray-400">
+                    <span class="material-symbols-rounded transition-transform duration-200" 
+                          [ngStyle]="{'transform': isAxisExpanded(axis) ? 'rotate(180deg)' : 'rotate(0deg)'}">expand_more</span>
+                  </button>
+                </div>
+          
+                <!-- Axis Content (Questions List) -->
+                <div *ngIf="isAxisExpanded(axis)" class="border-t border-gray-200 divide-y divide-gray-100">
+                   <ng-container *ngFor="let question of axis.questions">
+                      <div class="p-4 space-y-3">
+                         <!-- Question Text & Status -->
+                         <div class="flex items-start justify-between gap-3">
+                            <p class="text-sm font-medium text-gray-900 leading-snug">{{ question.text }}</p>
+                            <span class="material-symbols-rounded text-lg flex-shrink-0"
+                                [ngClass]="{
+                                  'text-green-500': question.status === 'VALIDATED',
+                                  'text-red-500': question.status === 'RETURNED',
+                                  'text-gray-400': question.status === 'PENDING'
+                                }">
+                              {{ question.status === 'VALIDATED' ? 'check_circle' : question.status === 'RETURNED' ? 'cancel' : 'help' }}
+                            </span>
+                         </div>
+                         
+                         <!-- Answer -->
+                         <div class="bg-gray-50 p-3 rounded-md text-sm text-gray-700 border border-gray-100">
+                            <span class="block text-xs font-bold text-gray-400 uppercase mb-1">Respuesta</span>
+                            {{ question.answer }}
+                         </div>
+          
+                         <!-- Actions -->
+                         <div class="flex justify-end pt-1">
+                           <button (click)="handleQuestionAction(question)" 
+                                   class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                              <span class="material-symbols-rounded text-lg">more_horiz</span>
+                              Acciones
+                           </button>
+                         </div>
+                      </div>
+                   </ng-container>
+                   <div *ngIf="!axis.questions?.length" class="p-6 text-center text-gray-400 text-sm italic">
+                      No hay preguntas registradas
+                   </div>
+                </div>
+              </div>
+            </ng-container>
+            
+            <div *ngIf="!project.axes?.length" class="p-6 text-center text-gray-400 italic bg-gray-50 rounded-lg border border-dashed border-gray-300">
+               Sin ejes asignados
+            </div>
+          </div>
+
+          <!-- Tabla Anidada para Ejes (Desktop View) -->
+          <div class="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                <tr>
+                  <th class="w-8"></th>
+                  <th class="px-4 py-2 text-left">Eje</th>
+                  <th class="px-4 py-2 text-center">Estado</th>
+                  <th class="px-4 py-2 text-right">Preguntas</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <ng-container *ngFor="let axis of project.axes">
+                  <!-- Fila del Eje -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-2 py-3">
+                      <button 
+                        *ngIf="axis.questions && axis.questions.length > 0"
+                        (click)="toggleAxisExpansion(axis)"
+                        [ngStyle]="{'transform': isAxisExpanded(axis) ? 'rotate(45deg)' : 'rotate(0deg)'}"
+                        class="w-8 h-8 rounded-full hover:bg-white hover:shadow-sm hover:text-pavis-brand-primary flex items-center justify-center transition-all focus:outline-none text-pavis-brand-primary">
+                        <span class="material-symbols-rounded transition-transform duration-200 text-xl">chevron_right</span>
+                      </button>
+                    </td>
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ axis.name }}</td>
+                    <td class="px-4 py-3 text-center">
+                      <span class="px-2 py-1 rounded-full text-xs font-medium" 
+                            [ngClass]="{
+                              'bg-green-100 text-green-800': axis.status === 'VALIDATED',
+                              'bg-blue-100 text-blue-800': axis.status === 'PROCESS',
+                              'bg-red-100 text-red-800': axis.status === 'RETURNED',
+                              'bg-gray-100 text-gray-800': axis.status === 'PENDING'
+                            }">
+                        {{ axis.status }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-right text-gray-500">
+                      {{ axis.questions?.length || 0 }} pregunta(s)
+                    </td>
+                  </tr>
+
+                  <!-- Filas de Preguntas Expandidas -->
+                  <tr *ngIf="isAxisExpanded(axis) && axis.questions?.length > 0">
+                    <td colspan="4" class="p-0">
+                      <div class="bg-gray-50 px-4 py-3 space-y-2">
+                        <ng-container *ngFor="let question of axis.questions">
+                          <!-- Fila de la Pregunta (expandible) -->
+                          <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                            <!-- Header de la Pregunta -->
+                            <div class="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50"
+                                 (click)="toggleQuestionExpansion(question)">
+                              <div class="flex items-center gap-3 flex-1">
+                                <button class="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center transition-all focus:outline-none text-gray-500"
+                                        [ngStyle]="{'transform': isQuestionExpanded(question) ? 'rotate(45deg)' : 'rotate(0deg)'}">
+                                  <span class="material-symbols-rounded text-[18px]">add</span>
+                                </button>
+                                <span class="material-symbols-rounded text-[18px]"
+                                      [ngClass]="{
+                                        'text-green-500': question.status === 'VALIDATED',
+                                        'text-red-500': question.status === 'RETURNED',
+                                        'text-gray-400': question.status === 'PENDING'
+                                      }">
+                                  {{ question.status === 'VALIDATED' ? 'check_circle' : question.status === 'RETURNED' ? 'cancel' : 'help' }}
+                                </span>
+                                <p class="text-sm font-medium text-gray-800">{{ question.text }}</p>
+                              </div>
+                              <button 
+                                (click)="$event.stopPropagation(); handleQuestionAction(question)"
+                                class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors flex items-center gap-1 flex-shrink-0">
+                                <span class="material-symbols-rounded text-[14px]">more_horiz</span>
+                                Acción
+                              </button>
+                            </div>
+
+                            <!-- Detalle de la Pregunta Expandida -->
+                            <div *ngIf="isQuestionExpanded(question)" class="px-4 pb-3 pt-0 border-t border-gray-100 bg-gray-50">
+                              <div class="pt-3 space-y-2">
+                                <div class="flex items-start gap-2">
+                                  <span class="material-symbols-rounded text-gray-400 text-[16px] mt-0.5">chat_bubble</span>
+                                  <div class="flex-1">
+                                    <p class="text-xs text-gray-500 uppercase font-medium">Respuesta</p>
+                                    <p class="text-sm text-gray-700 mt-0.5">{{ question.answer }}</p>
+                                  </div>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                  <span class="material-symbols-rounded text-gray-400 text-[16px] mt-0.5">info</span>
+                                  <div class="flex-1">
+                                    <p class="text-xs text-gray-500 uppercase font-medium">Estado</p>
+                                    <p class="text-sm text-gray-700 mt-0.5">{{ question.status }}</p>
+                                  </div>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                  <span class="material-symbols-rounded text-gray-400 text-[16px] mt-0.5">attach_file</span>
+                                  <div class="flex-1">
+                                    <p class="text-xs text-gray-500 uppercase font-medium">Evidencia</p>
+                                    <p class="text-sm text-gray-500 mt-0.5 italic">No adjuntada</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+
+                <tr *ngIf="!project.axes || project.axes.length === 0">
+                  <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">
+                    Sin ejes asignados
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </ng-template>
+
+    </app-expandable-table>
+  </section>
+</div>

@@ -20,5 +20,6 @@ export class SidebarComponent {
     { label: 'Organizaciones', icon: 'corporate_fare', route: '/admin/organizations' },
     { label: 'Catálogos', icon: 'settings', route: '/admin/settings' },
     { label: 'Reportes', icon: 'bar_chart', route: '/admin/reports' },
+    { label: 'Componentes UI', icon: 'palette', route: '/admin/ui-components' },
   ];
 }
