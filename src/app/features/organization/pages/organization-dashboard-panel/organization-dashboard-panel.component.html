@@ -214,7 +214,7 @@
 
         <div class="flex-1 overflow-y-auto p-6">
           <div class="space-y-6">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Código</p>
                 <p class="font-semibold text-gray-900">{{ selectedProject()?.code }}</p>
@@ -238,6 +238,10 @@
                 <p class="font-semibold text-gray-900">{{ getOrganizationName(selectedProject()!) }}</p>
               </div>
               <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">NIT / Identificador</p>
+                <p class="font-semibold text-gray-900">{{ getOrganizationIdentifier(selectedProject()!) }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Viabilidad</p>
                 <span 
                   class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
@@ -251,9 +255,13 @@
                   {{ getViabilityLabel(selectedProject()?.viabilityStatus || ViabilityScenario.PRE_ENABLED) }}
                 </span>
               </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Ubicación</p>
+                <p class="font-semibold text-gray-900">{{ getDisplayMunicipality(selectedProject()!) }}</p>
+              </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Viviendas</p>
                 <p class="font-semibold text-gray-900">{{ selectedProject()?.housingCount || '-' }}</p>
@@ -266,27 +274,56 @@
                 <p class="text-xs text-gray-500 mb-1">Valor del Proyecto</p>
                 <p class="font-semibold text-gray-900">{{ formatCurrency(selectedProject()?.projectValue) }}</p>
               </div>
-              @if (selectedProject()?.tieneTerreno && selectedProject()?.tieneTerreno?.nombre) {
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <p class="text-xs text-gray-500 mb-1">Terreno</p>
-                  <p class="font-semibold text-gray-900">{{ selectedProject()?.tieneTerreno?.nombre }}</p>
-                </div>
-              }
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Asesor</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.advisor?.name || '-' }}</p>
+              </div>
             </div>
 
-            @if (selectedProject()?.landDescription) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-gray-50 p-4 rounded-lg">
-                <p class="text-xs text-gray-500 mb-2">Descripción del Terreno</p>
-                <p class="font-medium text-gray-900">{{ selectedProject()?.landDescription }}</p>
+                <p class="text-xs text-gray-500 mb-1">Tiene terreno</p>
+                <p class="font-semibold text-gray-900">{{ getTerrenoDisplay(selectedProject()!) }}</p>
               </div>
-            }
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Tiene financiación</p>
+                <p class="font-semibold text-gray-900">{{ getFinanciacionDisplay(selectedProject()!) }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Responsable</p>
+                <p class="font-semibold text-gray-900">{{ getParametroDisplay(selectedProject()?.responsible) }}</p>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Fuentes de financiación</p>
+                <p class="font-semibold text-gray-900">{{ selectedProject()?.detalleFinanciacion?.length || 0 }}</p>
+              </div>
+            </div>
 
-            @if (selectedProject()?.description) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-gray-50 p-4 rounded-lg">
-                <p class="text-xs text-gray-500 mb-2">Descripción</p>
-                <p class="font-medium text-gray-900">{{ selectedProject()?.description }}</p>
+                <p class="text-xs text-gray-500 mb-1">Fecha límite de envío</p>
+                <p class="font-semibold text-gray-900">{{ getDisplayDate(selectedProject()?.submissionDeadline) }}</p>
               </div>
-            }
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Fecha límite de corrección</p>
+                <p class="font-semibold text-gray-900">{{ getDisplayDate(selectedProject()?.correctionDeadline) }}</p>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-500 mb-2">Descripción del Proyecto</p>
+              <p class="font-medium text-gray-900">{{ getFullProjectDescription(selectedProject()!) }}</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-500 mb-2">Descripción del Terreno</p>
+              <p class="font-medium text-gray-900">{{ selectedProject()?.landDescription || '-' }}</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-500 mb-2">Descripción de la Financiación</p>
+              <p class="font-medium text-gray-900">{{ selectedProject()?.financingDescription || '-' }}</p>
+            </div>
 
             <div class="bg-gray-50 p-4 rounded-lg">
               <p class="text-xs text-gray-500 mb-2">Progreso</p>
