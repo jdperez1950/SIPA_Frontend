@@ -5,7 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 import { QuestionManagerService } from '../../services/question-manager.service';
 import { ProjectContextService } from '../../services/project-context.service';
-import { AssistanceLogEntry, EvidenceUpload, QuestionDefinition } from '../../../../core/models/question.models';
+import { AssistanceLogEntry, EvidenceUpload, QuestionDefinition, QuestionDocumentRequirement } from '../../../../core/models/question.models';
 import { DynamicInputComponent } from './components/dynamic-input/dynamic-input.component';
 import { EvidenceUploaderComponent } from '../../components/evidence-uploader/evidence-uploader.component';
 import { FormsModule } from '@angular/forms';
@@ -64,6 +64,7 @@ export class QuestionPageComponent implements OnInit {
   isLoading = signal(false);
   projectName = signal<string>('');
   axisColors = AXIS_COLORS;
+  private editingRequirements = signal<Set<string>>(new Set());
 
   async ngOnInit() {
     const pid = this.projectId();
@@ -265,15 +266,21 @@ export class QuestionPageComponent implements OnInit {
         };
 
         const currentEvidence = existing.evidence || [];
+        const evidence = requirementId
+          ? [...currentEvidence.filter(item => item.requirementId !== requirementId), queuedEvidence]
+          : [...currentEvidence, queuedEvidence];
 
         this.questionManager.saveResponse({
           ...existing,
           questionId,
-          evidence: [...currentEvidence, queuedEvidence],
+          evidence: evidence,
           lastUpdated: new Date().toISOString(),
           isUnsaved: true
         });
 
+        if (requirementId) {
+          this.disableEditRequirement(questionId, requirementId);
+        }
         this.alertService.info('Archivo listo. Se cargará al guardar con "Enviar y Siguiente"');
         return;
       }
@@ -306,7 +313,9 @@ export class QuestionPageComponent implements OnInit {
 
       const refreshedResponse = this.questionManager.getResponse(questionId);
       const currentEvidence = refreshedResponse?.evidence || [];
-      const evidence = [...currentEvidence, newEvidence];
+      const evidence = requirementId
+        ? [...currentEvidence.filter(item => item.requirementId !== requirementId), newEvidence]
+        : [...currentEvidence, newEvidence];
 
       this.questionManager.saveResponse({
         ...refreshedResponse,
@@ -319,6 +328,9 @@ export class QuestionPageComponent implements OnInit {
         isUnsaved: true
       });
 
+      if (requirementId) {
+        this.disableEditRequirement(questionId, requirementId);
+      }
       this.alertService.success('Evidencia cargada exitosamente');
     } catch (error) {
       console.error('Error uploading evidence:', error);
@@ -336,6 +348,60 @@ export class QuestionPageComponent implements OnInit {
 
   getEvidenceForRequirement(questionId: string, requirementId: string) {
     return this.getAllEvidence(questionId).filter(e => e.requirementId === requirementId);
+  }
+
+  hasEvidenceForRequirement(questionId: string, requirementId: string): boolean {
+    return this.getEvidenceForRequirement(questionId, requirementId).length > 0;
+  }
+
+  canShowUploader(questionId: string, requirement: QuestionDocumentRequirement): boolean {
+    if (requirement.multiple) {
+      return true;
+    }
+
+    if (!this.hasEvidenceForRequirement(questionId, requirement.id)) {
+      return true;
+    }
+
+    return this.isEditingRequirement(questionId, requirement.id);
+  }
+
+  enableEditRequirement(questionId: string, requirementId: string) {
+    this.editingRequirements.update(current => {
+      const next = new Set(current);
+      next.add(this.getRequirementKey(questionId, requirementId));
+      return next;
+    });
+  }
+
+  disableEditRequirement(questionId: string, requirementId: string) {
+    this.editingRequirements.update(current => {
+      const next = new Set(current);
+      next.delete(this.getRequirementKey(questionId, requirementId));
+      return next;
+    });
+  }
+
+  isEditingRequirement(questionId: string, requirementId: string): boolean {
+    return this.editingRequirements().has(this.getRequirementKey(questionId, requirementId));
+  }
+
+  formatFileSize(size?: number): string {
+    if (!size || size <= 0) {
+      return '';
+    }
+
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    const kb = size / 1024;
+    if (kb < 1024) {
+      return `${kb.toFixed(1)} KB`;
+    }
+
+    const mb = kb / 1024;
+    return `${mb.toFixed(2)} MB`;
   }
 
   async removeEvidence(questionId: string, evidence: EvidenceUpload) {
@@ -485,5 +551,9 @@ export class QuestionPageComponent implements OnInit {
 
   goBackToPanel() {
     this.router.navigateByUrl('/organization/panel');
+  }
+
+  private getRequirementKey(questionId: string, requirementId: string): string {
+    return `${questionId}::${requirementId}`;
   }
 }

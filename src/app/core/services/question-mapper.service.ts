@@ -70,7 +70,7 @@ export class QuestionMapperService {
       priority: backendAnswer.priority,
       validity: backendAnswer.validity,
       progressPercentage: backendAnswer.progressPercentage,
-      evidence: this.mapEvidences(backendAnswer.evidences)
+      evidence: this.mapEvidences(backendAnswer.evidences, backendAnswer.question.attachments)
     };
   }
 
@@ -151,20 +151,33 @@ export class QuestionMapperService {
     }));
   }
 
-  private mapEvidences(evidences?: EvidenceResponseBackend[]) {
+  private mapEvidences(
+    evidences?: EvidenceResponseBackend[],
+    attachments?: QuestionAttachmentBackend[]
+  ) {
     if (!evidences?.length) {
       return [];
     }
 
-    return evidences.map(evidence => ({
+    const fallbackRequirementIds = (attachments || []).map(att => att.documentType.id);
+    let fallbackIndex = 0;
+
+    return evidences.map(evidence => {
+      const requirementId = evidence.documentTypeId || fallbackRequirementIds[fallbackIndex];
+      if (!evidence.documentTypeId && fallbackIndex < fallbackRequirementIds.length - 1) {
+        fallbackIndex += 1;
+      }
+
+      return {
       id: evidence.id,
       answerId: evidence.answerId,
-      requirementId: evidence.documentTypeId,
+      requirementId: requirementId,
       fileUrl: evidence.fileUrl || '',
       fileName: evidence.fileName,
       fileSize: evidence.fileSize,
       uploadDate: evidence.uploadedAt
-    }));
+      };
+    });
   }
 
   private mapOptionsToFeedback(backendOptions: any[]): any[] {
