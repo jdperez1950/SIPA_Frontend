@@ -96,14 +96,14 @@
           </div>
 
           <!-- Evidencias -->
-          @if (question.requiresEvidence && getCurrentValue(question.id) === 'SI') {
+          @if (shouldShowEvidence(question)) {
             <div>
               <div class="text-sky-500 text-sm font-medium mb-2 italic">Evidencias para adjuntar:</div>
               <div class="border border-gray-200 rounded p-4 min-h-[200px] max-h-[500px] overflow-y-auto custom-scrollbar">
                 <div class="space-y-6">
-                @if (question.requiredDocuments?.length) {
+                @if (getRequiredDocuments(question).length) {
                   <!-- Lista de Documentos Requeridos -->
-                  @for (req of question.requiredDocuments; track req.id) {
+                  @for (req of getRequiredDocuments(question); track req.id) {
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                       <div class="flex justify-between items-start mb-2">
                         <div>
@@ -139,7 +139,7 @@
                               <span class="text-xs text-gray-700 truncate" [title]="file.fileName">{{ file.fileName }}</span>
                             </div>
                             <button 
-                              (click)="removeEvidence(question.id, file.fileName)"
+                              (click)="removeEvidence(question.id, file)"
                               class="text-gray-400 hover:text-red-500 transition-colors p-1"
                               title="Eliminar archivo"
                             >
@@ -162,7 +162,7 @@
                   
                   <!-- Lista general de archivos -->
                   <div class="space-y-2 mt-4">
-                    @for (file of getCurrentValue(question.id)?.evidence || []; track file.fileName) {
+                    @for (file of getAllEvidence(question.id); track file.fileName) {
                        <div class="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded text-xs font-medium">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />

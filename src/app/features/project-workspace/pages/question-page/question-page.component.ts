@@ -5,16 +5,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 import { QuestionManagerService } from '../../services/question-manager.service';
 import { ProjectContextService } from '../../services/project-context.service';
-import { AssistanceLogEntry, QuestionDefinition } from '../../../../core/models/question.models';
+import { AssistanceLogEntry, EvidenceUpload, QuestionDefinition } from '../../../../core/models/question.models';
 import { DynamicInputComponent } from './components/dynamic-input/dynamic-input.component';
 import { EvidenceUploaderComponent } from '../../components/evidence-uploader/evidence-uploader.component';
 import { FormsModule } from '@angular/forms';
 import { TechnicalAssistanceLogComponent } from '../../components/technical-assistance-log/technical-assistance-log.component';
-import { FileService } from '../../../../core/services/file.service';
 import { LoadingService } from '../../../../core/services/loading.service';
 import { ProjectsService } from '../../../../core/services/projects.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-colors.config';
+import { QuestionService } from '../../../../core/services/question.service';
 
 @Component({
   selector: 'app-question-page',
@@ -27,7 +27,7 @@ export class QuestionPageComponent implements OnInit {
   private router = inject(Router);
   questionManager = inject(QuestionManagerService);
   private projectContextService = inject(ProjectContextService);
-  private fileService = inject(FileService);
+  private questionService = inject(QuestionService);
   private loadingService = inject(LoadingService);
   private projectsService = inject(ProjectsService);
   private alertService = inject(AlertService);
@@ -81,7 +81,7 @@ export class QuestionPageComponent implements OnInit {
 
         const qid = this.currentQuestionId();
         if (!qid) {
-          const firstQuestionId = this.questionManager['questions']()[0]?.id;
+          const firstQuestionId = this.questionManager.getFirstQuestionId();
           if (firstQuestionId) {
             if (pid) {
               this.router.navigate(['project', pid, 'question', firstQuestionId], { relativeTo: this.route.parent });
@@ -164,6 +164,28 @@ export class QuestionPageComponent implements OnInit {
     return match ? match.text : null;
   }
 
+  hasAnswer(questionId: string): boolean {
+    const val = this.getCurrentValue(questionId);
+    return val !== null && val !== undefined && val !== '';
+  }
+
+  shouldShowEvidence(question: QuestionDefinition): boolean {
+    return question.requiresEvidence && this.hasAnswer(question.id);
+  }
+
+  getRequiredDocuments(question: QuestionDefinition) {
+    const selectedOptionId = this.getCurrentValue(question.id);
+    const requirements = question.requiredDocuments || [];
+
+    if (!selectedOptionId) {
+      return requirements.filter(req => !req.triggerOptionId);
+    }
+
+    return requirements.filter(req =>
+      !req.triggerOptionId || req.triggerOptionId === selectedOptionId
+    );
+  }
+
   getObservation(questionId: string): string {
     const resp = this.questionManager.getResponse(questionId);
     return resp?.observation || '';
@@ -190,6 +212,8 @@ export class QuestionPageComponent implements OnInit {
     this.questionManager.saveResponse({
       questionId,
       value,
+      selectedOptionId: value,
+      answerId: existing?.answerId,
       evidence: existing?.evidence,
       observation: existing?.observation,
       evaluationStatus: existing?.evaluationStatus || 'PENDING',
@@ -203,6 +227,8 @@ export class QuestionPageComponent implements OnInit {
     this.questionManager.saveResponse({
       questionId,
       value: existing?.value,
+      selectedOptionId: existing?.selectedOptionId,
+      answerId: existing?.answerId,
       evidence: existing?.evidence,
       observation: observation,
       evaluationStatus: existing?.evaluationStatus || 'PENDING',
@@ -214,61 +240,119 @@ export class QuestionPageComponent implements OnInit {
   async onEvidenceUpload(questionId: string, file: File, requirementId?: string) {
     try {
       this.loadingService.show('Cargando archivo...');
-      
-      const uploadResult = await this.fileService.uploadFile(file).toPromise();
-      
-      if (!uploadResult) {
-        throw new Error('Error al cargar el archivo');
+
+      const pid = this.projectId();
+      const existing = this.questionManager.getResponse(questionId);
+
+      if (!pid) {
+        throw new Error('No se encontró el proyecto para cargar evidencia');
       }
 
-      const fileUrl = this.fileService.getFileUrl(uploadResult.fileId);
-      
-      const existing = this.questionManager.getResponse(questionId);
-      const newEvidence = {
-        requirementId: requirementId,
-        fileUrl: fileUrl,
-        fileName: file.name,
-        uploadDate: new Date().toISOString()
+      if (!existing?.value) {
+        this.alertService.warning('Debe seleccionar una respuesta antes de adjuntar evidencia');
+        return;
+      }
+
+      let answerId = existing.answerId;
+      if (!answerId) {
+        const submitResult = await this.questionManager.submitResponse({
+          ...existing,
+          questionId,
+          selectedOptionId: existing.selectedOptionId || existing.value
+        }, pid);
+        this.alertService.success(submitResult.message, 2500);
+        answerId = this.questionManager.getResponse(questionId)?.answerId;
+      }
+
+      if (!answerId) {
+        throw new Error('No se pudo crear la respuesta para adjuntar evidencia');
+      }
+
+      const uploadResult = await this.questionService
+        .uploadEvidence(answerId, {
+          file,
+          documentTypeId: requirementId
+        })
+        .toPromise();
+
+      if (!uploadResult?.success || !uploadResult.data) {
+        throw new Error(uploadResult?.message || 'Error al cargar la evidencia');
+      }
+
+      const newEvidence: EvidenceUpload = {
+        id: uploadResult.data.id,
+        answerId: uploadResult.data.answerId || answerId,
+        requirementId: uploadResult.data.documentTypeId || requirementId,
+        fileUrl: uploadResult.data.fileUrl || '',
+        fileName: uploadResult.data.fileName || file.name,
+        uploadDate: uploadResult.data.uploadedAt || new Date().toISOString()
       };
 
-      const currentEvidence = existing?.evidence || [];
-      
+      const refreshedResponse = this.questionManager.getResponse(questionId);
+      const currentEvidence = refreshedResponse?.evidence || [];
+      const evidence = [...currentEvidence, newEvidence];
+
       this.questionManager.saveResponse({
+        ...refreshedResponse,
         questionId,
-        value: existing?.value,
-        observation: existing?.observation,
-        evidence: [...currentEvidence, newEvidence],
-        evaluationStatus: 'PENDING',
+        value: refreshedResponse?.value ?? existing.value,
+        selectedOptionId: refreshedResponse?.selectedOptionId ?? existing.selectedOptionId ?? existing.value,
+        answerId,
+        evidence,
         lastUpdated: new Date().toISOString(),
         isUnsaved: true
       });
+
+      this.alertService.success('Evidencia cargada exitosamente');
     } catch (error) {
       console.error('Error uploading evidence:', error);
-      this.loadingService.show('Error al cargar el archivo');
-      setTimeout(() => this.loadingService.hide(), 3000);
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar el archivo';
+      this.alertService.error(errorMessage, 4000);
     } finally {
       this.loadingService.hide();
     }
   }
 
-  getEvidenceForRequirement(questionId: string, requirementId: string) {
+  getAllEvidence(questionId: string): EvidenceUpload[] {
     const response = this.questionManager.getResponse(questionId);
-    const evidence = response?.evidence || [];
-    return evidence.filter(e => e.requirementId === requirementId);
+    return response?.evidence || [];
   }
 
-  removeEvidence(questionId: string, fileName: string) {
+  getEvidenceForRequirement(questionId: string, requirementId: string) {
+    return this.getAllEvidence(questionId).filter(e => e.requirementId === requirementId);
+  }
+
+  async removeEvidence(questionId: string, evidence: EvidenceUpload) {
     const existing = this.questionManager.getResponse(questionId);
-    if (!existing || !existing.evidence) return;
+    if (!existing?.evidence) return;
 
-    const newEvidence = existing.evidence.filter(e => e.fileName !== fileName);
+    try {
+      this.loadingService.show('Eliminando evidencia...');
 
-    this.questionManager.saveResponse({
-      ...existing,
-      evidence: newEvidence,
-      lastUpdated: new Date().toISOString(),
-      isUnsaved: true
-    });
+      if (evidence.id) {
+        const deleteResult = await this.questionService.deleteEvidence(evidence.id).toPromise();
+        if (!deleteResult?.success) {
+          throw new Error(deleteResult?.message || 'No fue posible eliminar la evidencia');
+        }
+      }
+
+      const newEvidence = existing.evidence.filter(e => e.id !== evidence.id && e.fileName !== evidence.fileName);
+
+      this.questionManager.saveResponse({
+        ...existing,
+        evidence: newEvidence,
+        lastUpdated: new Date().toISOString(),
+        isUnsaved: true
+      });
+
+      this.alertService.success('Evidencia eliminada');
+    } catch (error) {
+      console.error('Error removing evidence:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al eliminar la evidencia';
+      this.alertService.error(errorMessage, 4000);
+    } finally {
+      this.loadingService.hide();
+    }
   }
 
   nextQuestion(currentId: string) {

@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { QuestionDefinition, QuestionResponse, QuestionDependency } from '../../../core/models/question.models';
+import { QuestionDefinition, QuestionResponse } from '../../../core/models/question.models';
 import { QuestionService } from '../../../core/services/question.service';
 import { QuestionMapperService } from '../../../core/services/question-mapper.service';
 
@@ -35,43 +35,7 @@ export class QuestionManagerService {
   constructor(
     private questionService: QuestionService,
     private questionMapper: QuestionMapperService
-  ) {
-    this.responses.update(map => {
-      const newMap = new Map(map);
-      
-      newMap.set('q1', {
-        questionId: 'q1',
-        value: 'SI',
-        lastUpdated: new Date().toISOString(),
-        evaluationStatus: 'IN_PROCESS',
-        assistanceLog: [
-          {
-            id: 'log1',
-            date: '2025-12-15',
-            advisorName: 'ID 12345',
-            advisorMessage: 'La oficina de planeación municipal o distrital o la dependencia que haga sus veces aprobó el proyecto de plan parcial, mediante acto administrativo u ocurrió el silencio administrativo.',
-            priority: 'IMPORTANT',
-            validityPeriod: 'Pv'
-          },
-          {
-            id: 'log2',
-            date: '2025-12-05',
-            advisorName: 'ID 67890',
-            advisorMessage: 'Se requiere adjuntar el certificado de libertad y tradición actualizado.',
-            priority: 'URGENT',
-            validityPeriod: 'Pv',
-            response: {
-              responderName: 'Responsable Proyecto',
-              responseDate: '2025-12-10',
-              message: 'Adjunto el certificado solicitado en la sección de evidencias.'
-            }
-          }
-        ]
-      });
-      
-      return newMap;
-    });
-  }
+  ) {}
 
   private evaluateDependencies(question: QuestionDefinition, responses: Map<string, QuestionResponse>): boolean {
     if (!question.dependencies || question.dependencies.length === 0) {
@@ -97,20 +61,21 @@ export class QuestionManagerService {
         .getQuestionsByProject(projectId)
         .toPromise();
 
-      if (!response || (!response.success && !Array.isArray(response.data))) {
+      if (!response?.success || !Array.isArray(response.data)) {
         throw new Error('Error loading questions');
       }
 
-      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      const data = response.data;
 
-      const frontendQuestions = data.map((answer: any) =>
+      const frontendQuestions = data.map(answer =>
         this.questionMapper.mapBackendToFrontend(answer.question)
       );
 
       this.questions.set(frontendQuestions);
+      this.responses.set(new Map());
 
-      data.forEach((answer: any) => {
-        if (answer.currentAnswer) {
+      data.forEach(answer => {
+        if (this.hasPersistedData(answer)) {
           const frontendResponse = this.questionMapper.mapBackendResponse(answer);
           this.responses.update(map => {
             const newMap = new Map(map);
@@ -133,10 +98,18 @@ export class QuestionManagerService {
     return this.responses().get(questionId);
   }
 
+  getFirstQuestionId(): string | null {
+    return this.questions()[0]?.id || null;
+  }
+
   saveResponse(response: QuestionResponse) {
     this.responses.update(map => {
       const newMap = new Map(map);
-      newMap.set(response.questionId, response);
+      const existing = newMap.get(response.questionId);
+      newMap.set(response.questionId, {
+        ...existing,
+        ...response
+      });
       return newMap;
     });
   }
@@ -162,6 +135,7 @@ export class QuestionManagerService {
 
       this.saveResponse({
         ...response,
+        answerId: result.data?.id || response.answerId,
         lastUpdated: new Date().toISOString(),
         isUnsaved: false
       });
@@ -194,5 +168,13 @@ export class QuestionManagerService {
       return active[currentIndex - 1].id;
     }
     return null;
+  }
+
+  private hasPersistedData(answer: any): boolean {
+    return !!(
+      answer.currentAnswer ||
+      (answer.evidences && answer.evidences.length > 0) ||
+      answer.organizationMessage
+    );
   }
 }

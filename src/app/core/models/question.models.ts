@@ -30,6 +30,7 @@ export interface QuestionDocumentRequirement {
   description?: string;
   required: boolean;
   multiple: boolean;
+  triggerOptionId?: string;
 }
 
 export interface QuestionDefinition {
@@ -56,6 +57,8 @@ export interface QuestionDefinition {
 }
 
 export interface EvidenceUpload {
+  id?: string;
+  answerId?: string;
   requirementId?: string; // New: ID del requisito específico (opcional para retrocompatibilidad)
   fileUrl: string;
   fileName: string;
@@ -80,6 +83,7 @@ export interface AssistanceLogEntry {
 export type EvaluationStatus = 'PENDING' | 'VALIDATED' | 'RETURNED' | 'IN_PROCESS';
 
 export interface QuestionResponse {
+  answerId?: string;
   questionId: string;
   value: any;
   observation?: string;

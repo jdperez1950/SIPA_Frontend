@@ -43,9 +43,19 @@ export interface QuestionRequestBackend {
   helpInstruction?: string;
   limitDate?: string;
   category?: string;
+  requiresEvidence?: boolean;
   options: QuestionOptionResponseBackend[];
   preconditions: QuestionPreconditionBackend[];
   attachments: QuestionAttachmentBackend[];
+}
+
+export interface EvidenceResponseBackend {
+  id: string;
+  answerId?: string;
+  documentTypeId?: string;
+  fileName: string;
+  fileUrl?: string;
+  uploadedAt: string;
 }
 
 export interface AnswerRequestBackend {
@@ -68,6 +78,7 @@ export interface AnswerRequestBackend {
   progressPercentage?: number;
   evaluationState?: string;
   organizationMessage?: string;
+  evidences?: EvidenceResponseBackend[];
 }
 
 export interface SaveAnswerRequest {
@@ -80,4 +91,10 @@ export interface SaveAnswerRequest {
   currentAnswer: {
     id: string;
   };
+}
+
+export interface EvidenceUploadRequest {
+  file: File;
+  description?: string;
+  documentTypeId?: string;
 }

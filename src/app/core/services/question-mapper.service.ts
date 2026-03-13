@@ -10,7 +10,8 @@ import {
   AnswerRequestBackend,
   QuestionPreconditionBackend,
   QuestionAttachmentBackend,
-  SaveAnswerRequest
+  SaveAnswerRequest,
+  EvidenceResponseBackend
 } from '../models/question-backend.models';
 import { getAxisColorByName } from '../config/axis-colors.config';
 
@@ -45,7 +46,7 @@ export class QuestionMapperService {
       helpText: backendQuestion.helpInstruction,
       controlType: this.inferControlType(backendQuestion),
       options: options,
-      requiresEvidence: backendQuestion.attachments?.length > 0,
+      requiresEvidence: backendQuestion.requiresEvidence ?? backendQuestion.attachments?.length > 0,
       requiredDocuments: this.mapAttachmentsToRequirements(backendQuestion.attachments),
       dependencies: this.mapPreconditionsToDependencies(backendQuestion.preconditions),
       feedback: this.mapOptionsToFeedback(backendQuestion.options),
@@ -56,8 +57,9 @@ export class QuestionMapperService {
 
   mapBackendResponse(backendAnswer: AnswerRequestBackend): QuestionResponse {
     return {
+      answerId: backendAnswer.id,
       questionId: backendAnswer.question.id,
-      value: backendAnswer.currentAnswer?.optionText,
+      value: backendAnswer.currentAnswer?.id,
       selectedOptionId: backendAnswer.currentAnswer?.id,
       observation: backendAnswer.organizationMessage,
       evaluationStatus: this.mapEvaluationState(backendAnswer.evaluationState),
@@ -67,7 +69,8 @@ export class QuestionMapperService {
       userName: backendAnswer.user?.name,
       priority: backendAnswer.priority,
       validity: backendAnswer.validity,
-      progressPercentage: backendAnswer.progressPercentage
+      progressPercentage: backendAnswer.progressPercentage,
+      evidence: this.mapEvidences(backendAnswer.evidences)
     };
   }
 
@@ -110,20 +113,55 @@ export class QuestionMapperService {
   ): QuestionDependency[] {
     return preconditions.map(pc => ({
       dependentOnQuestionId: pc.precondition.id,
-      triggerValue: pc.responseValue,
+      triggerValue: this.mapPreconditionTriggerValue(pc.precondition.id, pc.responseValue),
       action: 'SHOW'
     }));
+  }
+
+  private mapPreconditionTriggerValue(questionId: string, responseValue?: string): string | undefined {
+    if (!responseValue) {
+      return responseValue;
+    }
+
+    const optionMap = this.optionMapCache.get(questionId);
+    if (!optionMap) {
+      return responseValue;
+    }
+
+    for (const [id, label] of optionMap.entries()) {
+      if (label === responseValue) {
+        return id;
+      }
+    }
+
+    return responseValue;
   }
 
   private mapAttachmentsToRequirements(
     attachments: QuestionAttachmentBackend[]
   ): QuestionDocumentRequirement[] {
     return attachments.map(att => ({
-      id: att.id,
+      id: att.documentType.id,
       name: att.documentType.name,
       description: `Tipo: ${att.documentType.code}`,
       required: true,
-      multiple: false
+      multiple: false,
+      triggerOptionId: att.optionResponse?.id
+    }));
+  }
+
+  private mapEvidences(evidences?: EvidenceResponseBackend[]) {
+    if (!evidences?.length) {
+      return [];
+    }
+
+    return evidences.map(evidence => ({
+      id: evidence.id,
+      answerId: evidence.answerId,
+      requirementId: evidence.documentTypeId,
+      fileUrl: evidence.fileUrl || '',
+      fileName: evidence.fileName,
+      uploadDate: evidence.uploadedAt
     }));
   }
 
