@@ -162,6 +162,7 @@ export class QuestionMapperService {
       requirementId: evidence.documentTypeId,
       fileUrl: evidence.fileUrl || '',
       fileName: evidence.fileName,
+      fileSize: evidence.fileSize,
       uploadDate: evidence.uploadedAt
     }));
   }

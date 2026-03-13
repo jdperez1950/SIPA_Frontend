@@ -55,6 +55,7 @@ export interface EvidenceResponseBackend {
   answerId?: string;
   documentTypeId?: string;
   fileName: string;
+  fileSize?: number;
   fileUrl?: string;
   uploadedAt: string;
 }

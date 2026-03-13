@@ -62,6 +62,7 @@ export interface EvidenceUpload {
   requirementId?: string; // New: ID del requisito específico (opcional para retrocompatibilidad)
   fileUrl: string;
   fileName: string;
+  fileSize?: number;
   uploadDate: string;
   expirationDate?: string;
   pendingUpload?: boolean;
