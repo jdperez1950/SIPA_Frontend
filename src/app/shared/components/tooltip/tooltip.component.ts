@@ -1,21 +1,24 @@
-import { Component, input, booleanAttribute } from '@angular/core';
+import { Component, input, booleanAttribute, inject, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PAVIS_COLORS } from '../../../core/constants/theme-colors';
+import { ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-tooltip',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="relative inline-block">
+    <div class="relative inline-block" (mouseenter)="updatePosition()">
       <ng-content></ng-content>
       <div 
         *ngIf="visible()"
-        class="absolute z-50 px-3 py-2 text-sm font-medium rounded-lg shadow-lg pointer-events-none transition-opacity duration-200"
+        class="fixed z-[10000] px-2.5 py-1.5 text-xs font-medium rounded-lg shadow-lg pointer-events-none transition-opacity duration-200 leading-tight"
         [class]="positionClass()"
         role="tooltip"
         [style.background-color]="backgroundColor()"
         [style.color]="textColor()"
+        [style.top]="tooltipTop()"
+        [style.left]="tooltipLeft()"
       >
         {{ text() }}
         <div class="absolute w-2 h-2 transform rotate-45" [class]="arrowClass()" [style.background-color]="backgroundColor()"></div>
@@ -29,17 +32,21 @@ import { PAVIS_COLORS } from '../../../core/constants/theme-colors';
   `]
 })
 export class TooltipComponent {
+  private hostElement = inject(ElementRef<HTMLElement>);
+
   text = input.required<string>();
   position = input<'top' | 'bottom' | 'left' | 'right'>('top');
   visible = input(false, { transform: booleanAttribute });
   variant = input<'dark' | 'light' | 'brand'>('dark');
+  tooltipTop = signal('0px');
+  tooltipLeft = signal('0px');
 
   positionClass(): string {
     const positions = {
-      top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
-      bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
-      left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-      right: 'left-full top-1/2 -translate-y-1/2 ml-2'
+      top: '-translate-x-1/2 -translate-y-full',
+      bottom: '-translate-x-1/2',
+      left: '-translate-x-full -translate-y-1/2',
+      right: '-translate-y-1/2'
     };
     return positions[this.position()];
   }
@@ -70,5 +77,38 @@ export class TooltipComponent {
       brand: PAVIS_COLORS.ui.textInverted
     };
     return variants[this.variant()];
+  }
+
+  updatePosition(): void {
+    const rect = this.hostElement.nativeElement.getBoundingClientRect();
+    const gap = 8;
+
+    if (this.position() === 'top') {
+      this.tooltipTop.set(`${rect.top - gap}px`);
+      this.tooltipLeft.set(`${rect.left + rect.width / 2}px`);
+      return;
+    }
+
+    if (this.position() === 'bottom') {
+      this.tooltipTop.set(`${rect.bottom + gap}px`);
+      this.tooltipLeft.set(`${rect.left + rect.width / 2}px`);
+      return;
+    }
+
+    if (this.position() === 'left') {
+      this.tooltipTop.set(`${rect.top + rect.height / 2}px`);
+      this.tooltipLeft.set(`${rect.left - gap}px`);
+      return;
+    }
+
+    this.tooltipTop.set(`${rect.top + rect.height / 2}px`);
+    this.tooltipLeft.set(`${rect.right + gap}px`);
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  handleViewportChange(): void {
+    if (!this.visible()) return;
+    this.updatePosition();
   }
 }

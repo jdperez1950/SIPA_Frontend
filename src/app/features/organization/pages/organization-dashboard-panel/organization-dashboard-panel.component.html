@@ -135,7 +135,8 @@
       <app-expandable-table
         [data]="projects()"
         [columns]="projectColumns"
-        title="Mis Proyectos"
+        [title]="'Mis Proyectos'"
+        [attr.title]="null"
         [showTools]="false"
         [showExpandControls]="false"
         [showRowToggle]="false"
