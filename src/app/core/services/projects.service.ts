@@ -11,6 +11,46 @@ export class ProjectsService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
+  private mapProjectFromBackend(backendProject: any): Project {
+    console.log('[ProjectsService] Mapping project:', backendProject.id, backendProject.code);
+    const mapped = {
+      id: backendProject.id,
+      code: backendProject.code,
+      organizationId: backendProject.organizationId,
+      name: backendProject.name,
+      description: backendProject.description,
+      organization: backendProject.organization || 'Sin organización',
+      organizationName: backendProject.organization?.name || backendProject.organization || 'Sin organización',
+      municipality: backendProject.organization?.municipality?.nombre || backendProject.municipality || '',
+      state: backendProject.organization?.region?.nombre || backendProject.state || '',
+      status: backendProject.status || 'ACTIVE',
+      viabilityStatus: backendProject.viabilityStatus,
+      advisor: backendProject.advisor,
+      progress: backendProject.progress || {
+        technical: 0,
+        legal: 0,
+        financial: 0,
+        social: 0
+      },
+      startDate: backendProject.startDate,
+      endDate: backendProject.endDate,
+      submissionDeadline: backendProject.submissionDeadline,
+      correctionDeadline: backendProject.correctionDeadline,
+      responseTeam: backendProject.responseTeam,
+      housingCount: backendProject.housingCount,
+      beneficiariesCount: backendProject.beneficiariesCount,
+      projectValue: backendProject.projectValue,
+      tieneTerreno: backendProject.tieneTerreno,
+      landDescription: backendProject.landDescription,
+      tieneFinanciacion: backendProject.tieneFinanciacion,
+      financingDescription: backendProject.financingDescription,
+      detalleFinanciacion: backendProject.detalleFinanciacion,
+      responsible: backendProject.responsible
+    };
+    console.log('[ProjectsService] Mapped project:', mapped.id, mapped.code, mapped.organizationName);
+    return mapped;
+  }
+
   getProjects(
     page: number = 1,
     pageSize: number = 25,
@@ -35,16 +75,7 @@ export class ProjectsService {
           console.log('apiResponse.data:', apiResponse.data);
           console.log('apiResponse.total:', apiResponse.total);
           
-          // Mock progress values to 0% to avoid errors
-          const projects = (apiResponse.data || []).map((project: any) => ({
-            ...project,
-            progress: project.progress || {
-              technical: 0,
-              legal: 0,
-              financial: 0,
-              social: 0
-            }
-          }));
+          const projects = (apiResponse.data || []).map(this.mapProjectFromBackend.bind(this));
           
           return {
             data: projects,

@@ -18,6 +18,7 @@ export const PAVIS_COLORS = {
     background: '#F3F4F6',   // Gris muy claro (Fondo de página / Body)
     surface: '#FFFFFF',      // Blanco (Tarjetas, Modales, Sidebar)
     surfaceAlt: '#F9FAFB',   // Blanco alternativo (Headers de tablas, Footers)
+    darkBg: '#111827',       // Negro suave (Tooltips, Modales oscuros)
     border: '#E5E7EB',       // Gris claro (Bordes de tarjetas, Separadores)
     borderStrong: '#D1D5DB', // Gris medio (Bordes de inputs inactivos)
     

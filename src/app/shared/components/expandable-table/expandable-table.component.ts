@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ContentChild, TemplateRef, signal, computed, inject, PLATFORM_ID, afterNextRender, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ContentChild, TemplateRef, signal, computed, inject, PLATFORM_ID, afterNextRender, OnDestroy, AfterContentInit, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -61,7 +61,7 @@ export interface TableAction {
           <thead class="bg-gray-50 text-xs uppercase font-semibold text-gray-500 border-b border-gray-200 sticky top-0 z-10">
             <tr>
               <!-- Toggle Column -->
-              <th class="w-12 px-4 py-3 text-center">
+              <th *ngIf="showRowToggle" class="w-12 px-4 py-3 text-center">
                 <span class="material-symbols-rounded text-gray-400 text-lg">list</span>
               </th>
               
@@ -88,7 +88,7 @@ export interface TableAction {
                   [ngClass]="{'bg-blue-50/50 border-l-pavis-brand-primary': isExpanded(row), 'border-l-transparent': !isExpanded(row)}">
                 
                 <!-- Toggle Button -->
-                <td class="px-4 py-3 text-center">
+                <td *ngIf="showRowToggle" class="px-4 py-3 text-center">
                   <button 
                     (click)="toggleRow(row)"
                     class="w-8 h-8 rounded-full hover:bg-white hover:shadow-sm hover:text-pavis-brand-primary flex items-center justify-center transition-all focus:outline-none"
@@ -156,7 +156,7 @@ export interface TableAction {
               </div>
               
               <!-- Expand Button -->
-               <button 
+               <button *ngIf="showRowToggle"
                  (click)="toggleRow(row)"
                  class="w-8 h-8 rounded-full bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-pavis-brand-primary flex items-center justify-center transition-all focus:outline-none flex-shrink-0"
                  [class.text-pavis-brand-primary]="isExpanded(row)"
@@ -319,7 +319,7 @@ export interface TableAction {
     /* PAVIS Colors Custom Properties are expected in styles.scss */
   `]
 })
-export class ExpandableTableComponent implements OnDestroy {
+export class ExpandableTableComponent implements OnDestroy, AfterContentInit {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() title: string = '';
@@ -327,6 +327,7 @@ export class ExpandableTableComponent implements OnDestroy {
   @Input() showTools = true;
   @Input() showExpandControls = true;
   @Input() showFooter = true;
+  @Input() showRowToggle = true;
 
   @Output() selectionChange = new EventEmitter<any[]>();
 
@@ -356,12 +357,26 @@ export class ExpandableTableComponent implements OnDestroy {
       // Listen for changes
       this.mediaQueryList.addEventListener('change', this.mediaQueryListener);
     }
+    
+    // Add effect to log data changes
+    effect(() => {
+      console.log('[ExpandableTable] Data changed:', this.data);
+      console.log('[ExpandableTable] Data length:', this.data.length);
+      console.log('[ExpandableTable] Columns:', this.columns);
+    });
   }
 
   ngOnDestroy() {
     if (this.mediaQueryList) {
       this.mediaQueryList.removeEventListener('change', this.mediaQueryListener);
     }
+  }
+
+  ngAfterContentInit() {
+    console.log('[ExpandableTable] ngAfterContentInit called');
+    console.log('[ExpandableTable] expandedRowTemplate:', this.expandedRowTemplate);
+    console.log('[ExpandableTable] customBodyTemplate:', this.customBodyTemplate);
+    console.log('[ExpandableTable] actionsTemplate:', this.actionsTemplate);
   }
 
   // --- View Toggle Logic ---
@@ -421,7 +436,7 @@ export class ExpandableTableComponent implements OnDestroy {
 
   // --- Helpers ---
   getTotalColumns() {
-    return this.columns.length + 1 + (this.selectable ? 1 : 0);
+    return this.columns.length + (this.showRowToggle ? 1 : 0) + (this.selectable ? 1 : 0);
   }
 
   getPrimaryText(row: any): string {

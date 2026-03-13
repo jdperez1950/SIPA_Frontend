@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, OnInit, effect } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,12 +7,14 @@ import { Project, ProjectStatus, ViabilityScenario } from '../../../../core/mode
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { FooterComponent } from '../../../../shared/components/footer/footer.component';
+import { TooltipComponent } from '../../../../shared/components/tooltip/tooltip.component';
+import { ExpandableTableComponent, TableColumn } from '../../../../shared/components/expandable-table/expandable-table.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 
 @Component({
   selector: 'app-organization-dashboard-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, LoadingComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingComponent, FooterComponent, TooltipComponent, ExpandableTableComponent],
   templateUrl: './organization-dashboard-panel.component.html',
   styles: []
 })
@@ -25,6 +27,7 @@ export class OrganizationDashboardPanelComponent implements OnInit {
   selectedStatus = signal<ProjectStatus | null>(null);
   selectedViability = signal<ViabilityScenario | null>(null);
   selectedProject = signal<Project | null>(null);
+  showProjectDetail = signal(false);
   projectTeam = signal<any>(null);
   isLoading = signal(false);
   isLoadingTeam = signal(false);
@@ -32,21 +35,25 @@ export class OrganizationDashboardPanelComponent implements OnInit {
   pageSize = signal(10);
   totalItems = signal(0);
   projects = signal<Project[]>([]);
+  activeTooltip = signal<string | null>(null);
 
   viabilityOptions = Object.values(ViabilityScenario);
   ViabilityScenario = ViabilityScenario;
 
-  constructor() {
-    effect(() => {
-      const query = this.searchQuery();
-      const status = this.selectedStatus();
-      const viability = this.selectedViability();
-      this.currentPage.set(1);
-      this.loadProjects();
-    }, { allowSignalWrites: true });
-  }
+  projectColumns: TableColumn[] = [
+    { header: 'Código', field: 'code', type: 'text' },
+    { header: 'Descripción', field: 'description', type: 'custom' },
+    { header: 'Organización', field: 'organizationName', type: 'custom' },
+    { header: 'Estado', field: 'status', type: 'status' },
+    { header: 'Viabilidad', field: 'viabilityStatus', type: 'viability' },
+    { header: 'Acciones', field: 'actions', type: 'actions', align: 'right' }
+  ];
 
-  ngOnInit() {}
+  constructor() {}
+
+  ngOnInit() {
+    this.loadProjects();
+  }
 
   loadProjects() {
     this.isLoading.set(true);
@@ -88,11 +95,19 @@ export class OrganizationDashboardPanelComponent implements OnInit {
     this.loadProjects();
   }
 
+  onSearchChange(value: string) {
+    this.searchQuery.set(value);
+    this.currentPage.set(1);
+    this.loadProjects();
+  }
+
   toggleProjectDetail(show: boolean, project?: Project) {
     if (show && project) {
+      this.showProjectDetail.set(true);
       this.selectedProject.set(project);
       this.loadProjectTeam(project.id);
     } else {
+      this.showProjectDetail.set(false);
       this.selectedProject.set(null);
       this.projectTeam.set(null);
     }
@@ -103,15 +118,20 @@ export class OrganizationDashboardPanelComponent implements OnInit {
   }
 
   fillSurvey(project: Project) {
+    if (!project?.id) return;
     this.router.navigate(['/workspace/project', project.id, 'question']);
   }
 
   filterByStatus(status: ProjectStatus | null) {
     this.selectedStatus.set(status);
+    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   filterByViability(viability: ViabilityScenario | null) {
     this.selectedViability.set(viability);
+    this.currentPage.set(1);
+    this.loadProjects();
   }
 
   getViabilityLabel(viability: ViabilityScenario | undefined): string {
@@ -130,6 +150,34 @@ export class OrganizationDashboardPanelComponent implements OnInit {
     }
   }
 
+  getDisplayMunicipality(project: Project): string {
+    if (!project) return '-';
+    if (project.municipality && project.state) {
+      return `${project.municipality}, ${project.state}`;
+    }
+    if (project.municipality) return project.municipality;
+    if (project.state) return project.state;
+    return '-';
+  }
+
+  getOrganizationName(project: Project): string {
+    if (!project) return '-';
+    if (project.organizationName && project.organizationName !== 'Sin organización') return project.organizationName;
+    if (typeof project.organization === 'object' && project.organization?.name) {
+      return project.organization.name;
+    }
+    if (typeof project.organization === 'string' && project.organization !== 'Sin organización') {
+      return project.organization;
+    }
+    return '-';
+  }
+
+  getProjectDescription(project: Project): string {
+    const source = project?.description?.trim() || '-';
+    if (source === '-') return source;
+    return source.length > 40 ? `${source.slice(0, 40)}...` : source;
+  }
+
   formatCurrency(value: number | undefined): string {
     if (value === undefined || value === null) return '-';
     return new Intl.NumberFormat('es-CO', {
@@ -143,5 +191,13 @@ export class OrganizationDashboardPanelComponent implements OnInit {
   logout() {
     this.authService.logout();
     this.router.navigate(['/auth/login']);
+  }
+
+  showTooltip(tooltipId: string) {
+    this.activeTooltip.set(tooltipId);
+  }
+
+  hideTooltip() {
+    this.activeTooltip.set(null);
   }
 }

@@ -42,7 +42,7 @@
         <input 
           type="text" 
           [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event)"
+          (ngModelChange)="onSearchChange($event)"
           class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Buscar proyecto..."
         >
@@ -127,103 +127,78 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      @if (isLoading()) {
+    @if (isLoading()) {
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12">
         <app-loading message="Cargando proyectos..."></app-loading>
-      } @else {
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-gray-600">
-            <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200">
-              <tr>
-                <th class="px-6 py-3">Código</th>
-                <th class="px-6 py-3">Organización</th>
-                <th class="px-6 py-3">Municipio</th>
-                <th class="px-6 py-3">Estado</th>
-                <th class="px-6 py-3">Viabilidad</th>
-                <th class="px-6 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              @for (project of projects(); track project.id) {
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="px-6 py-4 font-medium text-gray-900">{{ project.code }}</td>
-                  <td class="px-6 py-4">
-                    {{ project.organizationName || (typeof project.organization === 'object' ? project.organization.name : project.organization) }}
-                  </td>
-                  <td class="px-6 py-4">{{ project.municipality }}, {{ project.state }}</td>
-                  <td class="px-6 py-4">
-                    <span 
-                      class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
-                      [ngClass]="{
-                        'bg-green-50 text-green-700 border-green-100': project.status === 'ACTIVE',
-                        'bg-gray-100 text-gray-600 border-gray-200': project.status === 'SUSPENDED',
-                        'bg-blue-50 text-blue-700 border-blue-100': project.status === 'CERTIFIED',
-                        'bg-purple-50 text-purple-700 border-purple-100': project.status === 'BENEFICIARY'
-                      }"
-                    >
-                      {{ project.status }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4">
-                    <span 
-                      class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
-                      [ngClass]="{
-                        'bg-green-50 text-green-700 border-green-100': project.viabilityStatus === 'HABILITADO',
-                        'bg-blue-50 text-blue-700 border-blue-100': project.viabilityStatus === 'PRE_HABILITADO',
-                        'bg-yellow-50 text-yellow-700 border-yellow-100': project.viabilityStatus === 'ALTA_POSIBILIDAD',
-                        'bg-red-50 text-red-700 border-red-100': project.viabilityStatus === 'SIN_POSIBILIDAD'
-                      }"
-                    >
-                      {{ getViabilityLabel(project.viabilityStatus) }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4">
-                    <div class="flex gap-2">
-                      <button 
-                        (click)="viewProject(project)"
-                        class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                      >
-                        <span class="material-symbols-rounded text-sm">visibility</span>
-                        Ver
-                      </button>
-                      <button 
-                        (click)="fillSurvey(project)"
-                        class="text-green-600 hover:text-green-800 font-medium flex items-center gap-1"
-                      >
-                        <span class="material-symbols-rounded text-sm">assignment</span>
-                        Diligenciar encuesta
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="px-6 py-12 text-center text-gray-400">
-                    <div class="flex flex-col items-center gap-2">
-                      <span class="material-symbols-rounded text-4xl">folder_off</span>
-                      <p>No se encontraron proyectos</p>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="border-t border-gray-200 px-6 py-4">
-          <app-pagination
-            [currentPage]="currentPage()"
-            [itemsPerPage]="pageSize()"
-            [totalItems]="totalItems()"
-            (pageChange)="onPageChange($event)"
-          ></app-pagination>
-        </div>
-      }
-    </div>
+      </div>
+    } @else {
+      <app-expandable-table
+        [data]="projects()"
+        [columns]="projectColumns"
+        title="Mis Proyectos"
+        [showTools]="false"
+        [showExpandControls]="false"
+        [showRowToggle]="false"
+        [showFooter]="false"
+      >
+        <!-- Custom Body for Organization Name -->
+        <ng-template #customBodyTemplate let-row let-column="column">
+          @if (column.field === 'description') {
+            {{ getProjectDescription(row) }}
+          } @else if (column.field === 'organizationName') {
+            {{ getOrganizationName(row) }}
+          }
+        </ng-template>
+
+        <!-- Actions Template -->
+        <ng-template #actionsTemplate let-row>
+          <app-tooltip 
+            text="Ver detalles del proyecto" 
+            [visible]="activeTooltip() === 'view-' + row.id"
+            variant="dark"
+          >
+            <button 
+              (click)="viewProject(row)"
+              (mouseenter)="showTooltip('view-' + row.id)"
+              (mouseleave)="hideTooltip()"
+              class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+            >
+              <span class="material-symbols-rounded text-sm">visibility</span>
+              <span class="text-xs">Ver proyecto</span>
+            </button>
+          </app-tooltip>
+          <app-tooltip 
+            text="Diligenciar encuesta técnica del proyecto" 
+            [visible]="activeTooltip() === 'survey-' + row.id"
+            variant="dark"
+          >
+            <button 
+              (click)="fillSurvey(row)"
+              (mouseenter)="showTooltip('survey-' + row.id)"
+              (mouseleave)="hideTooltip()"
+              class="text-green-600 hover:text-green-800 font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-green-50 transition-colors"
+            >
+              <span class="material-symbols-rounded text-sm">assignment</span>
+              <span class="text-xs">Encuesta</span>
+            </button>
+          </app-tooltip>
+        </ng-template>
+      </app-expandable-table>
+
+      <!-- Pagination outside table for better layout -->
+      <div class="bg-white rounded-xl border border-gray-200 border-t-0 shadow-sm">
+        <app-pagination
+          [currentPage]="currentPage()"
+          [itemsPerPage]="pageSize()"
+          [totalItems]="totalItems()"
+          (pageChange)="onPageChange($event)"
+        ></app-pagination>
+      </div>
+    }
 
   </main>
 
-  @if (selectedProject()) {
+  @if (showProjectDetail() && selectedProject()) {
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative animate-slide-in-up">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-none">
@@ -260,7 +235,7 @@
               </div>
               <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Organización</p>
-                <p class="font-semibold text-gray-900">{{ selectedProject()?.organizationName || (typeof selectedProject()?.organization === 'object' ? selectedProject()?.organization?.name : selectedProject()?.organization) }}</p>
+                <p class="font-semibold text-gray-900">{{ getOrganizationName(selectedProject()!) }}</p>
               </div>
               <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Viabilidad</p>
@@ -291,10 +266,12 @@
                 <p class="text-xs text-gray-500 mb-1">Valor del Proyecto</p>
                 <p class="font-semibold text-gray-900">{{ formatCurrency(selectedProject()?.projectValue) }}</p>
               </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <p class="text-xs text-gray-500 mb-1">Terreno</p>
-                <p class="font-semibold text-gray-900">{{ selectedProject()?.tieneTerreno?.nombre || '-' }}</p>
-              </div>
+              @if (selectedProject()?.tieneTerreno && selectedProject()?.tieneTerreno?.nombre) {
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  <p class="text-xs text-gray-500 mb-1">Terreno</p>
+                  <p class="font-semibold text-gray-900">{{ selectedProject()?.tieneTerreno?.nombre }}</p>
+                </div>
+              }
             </div>
 
             @if (selectedProject()?.landDescription) {
