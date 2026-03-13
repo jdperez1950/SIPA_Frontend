@@ -87,7 +87,8 @@ export class QuestionMapperService {
       },
       currentAnswer: {
         id: frontendResponse.selectedOptionId || frontendResponse.value
-      }
+      },
+      organizationMessage: frontendResponse.observation
     };
   }
 
@@ -142,8 +143,8 @@ export class QuestionMapperService {
   ): QuestionDocumentRequirement[] {
     return attachments.map(att => ({
       id: att.documentType.id,
-      name: att.documentType.name,
-      description: `Tipo: ${att.documentType.code}`,
+      name: att.documentType.name || att.documentType.code,
+      description: att.documentType.helpInstruction || `Tipo: ${att.documentType.code}`,
       required: true,
       multiple: false,
       triggerOptionId: att.optionResponse?.id

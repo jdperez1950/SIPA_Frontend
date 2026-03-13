@@ -64,6 +64,8 @@ export interface EvidenceUpload {
   fileName: string;
   uploadDate: string;
   expirationDate?: string;
+  pendingUpload?: boolean;
+  localFile?: File;
 }
 
 export interface AssistanceLogEntry {

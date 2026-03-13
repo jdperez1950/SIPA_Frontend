@@ -32,6 +32,9 @@ export class QuestionService {
   uploadEvidence(answerId: string, request: EvidenceUploadRequest): Observable<ApiResponse<EvidenceResponseBackend>> {
     const formData = new FormData();
     formData.append('file', request.file);
+    if (request.questionId) {
+      formData.append('questionId', request.questionId);
+    }
     if (request.description) {
       formData.append('description', request.description);
     }

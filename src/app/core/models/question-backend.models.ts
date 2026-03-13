@@ -29,6 +29,7 @@ export interface QuestionAttachmentBackend {
     id: string;
     code: string;
     name: string;
+    helpInstruction?: string | null;
   };
   optionResponse?: QuestionOptionResponseBackend;
 }
@@ -91,10 +92,13 @@ export interface SaveAnswerRequest {
   currentAnswer: {
     id: string;
   };
+  consultantMessage?: string;
+  organizationMessage?: string;
 }
 
 export interface EvidenceUploadRequest {
   file: File;
+  questionId?: string;
   description?: string;
   documentTypeId?: string;
 }

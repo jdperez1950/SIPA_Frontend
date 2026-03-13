@@ -239,7 +239,7 @@ export class QuestionPageComponent implements OnInit {
 
   async onEvidenceUpload(questionId: string, file: File, requirementId?: string) {
     try {
-      this.loadingService.show('Cargando archivo...');
+      this.loadingService.show('Procesando archivo...');
 
       const pid = this.projectId();
       const existing = this.questionManager.getResponse(questionId);
@@ -255,13 +255,27 @@ export class QuestionPageComponent implements OnInit {
 
       let answerId = existing.answerId;
       if (!answerId) {
-        const submitResult = await this.questionManager.submitResponse({
+        const queuedEvidence: EvidenceUpload = {
+          requirementId: requirementId,
+          fileUrl: '',
+          fileName: file.name,
+          uploadDate: new Date().toISOString(),
+          pendingUpload: true,
+          localFile: file
+        };
+
+        const currentEvidence = existing.evidence || [];
+
+        this.questionManager.saveResponse({
           ...existing,
           questionId,
-          selectedOptionId: existing.selectedOptionId || existing.value
-        }, pid);
-        this.alertService.success(submitResult.message, 2500);
-        answerId = this.questionManager.getResponse(questionId)?.answerId;
+          evidence: [...currentEvidence, queuedEvidence],
+          lastUpdated: new Date().toISOString(),
+          isUnsaved: true
+        });
+
+        this.alertService.info('Archivo listo. Se cargará al guardar con "Enviar y Siguiente"');
+        return;
       }
 
       if (!answerId) {
@@ -271,6 +285,7 @@ export class QuestionPageComponent implements OnInit {
       const uploadResult = await this.questionService
         .uploadEvidence(answerId, {
           file,
+          questionId,
           documentTypeId: requirementId
         })
         .toPromise();
@@ -285,7 +300,8 @@ export class QuestionPageComponent implements OnInit {
         requirementId: uploadResult.data.documentTypeId || requirementId,
         fileUrl: uploadResult.data.fileUrl || '',
         fileName: uploadResult.data.fileName || file.name,
-        uploadDate: uploadResult.data.uploadedAt || new Date().toISOString()
+        uploadDate: uploadResult.data.uploadedAt || new Date().toISOString(),
+        pendingUpload: false
       };
 
       const refreshedResponse = this.questionManager.getResponse(questionId);
@@ -384,6 +400,56 @@ export class QuestionPageComponent implements OnInit {
     return !!response && response.value !== null && response.value !== undefined && response.value !== '';
   }
 
+  private async uploadPendingEvidences(questionId: string, answerId: string) {
+    const response = this.questionManager.getResponse(questionId);
+    const pendingEvidences = (response?.evidence || []).filter(e => e.pendingUpload && e.localFile);
+
+    for (const pendingEvidence of pendingEvidences) {
+      const uploadResult = await this.questionService.uploadEvidence(answerId, {
+        file: pendingEvidence.localFile as File,
+        questionId,
+        documentTypeId: pendingEvidence.requirementId
+      }).toPromise();
+
+      if (!uploadResult?.success || !uploadResult.data) {
+        throw new Error(uploadResult?.message || `Error al cargar evidencia: ${pendingEvidence.fileName}`);
+      }
+
+      const currentResponse = this.questionManager.getResponse(questionId);
+      if (!currentResponse) {
+        continue;
+      }
+
+      const updatedEvidence = (currentResponse.evidence || []).map(item => {
+        const isSamePending = item.pendingUpload
+          && item.fileName === pendingEvidence.fileName
+          && item.uploadDate === pendingEvidence.uploadDate
+          && item.requirementId === pendingEvidence.requirementId;
+
+        if (!isSamePending) {
+          return item;
+        }
+
+        return {
+          id: uploadResult.data.id,
+          answerId: uploadResult.data.answerId || answerId,
+          requirementId: uploadResult.data.documentTypeId || pendingEvidence.requirementId,
+          fileUrl: uploadResult.data.fileUrl || '',
+          fileName: uploadResult.data.fileName || pendingEvidence.fileName,
+          uploadDate: uploadResult.data.uploadedAt || new Date().toISOString(),
+          pendingUpload: false
+        } as EvidenceUpload;
+      });
+
+      this.questionManager.saveResponse({
+        ...currentResponse,
+        questionId,
+        evidence: updatedEvidence,
+        lastUpdated: new Date().toISOString()
+      });
+    }
+  }
+
   async sendAndNext(questionId: string) {
     const pid = this.projectId();
     if (!pid) {
@@ -396,6 +462,11 @@ export class QuestionPageComponent implements OnInit {
       try {
         this.loadingService.show('Guardando respuesta...');
         const result = await this.questionManager.submitResponse(response, pid);
+        const savedResponse = this.questionManager.getResponse(questionId);
+
+        if (savedResponse?.answerId) {
+          await this.uploadPendingEvidences(questionId, savedResponse.answerId);
+        }
         
         this.alertService.success(result.message, 3000);
         this.loadingService.hide();
