@@ -6,6 +6,7 @@ import { AdminDataService } from '../../../../../../services/admin-data.service'
 import { User } from '../../../../../../../../core/models/domain.models';
 import { signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CustomDropdownComponent, CustomDropdownItem } from '../../../shared/custom-dropdown/custom-dropdown.component';
 
 interface Advisor extends User {
   workload: number;
@@ -14,7 +15,7 @@ interface Advisor extends User {
 @Component({
   selector: 'app-step-technical-table',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomDropdownComponent],
   templateUrl: './step-technical-table.component.html',
   styles: []
 })
@@ -35,6 +36,7 @@ export class StepTechnicalTableComponent implements OnInit {
     { id: 'Suelo', name: 'Suelo', questionCount: 45, isActive: true },
     { id: 'Preconstrucción', name: 'Preconstrucción', questionCount: 20, isActive: true }
   ]);
+  displayedAxes = computed(() => this.activeAxes?.length ? this.activeAxes : this.availableAxes());
 
   ngOnInit() {
     this.loadAdvisors();
@@ -76,9 +78,14 @@ export class StepTechnicalTableComponent implements OnInit {
     return this.assignments.find(a => a.eje === axisId)?.consultor.id || '';
   }
 
-  onSelectAdvisor(axisId: string, event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const advisorId = select.value;
+  getAdvisorOptions(axisId: string): CustomDropdownItem[] {
+    return this.getAdvisorsForAxis(axisId).map(advisor => ({
+      id: advisor.id,
+      nombre: `${advisor.name} · Carga ${advisor.workload || 0}%`
+    }));
+  }
+
+  onSelectAdvisor(axisId: string, advisorId: string) {
     if (advisorId) {
       const advisor = this.advisors().find(a => a.id === advisorId);
       if (advisor) {

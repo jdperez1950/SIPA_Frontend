@@ -213,7 +213,7 @@
   <!-- Assignment Modal Overlay -->
   @if (showAssignModal() && selectedProject()) {
     <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-fade-in-up flex flex-col">
         <!-- Modal Header -->
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <div>
@@ -225,37 +225,34 @@
           </button>
         </div>
 
-        <!-- Modal Body: Advisor List -->
-        <div class="p-4 max-h-80 overflow-y-auto">
-          <p class="text-sm text-gray-500 mb-3">Sugerencias basadas en carga de trabajo:</p>
-          <div class="space-y-2">
-            @for (advisor of availableAdvisors; track advisor.id) {
-              <button 
-                (click)="assignAdvisor(advisor)"
-                class="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group text-left"
-              >
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold group-hover:bg-blue-200 group-hover:text-blue-700">
-                    {{ advisor.name.charAt(0) }}
-                  </div>
-                  <div>
-                    <p class="font-medium text-gray-900">{{ advisor.name }}</p>
-                    <p class="text-xs text-gray-500">Carga: {{ advisor.workload }}%</p>
-                  </div>
-                </div>
-                @if (advisor.recommended) {
-                  <span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-bold">Recomendado</span>
-                }
-              </button>
-            }
-          </div>
+        <div class="p-6 overflow-y-auto">
+          <app-step-technical-table
+            [assignments]="assignModalAssignments()"
+            (assign)="updateAssignModalAssignment($event)"
+          ></app-step-technical-table>
         </div>
 
         <!-- Modal Footer -->
-        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
-          <button (click)="closeAssignModal()" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
-            Cancelar
-          </button>
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+          <p class="text-sm text-gray-500">
+            Asignaciones listas: {{ assignModalAssignments().length }}
+          </p>
+          <div class="flex gap-2">
+            <button (click)="closeAssignModal()" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
+              Cancelar
+            </button>
+            <button
+              (click)="saveAssignedAdvisors()"
+              [disabled]="isSavingAssignments() || !assignModalAssignments().length"
+              class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              @if (isSavingAssignments()) {
+                Guardando...
+              } @else {
+                Guardar
+              }
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -21,6 +21,9 @@ export const roleGuard = (allowedRoles: string[]): CanMatchFn => {
       if (user.role === 'ORGANIZACION') {
         return router.createUrlTree(['/workspace']);
       }
+      if (user.role === 'ASESOR') {
+        return router.createUrlTree(['/advisor/dashboard']);
+      }
       if (user.role === 'ADMIN') {
         return router.createUrlTree(['/admin/dashboard']);
       }

@@ -4,15 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminDataService } from '../../services/admin-data.service';
 import { ProjectsService } from '../../../../core/services/projects.service';
-import { Project, ProjectStatus, AdvisorCandidate } from '../../../../core/models/domain.models';
+import { Project, ProjectStatus } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { ProjectWizardComponent } from './components/project-wizard/project-wizard.component';
+import { StepTechnicalTableComponent } from './components/project-wizard/steps/step-technical-table/step-technical-table.component';
+import { TechnicalTableAssignment } from './components/project-wizard/project-wizard.types';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-admin-projects-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent, LoadingComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ProjectWizardComponent, LoadingComponent, StepTechnicalTableComponent],
   templateUrl: './admin-projects-page.component.html',
   styles: []
 })
@@ -28,6 +31,7 @@ export class AdminProjectsPageComponent implements OnInit {
   showAssignModal = signal<boolean>(false);
   selectedProject = signal<Project | null>(null);
   isLoading = signal(false);
+  isSavingAssignments = signal(false);
 
   // Pagination State
   currentPage = signal(1);
@@ -37,13 +41,7 @@ export class AdminProjectsPageComponent implements OnInit {
   // Data
   projects = signal<Project[]>([]);
   expandedDescriptions = signal<Set<string>>(new Set());
-
-  // Mock Advisors for Modal
-  availableAdvisors: AdvisorCandidate[] = [
-    { id: '2', name: 'Carlos Ruiz', workload: 80, recommended: false },
-    { id: '5', name: 'María Gómez', workload: 100, recommended: false },
-    { id: '8', name: 'Roberto Díaz', workload: 30, recommended: true }, // Smart suggestion
-  ];
+  assignModalAssignments = signal<TechnicalTableAssignment[]>([]);
 
   constructor() {
     // No effect needed - we'll handle filter changes explicitly
@@ -131,38 +129,64 @@ export class AdminProjectsPageComponent implements OnInit {
 
   openAssignModal(project: Project) {
     this.selectedProject.set(project);
+    this.assignModalAssignments.set([]);
     this.showAssignModal.set(true);
   }
 
   closeAssignModal() {
     this.showAssignModal.set(false);
     this.selectedProject.set(null);
+    this.assignModalAssignments.set([]);
+    this.isSavingAssignments.set(false);
   }
 
-  assignAdvisor(advisor: AdvisorCandidate) {
+  updateAssignModalAssignment(assignment: TechnicalTableAssignment) {
+    this.assignModalAssignments.update(current => {
+      const filtered = current.filter(item => item.eje !== assignment.eje);
+      return [...filtered, assignment];
+    });
+  }
+
+  async saveAssignedAdvisors() {
     const project = this.selectedProject();
     if (!project) return;
+    const assignments = this.assignModalAssignments();
+    if (!assignments.length) {
+      this.alertService.warning('Seleccione al menos un asesor para guardar');
+      return;
+    }
 
+    this.isSavingAssignments.set(true);
     this.isLoading.set(true);
-    
-    this.adminDataService.assignAdvisor(project.id, { id: advisor.id, name: advisor.name }).subscribe({
-      next: (updatedProject) => {
-        this.projects.update(projects => 
-          projects.map(p => 
-            p.id === updatedProject.id ? updatedProject : p
+
+    try {
+      let updatedProject: Project | null = null;
+      for (const assignment of assignments) {
+        updatedProject = await firstValueFrom(
+          this.adminDataService.assignAdvisor(project.id, {
+            id: assignment.consultor.id,
+            name: assignment.consultor.nombre
+          })
+        );
+      }
+
+      if (updatedProject) {
+        this.projects.update(projects =>
+          projects.map(p =>
+            p.id === updatedProject.id ? updatedProject as Project : p
           )
         );
-        this.alertService.success(`Asesor asignado correctamente al proyecto ${updatedProject.name}`);
-        this.isLoading.set(false);
-        this.closeAssignModal();
-      },
-      error: (error) => {
-        const errorMessage = error?.error?.message || error?.message || 'Error al asignar el asesor. Por favor intente nuevamente.';
-        this.alertService.error(errorMessage);
-        this.isLoading.set(false);
-        this.closeAssignModal();
       }
-    });
+
+      this.alertService.success(`Se guardaron ${assignments.length} asignaciones de asesor`);
+      this.closeAssignModal();
+    } catch (error: any) {
+      const errorMessage = error?.error?.message || error?.message || 'Error al asignar asesores. Por favor intente nuevamente.';
+      this.alertService.error(errorMessage);
+    } finally {
+      this.isLoading.set(false);
+      this.isSavingAssignments.set(false);
+    }
   }
 
   // Helpers
