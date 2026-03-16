@@ -45,16 +45,17 @@
       <!-- Template para Acciones de la Fila Principal (Dinámicas) -->
       <ng-template #actionsTemplate let-row>
         <div class="flex items-center gap-1">
-          <ng-container *ngFor="let action of availableRowActions">
-            <button 
-              *ngIf="row.availableActions?.includes(action.id)"
-              (click)="handleRowAction(action, row)"
-              [title]="action.label"
-              class="p-1 text-gray-500 rounded transition-colors"
-              [ngClass]="action.color">
-              <span class="material-symbols-rounded">{{ action.icon }}</span>
-            </button>
-          </ng-container>
+          @for (action of availableRowActions; track action.id) {
+            @if (row.availableActions?.includes(action.id)) {
+              <button 
+                (click)="handleRowAction(action, row)"
+                [title]="action.label"
+                class="p-1 text-gray-500 rounded transition-colors"
+                [ngClass]="action.color">
+                <span class="material-symbols-rounded">{{ action.icon }}</span>
+              </button>
+            }
+          }
         </div>
       </ng-template>
 
@@ -68,7 +69,7 @@
 
           <!-- Mobile View (Accordion List) -->
           <div class="block md:hidden space-y-3">
-            <ng-container *ngFor="let axis of project.axes">
+            @for (axis of project.axes; track axis) {
               <div class="border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm">
                 <!-- Axis Header -->
                 <div (click)="toggleAxisExpansion(axis)" 
@@ -95,8 +96,9 @@
                 </div>
           
                 <!-- Axis Content (Questions List) -->
-                <div *ngIf="isAxisExpanded(axis)" class="border-t border-gray-200 divide-y divide-gray-100">
-                   <ng-container *ngFor="let question of axis.questions">
+                @if (isAxisExpanded(axis)) {
+                  <div class="border-t border-gray-200 divide-y divide-gray-100">
+                   @for (question of axis.questions; track question) {
                       <div class="p-4 space-y-3">
                          <!-- Question Text & Status -->
                          <div class="flex items-start justify-between gap-3">
@@ -126,17 +128,22 @@
                            </button>
                          </div>
                       </div>
-                   </ng-container>
-                   <div *ngIf="!axis.questions?.length" class="p-6 text-center text-gray-400 text-sm italic">
+                   }
+                   @if (!axis.questions?.length) {
+                    <div class="p-6 text-center text-gray-400 text-sm italic">
                       No hay preguntas registradas
-                   </div>
-                </div>
+                    </div>
+                   }
+                  </div>
+                }
               </div>
-            </ng-container>
+            }
             
-            <div *ngIf="!project.axes?.length" class="p-6 text-center text-gray-400 italic bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            @if (!project.axes?.length) {
+              <div class="p-6 text-center text-gray-400 italic bg-gray-50 rounded-lg border border-dashed border-gray-300">
                Sin ejes asignados
-            </div>
+              </div>
+            }
           </div>
 
           <!-- Tabla Anidada para Ejes (Desktop View) -->
@@ -151,17 +158,18 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <ng-container *ngFor="let axis of project.axes">
+                @for (axis of project.axes; track axis) {
                   <!-- Fila del Eje -->
                   <tr class="hover:bg-gray-50">
                     <td class="px-2 py-3">
-                      <button 
-                        *ngIf="axis.questions && axis.questions.length > 0"
-                        (click)="toggleAxisExpansion(axis)"
-                        [ngStyle]="{'transform': isAxisExpanded(axis) ? 'rotate(45deg)' : 'rotate(0deg)'}"
-                        class="w-8 h-8 rounded-full hover:bg-white hover:shadow-sm hover:text-pavis-brand-primary flex items-center justify-center transition-all focus:outline-none text-pavis-brand-primary">
-                        <span class="material-symbols-rounded transition-transform duration-200 text-xl">chevron_right</span>
-                      </button>
+                      @if (axis.questions && axis.questions.length > 0) {
+                        <button 
+                          (click)="toggleAxisExpansion(axis)"
+                          [ngStyle]="{'transform': isAxisExpanded(axis) ? 'rotate(45deg)' : 'rotate(0deg)'}"
+                          class="w-8 h-8 rounded-full hover:bg-white hover:shadow-sm hover:text-pavis-brand-primary flex items-center justify-center transition-all focus:outline-none text-pavis-brand-primary">
+                          <span class="material-symbols-rounded transition-transform duration-200 text-xl">chevron_right</span>
+                        </button>
+                      }
                     </td>
                     <td class="px-4 py-3 font-medium text-gray-800">{{ axis.name }}</td>
                     <td class="px-4 py-3 text-center">
@@ -181,10 +189,11 @@
                   </tr>
 
                   <!-- Filas de Preguntas Expandidas -->
-                  <tr *ngIf="isAxisExpanded(axis) && axis.questions?.length > 0">
-                    <td colspan="4" class="p-0">
-                      <div class="bg-gray-50 px-4 py-3 space-y-2">
-                        <ng-container *ngFor="let question of axis.questions">
+                  @if (isAxisExpanded(axis) && axis.questions?.length > 0) {
+                    <tr>
+                      <td colspan="4" class="p-0">
+                        <div class="bg-gray-50 px-4 py-3 space-y-2">
+                        @for (question of axis.questions; track question) {
                           <!-- Fila de la Pregunta (expandible) -->
                           <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                             <!-- Header de la Pregunta -->
@@ -214,7 +223,8 @@
                             </div>
 
                             <!-- Detalle de la Pregunta Expandida -->
-                            <div *ngIf="isQuestionExpanded(question)" class="px-4 pb-3 pt-0 border-t border-gray-100 bg-gray-50">
+                            @if (isQuestionExpanded(question)) {
+                              <div class="px-4 pb-3 pt-0 border-t border-gray-100 bg-gray-50">
                               <div class="pt-3 space-y-2">
                                 <div class="flex items-start gap-2">
                                   <span class="material-symbols-rounded text-gray-400 text-[16px] mt-0.5">chat_bubble</span>
@@ -238,19 +248,23 @@
                                   </div>
                                 </div>
                               </div>
-                            </div>
+                              </div>
+                            }
                           </div>
-                        </ng-container>
-                      </div>
+                        }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+
+                @if (!project.axes || project.axes.length === 0) {
+                  <tr>
+                    <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">
+                      Sin ejes asignados
                     </td>
                   </tr>
-                </ng-container>
-
-                <tr *ngIf="!project.axes || project.axes.length === 0">
-                  <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">
-                    Sin ejes asignados
-                  </td>
-                </tr>
+                }
               </tbody>
             </table>
           </div>

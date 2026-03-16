@@ -10,19 +10,20 @@ import { ElementRef } from '@angular/core';
   template: `
     <div class="relative inline-block" (mouseenter)="updatePosition()">
       <ng-content></ng-content>
-      <div 
-        *ngIf="visible()"
-        class="fixed z-[10000] px-2.5 py-1.5 text-xs font-medium rounded-lg shadow-lg pointer-events-none transition-opacity duration-200 leading-tight"
-        [class]="positionClass()"
-        role="tooltip"
-        [style.background-color]="backgroundColor()"
-        [style.color]="textColor()"
-        [style.top]="tooltipTop()"
-        [style.left]="tooltipLeft()"
-      >
-        {{ text() }}
-        <div class="absolute w-2 h-2 transform rotate-45" [class]="arrowClass()" [style.background-color]="backgroundColor()"></div>
-      </div>
+      @if (visible()) {
+        <div 
+          class="fixed z-[10000] px-2.5 py-1.5 text-xs font-medium rounded-lg shadow-lg pointer-events-none transition-opacity duration-200 leading-tight"
+          [class]="positionClass()"
+          role="tooltip"
+          [style.background-color]="backgroundColor()"
+          [style.color]="textColor()"
+          [style.top]="tooltipTop()"
+          [style.left]="tooltipLeft()"
+        >
+          {{ text() }}
+          <div class="absolute w-2 h-2 transform rotate-45" [class]="arrowClass()" [style.background-color]="backgroundColor()"></div>
+        </div>
+      }
     </div>
   `,
   styles: [`
