@@ -15,5 +15,8 @@ export {
   getMinNameLengthErrorMessage,
   phoneLengthValidator,
   PHONE_LENGTH_ERROR_KEY,
-  getPhoneLengthErrorMessage
+  getPhoneLengthErrorMessage,
+  maxDigitsValidator,
+  MAX_DIGITS_ERROR_KEY,
+  getMaxDigitsErrorMessage
 } from './custom-validators';

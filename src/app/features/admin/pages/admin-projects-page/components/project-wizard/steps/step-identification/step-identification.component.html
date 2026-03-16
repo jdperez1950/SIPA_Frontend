@@ -479,24 +479,34 @@
                   
                   <td class="px-4 py-3 text-sm">
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputmode="numeric"
                       class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right"
                       [formControl]="getDineroControl(i)"
+                      [ngClass]="{'border-red-300 focus:ring-red-200': getDineroControl(i).invalid && (getDineroControl(i).touched || getDineroControl(i).dirty)}"
                       min="0"
                       placeholder="0"
                       currencyFormat
                     >
+                    @if (getDineroControl(i).hasError('maxDigits') && (getDineroControl(i).touched || getDineroControl(i).dirty)) {
+                      <p class="text-xs text-red-500 mt-1">{{ getMaxDigitsMsg() }}</p>
+                    }
                   </td>
                   
                   <td class="px-4 py-3 text-sm">
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputmode="numeric"
                       class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right"
                       [formControl]="getEspecieControl(i)"
+                      [ngClass]="{'border-red-300 focus:ring-red-200': getEspecieControl(i).invalid && (getEspecieControl(i).touched || getEspecieControl(i).dirty)}"
                       min="0"
                       placeholder="0"
                       currencyFormat
                     >
+                    @if (getEspecieControl(i).hasError('maxDigits') && (getEspecieControl(i).touched || getEspecieControl(i).dirty)) {
+                      <p class="text-xs text-red-500 mt-1">{{ getMaxDigitsMsg() }}</p>
+                    }
                   </td>
                 </tr>
               }

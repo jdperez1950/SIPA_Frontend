@@ -13,6 +13,8 @@ import {
   getRequiredErrorMessage,
   getEmailErrorMessage,
   getMinLengthErrorMessage,
+  maxDigitsValidator,
+  getMaxDigitsErrorMessage,
 } from '../../../../../../../../shared/validators';
 
 import { FileService } from '../../../../../../../../core/services/file.service';
@@ -129,8 +131,8 @@ export class StepIdentificationComponent implements OnInit {
             id: [source.id],
             fuente: [source.nombre], // Esto es solo display, no se envia
             fuenteId: [source.id], // ID real para enviar
-            dinero: [dinero, [Validators.min(0)]],
-            especie: [especie, [Validators.min(0)]]
+            dinero: [dinero, [Validators.min(0), maxDigitsValidator(12)]],
+            especie: [especie, [Validators.min(0), maxDigitsValidator(12)]]
           }));
         });
         
@@ -571,8 +573,8 @@ export class StepIdentificationComponent implements OnInit {
       // Si tiene financiación, mantenemos los validadores
       // NO SOBRESCRIBIMOS VALORES AQUI, solo actualizamos validez
       detalleArray.controls.forEach(control => {
-        control.get('dinero')?.setValidators([Validators.min(0)]);
-        control.get('especie')?.setValidators([Validators.min(0)]);
+        control.get('dinero')?.setValidators([Validators.min(0), maxDigitsValidator(12)]);
+        control.get('especie')?.setValidators([Validators.min(0), maxDigitsValidator(12)]);
         control.get('dinero')?.updateValueAndValidity();
         control.get('especie')?.updateValueAndValidity();
       });
@@ -829,5 +831,9 @@ export class StepIdentificationComponent implements OnInit {
       (total, control) => total + (control.get('especie')?.value || 0),
       0
     );
+  }
+
+  getMaxDigitsMsg(): string {
+    return getMaxDigitsErrorMessage(12);
   }
 }

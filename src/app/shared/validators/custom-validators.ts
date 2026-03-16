@@ -4,6 +4,7 @@ export const NUMERIC_ONLY_ERROR_KEY = 'numericOnly';
 export const TEXT_ONLY_ERROR_KEY = 'textOnly';
 export const PHONE_LENGTH_ERROR_KEY = 'phoneLength';
 export const NIT_FORMAT_ERROR_KEY = 'nitFormat';
+export const MAX_DIGITS_ERROR_KEY = 'maxDigits';
 
 export const numericOnlyValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
   const value = control.value;
@@ -118,4 +119,25 @@ export const phoneLengthValidator: ValidatorFn = (control: AbstractControl): Val
 
 export function getPhoneLengthErrorMessage(): string {
   return 'El teléfono debe tener entre 5 y 13 dígitos';
+}
+
+export const maxDigitsValidator = (maxDigits: number): ValidatorFn => {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const numericString =
+      typeof value === 'number'
+        ? Math.floor(Math.abs(value)).toString()
+        : String(value).replace(/\D/g, '');
+    if (numericString.length > maxDigits) {
+      return { [MAX_DIGITS_ERROR_KEY]: true };
+    }
+    return null;
+  };
+};
+
+export function getMaxDigitsErrorMessage(maxDigits: number): string {
+  return `Máximo ${maxDigits} dígitos`;
 }
