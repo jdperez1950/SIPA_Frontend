@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardStatsComponent, StatItem } from '../../../../shared/components/dashboard-stats/dashboard-stats.component';
+import { DashboardStatsComponent, StatItem, DashboardColumn } from '../../../../shared/components/dashboard-stats/dashboard-stats.component';
 import { ExpandableTableComponent, TableColumn, NestedTableColumn } from '../../../../shared/components/expandable-table/expandable-table.component';
 import { Router } from '@angular/router';
 
@@ -83,6 +83,78 @@ export class AdminComponentsShowcaseComponent implements OnInit {
       trend: '+5%',
       trendDirection: 'up'
     }
+  ];
+  
+  // --- MOCK DATA: DASHBOARD COLUMNS (6 INDICADORES) ---
+  dashboardColumns: DashboardColumn[] = [
+    {
+      kind: 'list',
+      title: 'Escenarios de Viabilidad',
+      items: [
+        { label: 'Sin posibilidad', count: 1, color: 'gray' },
+        { label: 'Con posibilidad', count: 1, color: 'orange' },
+        { label: 'Con alta posibilidad', count: 1, color: 'green' },
+        { label: 'Pre-habilitado', count: 1, color: 'blue' },
+        { label: 'Habilitado', count: 1, color: 'purple' },
+      ]
+    },
+    { 
+      kind: 'badge', 
+      title: 'Proyectos Certificados',
+      badges: [
+        { value: 4, percent: 25, color: 'gray', badgeTitle: 'Sin certificar' },
+        { value: 16, percent: 75, color: 'blue', badgeTitle: 'Certificados' }
+      ]
+    },
+    {
+      kind: 'list',
+      title: 'Estado de Preguntas',
+      items: [
+        { label: 'Sin responder', count: 2, percent: 2, color: 'gray' },
+        { label: 'Sí', count: 1, percent: 1, color: 'green' },
+        { label: 'No', count: 1, percent: 10, color: 'red' },
+        { label: 'En Proceso', count: 1, percent: 1, color: 'orange' },
+        { label: 'No sé', count: 0, percent: 1, color: 'gray' },
+        { label: 'No aplica', count: 0, percent: 0, color: 'gray' },
+      ]
+    },
+    { 
+      kind: 'badge', 
+      title: 'Preguntas Validadas',
+      badges: [
+        { value: 4, percent: 25, color: 'gray', badgeTitle: 'Pendientes' },
+        { value: 16, percent: 75, color: 'orange', badgeTitle: 'Validadas' }
+      ]
+    },
+    {
+      kind: 'chips',
+      title: 'Notas de revisión',
+      groups: [
+        {
+          title: 'Prioridad',
+          items: [
+            { label: 'Urgente', count: 1, color: 'red' },
+            { label: 'Alerta', count: 2, color: 'orange' },
+            { label: 'Importante', count: 8, color: 'blue' },
+          ]
+        },
+        {
+          title: 'Vigencia',
+          items: [
+            { label: 'Vencidos', count: 1, color: 'red' },
+            { label: 'Por vencer', count: 2, color: 'orange' },
+            { label: 'Vigente', count: 2, color: 'green' },
+          ]
+        }
+      ]
+    },
+    { 
+      kind: 'badge', 
+      title: 'Certificados',
+      badges: [
+        { value: 8, percent: 25, color: 'green', badgeTitle: 'Certificados' }
+      ]
+    },
   ];
 
   // --- MOCK DATA: TABLE (PROJECTS) ---
