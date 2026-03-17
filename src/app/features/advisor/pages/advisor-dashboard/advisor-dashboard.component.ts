@@ -11,11 +11,12 @@ import { TooltipComponent } from '../../../../shared/components/tooltip/tooltip.
 import { ExpandableTableComponent, TableColumn } from '../../../../shared/components/expandable-table/expandable-table.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { ParametroBaseService } from '../../../../core/services/parametro-base.service';
+import { DashboardStatsComponent, DashboardColumn } from '../../../../shared/components/dashboard-stats/dashboard-stats.component';
 
 @Component({
   selector: 'app-advisor-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, LoadingComponent, FooterComponent, TooltipComponent, ExpandableTableComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingComponent, FooterComponent, TooltipComponent, ExpandableTableComponent, DashboardStatsComponent],
   templateUrl: './advisor-dashboard.component.html',
   styles: []
 })
@@ -46,6 +47,65 @@ export class AdvisorDashboardComponent implements OnInit {
 
   viabilityOptions = Object.values(ViabilityScenario);
   ViabilityScenario = ViabilityScenario;
+
+  dashboardColumns = signal<DashboardColumn[]>([
+    {
+      kind: 'badge',
+      title: 'Progreso Global',
+      badges: [
+        { value: 52, percent: 100, color: 'blue' }
+      ]
+    },
+    {
+      kind: 'list',
+      title: 'Estado de Proyectos',
+      items: [
+        { label: 'Activos', count: 8, color: 'green', percent: 80 },
+        { label: 'Devueltos', count: 2, color: 'orange', percent: 20 }
+      ]
+    },
+    {
+      kind: 'list',
+      title: 'Viabilidad',
+      items: [
+        { label: 'Habilitados', count: 3, color: 'green', percent: 37.5 },
+        { label: 'Pre-habilitados', count: 2, color: 'blue', percent: 25 },
+        { label: 'Alta Posibilidad', count: 2, color: 'orange', percent: 25 },
+        { label: 'Baja Posibilidad', count: 1, color: 'red', percent: 12.5 }
+      ]
+    },
+    {
+      kind: 'list',
+      title: 'Por Eje',
+      items: [
+        { label: 'Técnico', count: 58, color: 'blue' },
+        { label: 'Legal', count: 42, color: 'green' },
+        { label: 'Financiero', count: 55, color: 'purple' },
+        { label: 'Social', count: 48, color: 'orange' }
+      ]
+    },
+    {
+      kind: 'chips',
+      title: 'Por Prioridad',
+      groups: [
+        {
+          title: 'Asistencia Técnica',
+          items: [
+            { label: 'Urgente', count: 3, color: 'red' },
+            { label: 'Importante', count: 2, color: 'orange' },
+            { label: 'Normal', count: 5, color: 'blue' }
+          ]
+        },
+        {
+          title: 'Correcciones',
+          items: [
+            { label: 'Pendientes', count: 2, color: 'orange' },
+            { label: 'Completadas', count: 5, color: 'green' }
+          ]
+        }
+      ]
+    }
+  ]);
 
   projectColumns: TableColumn[] = [
     { header: 'Código', field: 'code', type: 'text' },

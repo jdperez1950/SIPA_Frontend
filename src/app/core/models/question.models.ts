@@ -76,7 +76,7 @@ export interface AssistanceLogEntry {
   advisorMessage: string;
   priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
   validityPeriod: string; // e.g. "Pv" (Periodo Vigente)
-  response?: {
+  correctionUpdate?: {
     responderName: string;
     responseDate: string;
     message: string;

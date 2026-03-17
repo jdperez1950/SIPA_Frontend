@@ -74,7 +74,7 @@ export interface AnswerRequestBackend {
   };
   answeredAt?: string;
   currentAnswer?: QuestionOptionResponseBackend;
-  consultantMessage?: string;
+  advisorMessage?: string;
   priority?: string;
   validity?: string;
   progressPercentage?: number;
@@ -93,8 +93,9 @@ export interface SaveAnswerRequest {
   currentAnswer: {
     id: string;
   };
-  consultantMessage?: string;
+  advisorMessage?: string;
   organizationMessage?: string;
+  priority?: string;
 }
 
 export interface EvidenceUploadRequest {

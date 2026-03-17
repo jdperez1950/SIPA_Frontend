@@ -14,104 +14,44 @@
   </header>
 
   <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Proyectos Asignados</h2>
         <p class="text-gray-500">Consulta tus proyectos y accede a encuesta</p>
       </div>
     </div>
 
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-      <div class="relative w-full md:w-80">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="material-symbols-rounded text-gray-400">search</span>
+    <app-dashboard-stats [columns]="dashboardColumns()" [showFilters]="false"></app-dashboard-stats>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row gap-4 items-center">
+      <div class="relative w-full sm:w-auto">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <span class="material-symbols-rounded text-lg">search</span>
         </span>
         <input 
           type="text" 
           [ngModel]="searchQuery()"
           (ngModelChange)="onSearchChange($event)"
-          class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Buscar proyecto..."
+          placeholder="Buscar por código o nombre..." 
+          class="pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
         >
-      </div>
-      
-      <div class="flex gap-2 flex-wrap justify-center">
-        <button 
-          (click)="filterByStatus(null)"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-          [ngClass]="{
-            'bg-gray-100 border-gray-300 text-gray-700': selectedStatus() === null,
-            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== null
-          }"
-        >
-          Todos
-        </button>
-        <button 
-          (click)="filterByStatus('ACTIVE')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-          [ngClass]="{
-            'bg-green-50 border-green-200 text-green-700': selectedStatus() === 'ACTIVE',
-            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'ACTIVE'
-          }"
-        >
-          Activos
-        </button>
-        <button 
-          (click)="filterByStatus('CERTIFIED')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-          [ngClass]="{
-            'bg-blue-50 border-blue-200 text-blue-700': selectedStatus() === 'CERTIFIED',
-            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'CERTIFIED'
-          }"
-        >
-          Certificados
-        </button>
-        <button 
-          (click)="filterByStatus('SUSPENDED')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-          [ngClass]="{
-            'bg-gray-100 border-gray-200 text-gray-700': selectedStatus() === 'SUSPENDED',
-            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'SUSPENDED'
-          }"
-        >
-          Suspendidos
-        </button>
-        <button 
-          (click)="filterByStatus('BENEFICIARY')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-          [ngClass]="{
-            'bg-purple-50 border-purple-200 text-purple-700': selectedStatus() === 'BENEFICIARY',
-            'border-transparent text-gray-500 hover:bg-gray-50': selectedStatus() !== 'BENEFICIARY'
-          }"
-        >
-          Beneficiarios
-        </button>
       </div>
 
-      <div class="flex gap-2 flex-wrap justify-center">
-        <button 
-          (click)="filterByViability(null)"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-          [ngClass]="{
-            'bg-gray-100 border-gray-300 text-gray-700': selectedViability() === null,
-            'border-transparent text-gray-500 hover:bg-gray-50': selectedViability() !== null
-          }"
-        >
-          Viabilidad
-        </button>
+      <select class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto">
+        <option>Todos los estados</option>
+        <option>Activos</option>
+        <option>Certificados</option>
+        <option>Suspendidos</option>
+        <option>Beneficiarios</option>
+      </select>
+
+      <select class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto">
+        <option>Toda la viabilidad</option>
         @for (viability of viabilityOptions; track viability) {
-          <button 
-            (click)="filterByViability(viability)"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-            [ngClass]="{
-              'bg-teal-50 border-teal-200 text-teal-700': selectedViability() === viability,
-              'border-transparent text-gray-500 hover:bg-gray-50': selectedViability() !== viability
-            }"
-          >
-            {{ getViabilityLabel(viability) }}
-          </button>
+          <option>{{ getViabilityLabel(viability) }}</option>
         }
-      </div>
+      </select>
     </div>
 
     @if (isLoading()) {

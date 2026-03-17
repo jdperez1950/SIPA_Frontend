@@ -69,6 +69,7 @@ import { QuestionDefinition } from '../../../../../../core/models/question.model
 export class DynamicInputComponent {
   question = input.required<QuestionDefinition>();
   initialValue = input<any>(null);
+  disabled = input<boolean>(false);
   valueChange = output<any>();
 
   control = new FormControl<any>(null);
@@ -78,6 +79,15 @@ export class DynamicInputComponent {
       const val = this.initialValue();
       // Reset control value when question changes or initialValue updates
       this.control.setValue(val || null, { emitEvent: false });
+    });
+
+    effect(() => {
+      const isDisabled = this.disabled();
+      if (isDisabled) {
+        this.control.disable();
+      } else {
+        this.control.enable();
+      }
     });
 
     this.control.valueChanges.subscribe(val => {

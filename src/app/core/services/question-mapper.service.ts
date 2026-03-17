@@ -14,6 +14,7 @@ import {
   EvidenceResponseBackend
 } from '../models/question-backend.models';
 import { getAxisColorByName } from '../config/axis-colors.config';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -63,7 +64,7 @@ export class QuestionMapperService {
       selectedOptionId: backendAnswer.currentAnswer?.id,
       observation: backendAnswer.organizationMessage,
       evaluationStatus: this.mapEvaluationState(backendAnswer.evaluationState),
-      evaluatorObservation: backendAnswer.consultantMessage,
+      evaluatorObservation: backendAnswer.advisorMessage,
       lastUpdated: backendAnswer.answeredAt || new Date().toISOString(),
       userId: backendAnswer.user?.id,
       userName: backendAnswer.user?.name,
@@ -88,7 +89,9 @@ export class QuestionMapperService {
       currentAnswer: {
         id: frontendResponse.selectedOptionId || frontendResponse.value
       },
-      organizationMessage: frontendResponse.observation
+      organizationMessage: frontendResponse.observation,
+      advisorMessage: frontendResponse.evaluatorObservation,
+      priority: frontendResponse.priority
     };
   }
 
@@ -168,11 +171,22 @@ export class QuestionMapperService {
         fallbackIndex += 1;
       }
 
+      const fileUrl = evidence.fileUrl
+        ? (evidence.fileUrl.startsWith('http') ? evidence.fileUrl : (evidence.fileUrl.startsWith('/api/') ? evidence.fileUrl : `${environment.apiUrl}${evidence.fileUrl}`))
+        : '';
+
+      console.log('🔍 Evidence URL construction:', {
+        fileName: evidence.fileName,
+        originalFileUrl: evidence.fileUrl,
+        finalFileUrl: fileUrl,
+        apiUrl: environment.apiUrl
+      });
+
       return {
       id: evidence.id,
       answerId: evidence.answerId,
       requirementId: requirementId,
-      fileUrl: evidence.fileUrl || '',
+      fileUrl: fileUrl,
       fileName: evidence.fileName,
       fileSize: evidence.fileSize,
       uploadDate: evidence.uploadedAt

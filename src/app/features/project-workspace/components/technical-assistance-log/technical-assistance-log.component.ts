@@ -23,7 +23,7 @@ import { AssistanceLogEntry } from '../../../../core/models/question.models';
             <thead class="text-xs text-white uppercase bg-gray-400 sticky top-0 z-10">
               <tr>
                 <th scope="col" class="px-4 py-3 w-[45%]">Asesor</th>
-                <th scope="col" class="px-4 py-3 w-[45%] border-l border-gray-300">Responsable</th>
+                <th scope="col" class="px-4 py-3 w-[45%] border-l border-gray-300">Corrección</th>
                 <th scope="col" class="px-2 py-3 w-[10%] text-center border-l border-gray-300">Vigencia</th>
               </tr>
             </thead>
@@ -55,25 +55,25 @@ import { AssistanceLogEntry } from '../../../../core/models/question.models';
                     </div>
                   </td>
 
-                  <!-- Columna Responsable -->
+                  <!-- Columna Corrección -->
                   <td class="px-4 py-4 align-top border-l border-gray-200 bg-gray-50/30">
-                    @if (entry.response) {
-                      <!-- Respuesta existente -->
+                    @if (entry.correctionUpdate) {
+                      <!-- Corrección existente -->
                       <div class="space-y-2">
                         <div class="flex items-center gap-2 text-xs text-gray-500">
-                          <span class="font-medium text-gray-700">{{ entry.response.responderName }}</span>
-                          <span>{{ entry.response.responseDate | date:'dd/MM/yyyy' }}</span>
+                          <span class="font-medium text-gray-700">{{ entry.correctionUpdate.responderName }}</span>
+                          <span>{{ entry.correctionUpdate.responseDate | date:'dd/MM/yyyy' }}</span>
                         </div>
-                        <p class="text-gray-700 whitespace-pre-line">{{ entry.response.message }}</p>
+                        <p class="text-gray-700 whitespace-pre-line">{{ entry.correctionUpdate.message }}</p>
                       </div>
-                    } @else {
-                      <!-- Formulario de respuesta -->
+                    } @else if (showCorrectionForm()) {
+                      <!-- Formulario de corrección -->
                       <div class="space-y-3">
                         <textarea 
                           [formControl]="getResponseControl(entry.id)"
                           class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none bg-white"
                           rows="4"
-                          placeholder="Responda aquí..."
+                          placeholder="Describa la corrección realizada..."
                         ></textarea>
                         <button 
                           type="button"
@@ -81,8 +81,12 @@ import { AssistanceLogEntry } from '../../../../core/models/question.models';
                           [disabled]="getResponseControl(entry.id).invalid"
                           class="w-full px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Registrar Respuesta
+                          Registrar Corrección
                         </button>
+                      </div>
+                    } @else {
+                      <div class="text-gray-400 italic text-sm">
+                        Pendiente de corrección
                       </div>
                     }
                   </td>
@@ -106,6 +110,7 @@ import { AssistanceLogEntry } from '../../../../core/models/question.models';
 export class TechnicalAssistanceLogComponent {
   entries = input<AssistanceLogEntry[]>([]);
   response = output<{ entryId: string, message: string }>();
+  showCorrectionForm = input<boolean>(true);
 
   // Map to store form controls for each entry
   private responseControls = new Map<string, FormControl>();

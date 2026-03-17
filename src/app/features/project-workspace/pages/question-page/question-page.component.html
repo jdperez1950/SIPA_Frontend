@@ -54,12 +54,21 @@
 
           <!-- Área de Respuesta -->
           <div>
-            <div class="text-sky-500 text-sm font-medium mb-2 italic">Responda si cumple con el requisito:</div>
-            <app-dynamic-input 
-                [question]="question"
-                [initialValue]="getCurrentValue(question.id)"
-                (valueChange)="onValueChange(question.id, $event)"
-            ></app-dynamic-input>
+            @if (isOrganization()) {
+              <div class="text-sky-500 text-sm font-medium mb-2 italic">Responda si cumple con el requisito:</div>
+              <app-dynamic-input 
+                  [question]="question"
+                  [initialValue]="getCurrentValue(question.id)"
+                  (valueChange)="onValueChange(question.id, $event)"
+              ></app-dynamic-input>
+            } @else {
+              <div class="text-sky-500 text-sm font-medium mb-2 italic">Respuesta de la organización:</div>
+              <app-dynamic-input 
+                  [question]="question"
+                  [initialValue]="getCurrentValue(question.id)"
+                  [disabled]="true"
+              ></app-dynamic-input>
+            }
             
             <!-- Estado Visual de Cumplimiento -->
             @if (getCurrentValue(question.id) === 'SI') {
@@ -118,20 +127,22 @@
                           }
                         </div>
                         
-                        @if (canShowUploader(question.id, req)) {
-                          <app-evidence-uploader
-                            [config]="question.evidenceConfig"
-                            [compact]="true"
-                            (upload)="onEvidenceUpload(question.id, $event, req.id)"
-                          ></app-evidence-uploader>
-                        } @else {
-                          <button
-                            type="button"
-                            (click)="enableEditRequirement(question.id, req.id)"
-                            class="text-xs px-3 py-1.5 border border-sky-400 text-sky-600 rounded hover:bg-sky-50 transition-colors"
-                          >
-                            Editar
-                          </button>
+                        @if (isOrganization()) {
+                          @if (canShowUploader(question.id, req)) {
+                            <app-evidence-uploader
+                              [config]="question.evidenceConfig"
+                              [compact]="true"
+                              (upload)="onEvidenceUpload(question.id, $event, req.id)"
+                            ></app-evidence-uploader>
+                          } @else {
+                            <button
+                              type="button"
+                              (click)="enableEditRequirement(question.id, req.id)"
+                              class="text-xs px-3 py-1.5 border border-sky-400 text-sky-600 rounded hover:bg-sky-50 transition-colors"
+                            >
+                              Editar
+                            </button>
+                          }
                         }
                       </div>
 
@@ -157,15 +168,30 @@
                                 </span>
                               </div>
                             </div>
-                            <button 
-                              (click)="removeEvidence(question.id, file)"
-                              class="text-gray-400 hover:text-red-500 transition-colors p-1"
-                              title="Eliminar archivo"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                              </svg>
-                            </button>
+                            <div class="flex items-center gap-1">
+                              @if (!file.pendingUpload && file.fileUrl) {
+                                <button 
+                                  (click)="downloadEvidence(file.fileUrl, file.fileName)"
+                                  class="text-sky-500 hover:text-sky-700 transition-colors p-1"
+                                  title="Descargar archivo"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
+                                  </svg>
+                                </button>
+                              }
+                              @if (isOrganization()) {
+                                <button 
+                                  (click)="removeEvidence(question.id, file)"
+                                  class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                  title="Eliminar archivo"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                  </svg>
+                                </button>
+                              }
+                            </div>
                           </div>
                         }
                       </div>
@@ -174,19 +200,34 @@
                 } @else {
                   <!-- Fallback para comportamiento anterior (sin requisitos específicos) -->
                   <div class="italic text-gray-400 text-xs mb-4">Adjunte los documentos que soporten su respuesta.</div>
-                  <app-evidence-uploader
-                    [config]="question.evidenceConfig"
-                    (upload)="onEvidenceUpload(question.id, $event)"
-                  ></app-evidence-uploader>
+                  @if (isOrganization()) {
+                    <app-evidence-uploader
+                      [config]="question.evidenceConfig"
+                      (upload)="onEvidenceUpload(question.id, $event)"
+                    ></app-evidence-uploader>
+                  }
                   
                   <!-- Lista general de archivos -->
                   <div class="space-y-2 mt-4">
                     @for (file of getAllEvidence(question.id); track file.fileName) {
-                       <div class="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded text-xs font-medium">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                          </svg>
-                          Archivo cargado: {{ file.fileName }}
+                       <div class="flex items-center justify-between gap-2 text-green-600 bg-green-50 p-2 rounded text-xs font-medium">
+                          <div class="flex items-center gap-2 overflow-hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="truncate" [title]="file.fileName">Archivo cargado: {{ file.fileName }}</span>
+                          </div>
+                          @if (!file.pendingUpload && file.fileUrl) {
+                            <button 
+                              (click)="downloadEvidence(file.fileUrl, file.fileName)"
+                              class="text-sky-500 hover:text-sky-700 transition-colors flex-shrink-0"
+                              title="Descargar archivo"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
+                              </svg>
+                            </button>
+                          }
                        </div>
                     }
                   </div>
@@ -200,13 +241,22 @@
         <!-- Columna Derecha: Observaciones -->
         <div class="lg:col-span-3 p-6">
            <div class="text-sky-500 text-sm font-medium mb-2 italic">Descripción / Observaciones</div>
-           <textarea 
-             [ngModel]="getObservation(question.id)"
-             (ngModelChange)="onObservationChange(question.id, $event)"
-             [disabled]="!isObservationEnabled(question.id)"
-             class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
-             placeholder="Escriba aquí sus observaciones..."
-           ></textarea>
+           @if (isOrganization()) {
+             <textarea 
+               [ngModel]="getObservation(question.id)"
+               (ngModelChange)="onObservationChange(question.id, $event)"
+               [disabled]="!isObservationEnabled(question.id)"
+               class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
+               placeholder="Escriba aquí sus observaciones..."
+             ></textarea>
+           } @else {
+             <textarea 
+               [ngModel]="getObservation(question.id)"
+               [disabled]="true"
+               class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
+               placeholder="No hay observaciones..."
+             ></textarea>
+           }
         </div>
       </div>
 
@@ -225,37 +275,61 @@
          </button>
 
          <div class="flex gap-3">
-           <button 
-             type="button"
-             (click)="nextQuestion(question.id)"
-             [disabled]="!questionManager.getNextQuestionId(question.id)"
-             class="px-6 py-2 text-sky-600 bg-white border border-sky-600 hover:bg-sky-50 rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-           >
-             Siguiente
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-             </svg>
-           </button>
- 
-           <button 
-             type="button"
-             (click)="sendAndNext(question.id)"
-             class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-             [disabled]="!canSend(question.id)"
-           >
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-             </svg>
-             Enviar y Siguiente
-           </button>
+           @if (isOrganization()) {
+             <button 
+               type="button"
+               (click)="nextQuestion(question.id)"
+               [disabled]="!questionManager.getNextQuestionId(question.id)"
+               class="px-6 py-2 text-sky-600 bg-white border border-sky-600 hover:bg-sky-50 rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               Siguiente
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+               </svg>
+             </button>
+     
+             <button 
+               type="button"
+               (click)="sendAndNext(question.id)"
+               class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+               [disabled]="!canSend(question.id)"
+             >
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+               </svg>
+               Enviar y Siguiente
+             </button>
+           } @else {
+             <button 
+               type="button"
+               (click)="nextQuestion(question.id)"
+               [disabled]="!questionManager.getNextQuestionId(question.id)"
+               class="px-6 py-2 text-sky-600 bg-white border border-sky-600 hover:bg-sky-50 rounded shadow-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               Siguiente
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+               </svg>
+             </button>
+           }
         </div>
       </div>
     </div>
+
+    <!-- Registro de Asistencia Técnica (Solo Asesor) -->
+    @if (isAdvisor()) {
+      <div class="mt-8 border-t border-gray-200 pt-6">
+        <app-technical-assistance-register
+          (register)="onRegisterAssistance($event)"
+        ></app-technical-assistance-register>
+      </div>
+    }
 
     <!-- Bitácora de Asistencia Técnica -->
     @if (shouldShowAssistanceLog(question.id)) {
       <app-technical-assistance-log
         [entries]="getAssistanceLog(question.id)"
+        [showCorrectionForm]="isOrganization()"
         (response)="onAssistanceResponse(question.id, $event)"
       ></app-technical-assistance-log>
     }

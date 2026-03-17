@@ -10,16 +10,19 @@ import { DynamicInputComponent } from './components/dynamic-input/dynamic-input.
 import { EvidenceUploaderComponent } from '../../components/evidence-uploader/evidence-uploader.component';
 import { FormsModule } from '@angular/forms';
 import { TechnicalAssistanceLogComponent } from '../../components/technical-assistance-log/technical-assistance-log.component';
+import { TechnicalAssistanceRegisterComponent } from '../../components/technical-assistance-register/technical-assistance-register.component';
 import { LoadingService } from '../../../../core/services/loading.service';
 import { ProjectsService } from '../../../../core/services/projects.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-colors.config';
 import { QuestionService } from '../../../../core/services/question.service';
+import { AuthService } from '../../../../core/auth/services/auth.service';
+import { UserRole } from '../../../../core/models/domain.models';
 
 @Component({
   selector: 'app-question-page',
   standalone: true,
-  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, TechnicalAssistanceLogComponent, FormsModule],
+  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, TechnicalAssistanceLogComponent, TechnicalAssistanceRegisterComponent, FormsModule],
   templateUrl: './question-page.component.html'
 })
 export class QuestionPageComponent implements OnInit {
@@ -31,6 +34,11 @@ export class QuestionPageComponent implements OnInit {
   private loadingService = inject(LoadingService);
   private projectsService = inject(ProjectsService);
   private alertService = inject(AlertService);
+  private authService = inject(AuthService);
+
+  currentUser = this.authService.currentUser;
+  isAdvisor = computed(() => this.currentUser()?.role === 'ASESOR');
+  isOrganization = computed(() => this.currentUser()?.role === 'ORGANIZACION');
 
   currentQuestionId = toSignal(
     this.route.paramMap.pipe(
@@ -136,8 +144,66 @@ export class QuestionPageComponent implements OnInit {
     }
   }
 
+  async onRegisterAssistance(event: { message: string, priority: string }) {
+    const qid = this.currentQuestion()?.id;
+    if (!qid) return;
+
+    try {
+      this.loadingService.show('Guardando nota de asistencia...');
+      
+      const response = this.questionManager.getResponse(qid);
+      
+      const newEntry: AssistanceLogEntry = {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        advisorName: this.currentUser()?.name || 'Asesor',
+        advisorMessage: event.message,
+        priority: event.priority as 'NORMAL' | 'IMPORTANT' | 'URGENT',
+        validityPeriod: 'Pv' 
+      };
+
+      const updatedResponse: any = {
+        ...response,
+        questionId: qid,
+        evaluatorObservation: event.message, 
+        priority: event.priority,
+        assistanceLog: [newEntry, ...(response?.assistanceLog || [])],
+        lastUpdated: new Date().toISOString(),
+        isUnsaved: true
+      };
+
+      this.questionManager.saveResponse(updatedResponse);
+
+      const result = await this.questionManager.submitResponse(updatedResponse, this.projectId()!);
+      
+      if (result.success) {
+        this.alertService.success('Nota de asistencia registrada exitosamente');
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error: any) {
+      console.error('Error saving assistance note:', error);
+      this.alertService.error(error?.message || 'Error al guardar la nota de asistencia');
+    } finally {
+      this.loadingService.hide();
+    }
+  }
+
+  // --- Methods for Template ---
+
   getEvidenceConfig(question: QuestionDefinition) {
     return question.evidenceConfig;
+  }
+
+  downloadEvidence(fileUrl: string, fileName: string) {
+    console.log('Downloading file:', { fileUrl, fileName });
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   getAxisColorText(axisName: string): string {
@@ -196,7 +262,12 @@ export class QuestionPageComponent implements OnInit {
     const resp = this.questionManager.getResponse(questionId);
     const hasResponse = resp !== null && resp !== undefined && resp.value !== null && resp.value !== undefined && resp.value !== '';
     const hasLogEntries = resp !== null && resp !== undefined && resp.assistanceLog !== undefined && resp.assistanceLog.length > 0;
-    return hasResponse || hasLogEntries;
+    
+    if (this.isAdvisor()) {
+      return hasResponse || hasLogEntries;
+    } else {
+      return hasLogEntries && hasResponse;
+    }
   }
 
   isObservationEnabled(questionId: string): boolean {
