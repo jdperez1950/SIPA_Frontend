@@ -2,6 +2,7 @@ import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { QuestionManagerService } from '../../services/question-manager.service';
 import { ProjectContextService } from '../../services/project-context.service';
@@ -18,6 +19,7 @@ import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-co
 import { QuestionService } from '../../../../core/services/question.service';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { UserRole } from '../../../../core/models/domain.models';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-question-page',
@@ -28,6 +30,7 @@ import { UserRole } from '../../../../core/models/domain.models';
 export class QuestionPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private http = inject(HttpClient);
   questionManager = inject(QuestionManagerService);
   private projectContextService = inject(ProjectContextService);
   private questionService = inject(QuestionService);
@@ -196,14 +199,29 @@ export class QuestionPageComponent implements OnInit {
   }
 
   downloadEvidence(fileUrl: string, fileName: string) {
-    console.log('Downloading file:', { fileUrl, fileName });
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const fullUrl = fileUrl.startsWith('http') ? fileUrl : (fileUrl.startsWith('/api/') ? fileUrl : `${environment.apiUrl}${fileUrl}`);
+    console.log('Downloading file with auth:', { originalFileUrl: fileUrl, fullUrl, fileName });
+    
+    this.loadingService.show('Descargando archivo...');
+    
+    this.http.get(fullUrl, { responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error downloading file:', error);
+        this.loadingService.hide();
+        this.alertService.error('No se pudo descargar el archivo. Por favor, intenta nuevamente.');
+      }
+    });
   }
 
   getAxisColorText(axisName: string): string {
