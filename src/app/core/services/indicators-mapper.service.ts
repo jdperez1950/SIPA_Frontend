@@ -11,7 +11,7 @@ export class IndicatorsMapperService {
     return entities.map(entity => this.mapEntityToColumns(entity)).flat();
   }
 
-  private mapEntityToColumns(entity: IndicatorEntity): DashboardColumn[] {
+  mapEntityToColumns(entity: IndicatorEntity): DashboardColumn[] {
     return entity.indicators.map(indicator => {
       switch (indicator.draw) {
         case 'vertical':
