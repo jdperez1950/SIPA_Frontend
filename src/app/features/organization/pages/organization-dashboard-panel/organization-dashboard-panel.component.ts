@@ -11,12 +11,12 @@ import { TooltipComponent } from '../../../../shared/components/tooltip/tooltip.
 import { ExpandableTableComponent, TableColumn } from '../../../../shared/components/expandable-table/expandable-table.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { ParametroBaseService } from '../../../../core/services/parametro-base.service';
-import { DashboardStatsComponent, DashboardColumn } from '../../../../shared/components/dashboard-stats/dashboard-stats.component';
+import { IndicatorsDashboardComponent } from '../../../../shared/components/indicators-dashboard/indicators-dashboard.component';
 
 @Component({
   selector: 'app-organization-dashboard-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, LoadingComponent, FooterComponent, TooltipComponent, ExpandableTableComponent, DashboardStatsComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingComponent, FooterComponent, TooltipComponent, ExpandableTableComponent, IndicatorsDashboardComponent],
   templateUrl: './organization-dashboard-panel.component.html',
   styles: []
 })
@@ -47,64 +47,6 @@ export class OrganizationDashboardPanelComponent implements OnInit {
 
   viabilityOptions = Object.values(ViabilityScenario);
   ViabilityScenario = ViabilityScenario;
-
-  dashboardColumns = signal<DashboardColumn[]>([
-    {
-      kind: 'badge',
-      title: 'Progreso Global',
-      badges: [
-        { value: 45, percent: 100, color: 'blue' }
-      ]
-    },
-    {
-      kind: 'list',
-      title: 'Estado de Proyectos',
-      items: [
-        { label: 'Activos', count: 3, color: 'green', percent: 75 },
-        { label: 'Suspendidos', count: 1, color: 'gray', percent: 25 }
-      ]
-    },
-    {
-      kind: 'list',
-      title: 'Viabilidad',
-      items: [
-        { label: 'Habilitados', count: 2, color: 'green', percent: 50 },
-        { label: 'Pre-habilitados', count: 1, color: 'blue', percent: 25 },
-        { label: 'Alta Posibilidad', count: 1, color: 'orange', percent: 25 }
-      ]
-    },
-    {
-      kind: 'list',
-      title: 'Por Eje',
-      items: [
-        { label: 'Técnico', count: 45, color: 'blue' },
-        { label: 'Legal', count: 30, color: 'green' },
-        { label: 'Financiero', count: 60, color: 'purple' },
-        { label: 'Social', count: 40, color: 'orange' }
-      ]
-    },
-    {
-      kind: 'chips',
-      title: 'Por Prioridad',
-      groups: [
-        {
-          title: 'Asistencia Técnica',
-          items: [
-            { label: 'Urgente', count: 2, color: 'red' },
-            { label: 'Importante', count: 1, color: 'orange' },
-            { label: 'Normal', count: 3, color: 'blue' }
-          ]
-        },
-        {
-          title: 'Correcciones',
-          items: [
-            { label: 'Pendientes', count: 1, color: 'orange' },
-            { label: 'Completadas', count: 2, color: 'green' }
-          ]
-        }
-      ]
-    }
-  ]);
 
   projectColumns: TableColumn[] = [
     { header: 'Código', field: 'code', type: 'text' },

@@ -161,18 +161,20 @@ export class StatChipGroupsComponent {
     <div class="flex flex-col gap-6 mb-8">
 
       @if (columns.length > 0) {
-        <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div class="flex flex-wrap justify-around items-start gap-8">
             @for (col of columns; track $index) {
-              <div class="grid grid-cols-1 justify-items-center">
+              <div class="flex flex-col items-center min-w-[150px] flex-1">
                 @if (col.title) {
-                  <div class="text-xs text-gray-500 mb-2">{{ col.title }}</div>
+                  <div class="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide text-center">{{ col.title }}</div>
                 }
-                @switch (col.kind) {
-                  @case ('list') { <app-stat-list [items]="col.items"></app-stat-list> }
-                  @case ('badge') { <app-stat-badge [badges]="col.badges"></app-stat-badge> }
-                  @case ('chips') { <app-stat-chip-groups [groups]="col.groups"></app-stat-chip-groups> }
-                }
+                <div class="w-full flex justify-center">
+                  @switch (col.kind) {
+                    @case ('list') { <app-stat-list [items]="col.items"></app-stat-list> }
+                    @case ('badge') { <app-stat-badge [badges]="col.badges"></app-stat-badge> }
+                    @case ('chips') { <app-stat-chip-groups [groups]="col.groups"></app-stat-chip-groups> }
+                  }
+                </div>
               </div>
             }
           </div>

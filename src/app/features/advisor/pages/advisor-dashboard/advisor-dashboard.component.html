@@ -22,7 +22,8 @@
       </div>
     </div>
 
-    <app-dashboard-stats [columns]="dashboardColumns()" [showFilters]="false"></app-dashboard-stats>
+    <app-indicators-dashboard>
+    </app-indicators-dashboard>
 
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row gap-4 items-center">
       <div class="relative w-full sm:w-auto">
@@ -64,11 +65,18 @@
         [columns]="projectColumns"
         [title]="'Proyectos Asignados'"
         [attr.title]="null"
-        [showTools]="false"
-        [showExpandControls]="false"
-        [showRowToggle]="false"
+        [showTools]="true"
+        [showExpandControls]="true"
+        [showRowToggle]="true"
         [showFooter]="false"
       >
+        <ng-template #expandedRowTemplate let-row>
+          <div class="p-4 bg-gray-50 border-t border-gray-100">
+             <h4 class="text-sm font-semibold text-gray-700 mb-3">Indicadores del Proyecto</h4>
+             <app-indicators-dashboard [projectId]="row.id"></app-indicators-dashboard>
+          </div>
+        </ng-template>
+
         <ng-template #customBodyTemplate let-row let-column="column">
           @if (column.field === 'description') {
             {{ getProjectDescription(row) }}
