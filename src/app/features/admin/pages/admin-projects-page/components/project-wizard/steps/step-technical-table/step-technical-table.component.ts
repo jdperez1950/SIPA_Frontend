@@ -30,13 +30,13 @@ export class StepTechnicalTableComponent implements OnInit {
   advisors = signal<Advisor[]>([]);
   loading = signal(false);
 
-  availableAxes = signal<EvaluationAxis[]>([
-    { id: 'Social', name: 'Social', questionCount: 30, isActive: true },
-    { id: 'Financiero', name: 'Financiero', questionCount: 25, isActive: true },
-    { id: 'Suelo', name: 'Suelo', questionCount: 45, isActive: true },
-    { id: 'Preconstrucción', name: 'Preconstrucción', questionCount: 20, isActive: true }
-  ]);
-  displayedAxes = computed(() => this.activeAxes?.length ? this.activeAxes : this.availableAxes());
+  displayedAxes = computed(() => {
+    return [...this.activeAxes].sort((a, b) => {
+      const codeA = a.code || '';
+      const codeB = b.code || '';
+      return codeA.localeCompare(codeB, undefined, { numeric: true });
+    });
+  });
 
   ngOnInit() {
     this.loadAdvisors();
@@ -65,12 +65,16 @@ export class StepTechnicalTableComponent implements OnInit {
   }
 
   getAdvisorsForAxis(axisId: string) {
+    const currentAssignment = this.assignments.find(a => a.eje === axisId);
     const assignedAdvisorIds = this.assignments
       .filter(a => a.eje !== axisId)
       .map(a => a.consultor.id);
 
     return this.advisors()
-      .filter(advisor => !assignedAdvisorIds.includes(advisor.id))
+      .filter(advisor => 
+        !assignedAdvisorIds.includes(advisor.id) || 
+        (currentAssignment && advisor.id === currentAssignment.consultor.id)
+      )
       .sort((a, b) => (a.workload || 0) - (b.workload || 0));
   }
 
@@ -86,17 +90,25 @@ export class StepTechnicalTableComponent implements OnInit {
   }
 
   onSelectAdvisor(axisId: string, advisorId: string) {
+    const axis = this.activeAxes.find(a => a.id === axisId);
     if (advisorId) {
       const advisor = this.advisors().find(a => a.id === advisorId);
       if (advisor) {
         this.assign.emit({
           eje: axisId,
+          ejeName: axis?.name || axisId,
           consultor: {
             id: advisor.id,
             nombre: advisor.name
           }
         });
       }
+    } else {
+      this.assign.emit({
+        eje: axisId,
+        ejeName: axis?.name || axisId,
+        consultor: { id: '', nombre: '' }
+      });
     }
   }
 }

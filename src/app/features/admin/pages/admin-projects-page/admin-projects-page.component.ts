@@ -9,7 +9,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { ProjectWizardComponent } from './components/project-wizard/project-wizard.component';
 import { StepTechnicalTableComponent } from './components/project-wizard/steps/step-technical-table/step-technical-table.component';
-import { TechnicalTableAssignment } from './components/project-wizard/project-wizard.types';
+import { TechnicalTableAssignment, EvaluationAxis } from './components/project-wizard/project-wizard.types';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -42,6 +42,7 @@ export class AdminProjectsPageComponent implements OnInit {
   projects = signal<Project[]>([]);
   expandedDescriptions = signal<Set<string>>(new Set());
   assignModalAssignments = signal<TechnicalTableAssignment[]>([]);
+  availableAxes = signal<EvaluationAxis[]>([]);
 
   constructor() {
     // No effect needed - we'll handle filter changes explicitly
@@ -134,18 +135,29 @@ export class AdminProjectsPageComponent implements OnInit {
     this.projectsService.getProjectAdviser(project.id).subscribe({
       next: (assignments) => {
         const mapped = assignments
-          .filter(a => a.isActive)
+          .filter(a => a.isActive && a.user)
           .map(a => ({
-            eje: this.mapAxisIdToName(a.axis.id),
+            eje: a.axis.id,
+            ejeName: a.axis.name,
             consultor: { 
               id: a.user.id, 
               nombre: a.user.name || a.user.email || a.user.id 
             }
           }));
         this.assignModalAssignments.set(mapped);
+
+        const uniqueAxes = Array.from(
+          new Map(assignments.map(a => [a.axis.id, {
+            id: a.axis.id,
+            code: a.axis.code,
+            name: a.axis.name || a.axis.id
+          }])).values()
+        );
+        this.availableAxes.set(uniqueAxes);
       },
       error: () => {
         this.assignModalAssignments.set([]);
+        this.availableAxes.set([]);
       }
     });
   }
@@ -179,11 +191,10 @@ export class AdminProjectsPageComponent implements OnInit {
     try {
       let updatedProject: Project | null = null;
       for (const assignment of assignments) {
-        const axisId = this.mapAxisNameToId(assignment.eje);
         updatedProject = await firstValueFrom(
           this.adminDataService.assignAdvisor(
             project.id,
-            axisId,
+            assignment.eje,
             assignment.consultor.id,
             true
           )
@@ -207,26 +218,6 @@ export class AdminProjectsPageComponent implements OnInit {
       this.isLoading.set(false);
       this.isSavingAssignments.set(false);
     }
-  }
-
-  private mapAxisNameToId(axisName: string): string {
-    const mapping: Record<string, string> = {
-      'Suelo': '7a731534-d744-43af-a5cb-3c2ab3581e6c',
-      'Social': '9e9b058e-eea4-4990-b132-dd6d4c83ee5d',
-      'Financiero': '7bc84206-1e7b-4aee-8cd1-f8459f549f05',
-      'Preconstrucción': '8149d573-f8cd-4e45-a077-c9805791ea1b'
-    };
-    return mapping[axisName] || axisName;
-  }
-
-  private mapAxisIdToName(axisId: string): string {
-    const mapping: Record<string, string> = {
-      '7a731534-d744-43af-a5cb-3c2ab3581e6c': 'Suelo',
-      '9e9b058e-eea4-4990-b132-dd6d4c83ee5d': 'Social',
-      '7bc84206-1e7b-4aee-8cd1-f8459f549f05': 'Financiero',
-      '8149d573-f8cd-4e45-a077-c9805791ea1b': 'Preconstrucción'
-    };
-    return mapping[axisId] || axisId;
   }
 
   // Helpers
@@ -264,6 +255,10 @@ export class AdminProjectsPageComponent implements OnInit {
 
   getAdvisorName(project: Project): string {
     return project.advisor?.name || '';
+  }
+
+  hasAdviserAssignments(project: Project): boolean {
+    return !!project.advisor;
   }
 
   toggleDescription(projectId: string) {

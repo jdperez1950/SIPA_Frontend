@@ -53,14 +53,14 @@ export interface ParametroSelect {
 }
 
 export interface EvaluationAxis {
-  id: string; // 'SUELO', 'SOCIAL', 'FINANCIERO', 'PRECONSTRUCCION'
+  id: string; // GUID del backend
+  code?: string;
   name: string;
-  questionCount: number;
-  isActive: boolean;
 }
 
 export interface TechnicalTableAssignment {
-  eje: string;
+  eje: string; // GUID del eje
+  ejeName?: string; // Nombre del eje (opcional, para mostrar)
   consultor: ParametroSelect;
 }
 
