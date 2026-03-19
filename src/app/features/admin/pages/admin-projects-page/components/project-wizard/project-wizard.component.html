@@ -90,12 +90,7 @@
               ></app-step-response-team>
             }
           }
-          @case (3) {
-            <app-step-technical-table
-              [assignments]="technicalTableAssignments()"
-              (assign)="updateTechnicalTable($event)"
-            ></app-step-technical-table>
-          }
+          <!-- Mesa Técnica eliminada del wizard -->
         }
       </div>
     </div>
@@ -119,7 +114,7 @@
         Anterior
       </button>
 
-      @if (currentStep() < 3) {
+      @if (currentStep() < 2) {
         <button 
           (click)="nextStep()"
           [disabled]="isSaving()"

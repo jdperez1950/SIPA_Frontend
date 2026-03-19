@@ -2,7 +2,6 @@ import { Component, computed, EventEmitter, Input, Output, signal, effect, injec
 import { CommonModule } from '@angular/common';
 import { forkJoin, of, map, Observable } from 'rxjs';
 import { StepIdentificationComponent } from './steps/step-identification/step-identification.component';
-import { StepTechnicalTableComponent } from './steps/step-technical-table/step-technical-table.component';
 import { StepResponseTeamComponent } from './steps/step-response-team/step-response-team.component';
 import { AlertService } from '../../../../../../core/services/alert.service';
 import { AdminDataService } from '../../../../services/admin-data.service';
@@ -25,7 +24,6 @@ export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY';
   imports: [
     CommonModule, 
     StepIdentificationComponent,
-    StepTechnicalTableComponent,
     StepResponseTeamComponent,
     ModalAlertComponent
   ],
@@ -56,12 +54,6 @@ export class ProjectWizardComponent {
       title: 'Equipo Respuesta', 
       icon: 'group_add',
       description: 'Agrega los usuarios que formarán parte del equipo de respuesta para la organización, incluye la persona responsable de diligenciar el cuestionario de cumplimiento para la aplicación del proyecto.'
-    },
-    { 
-      number: 3, 
-      title: 'Mesa Técnica', 
-      icon: 'engineering',
-      description: 'Configure la mesa técnica y asigne los responsables para el seguimiento del proyecto.'
     }
   ];
 
@@ -85,8 +77,7 @@ export class ProjectWizardComponent {
   responseTeam = signal<ResponseTeamMember[]>([]);
   responsible = signal<ParametroSelect | null>(null);
 
-  // Step 3 Data (Mesa Técnica)
-  technicalTableAssignments = signal<TechnicalTableAssignment[]>([]);
+  // Mesa Técnica eliminada del wizard
 
   modalAlertData = signal<ModalAlertData | null>(null);
 
@@ -188,8 +179,6 @@ export class ProjectWizardComponent {
         return !!this.identificationData();
       case 2:
         return this.responseTeam().length > 0 && !!this.responsible();
-      case 3:
-        return true; // Mesa técnica es opcional
       default:
         return false;
     }
@@ -230,10 +219,7 @@ export class ProjectWizardComponent {
         this.saveStep1AndProceed();
       }
     } else if (this.currentStep() === 2) {
-      // Proceed to Step 3 (Mesa Técnica)
-      this.currentStep.update(s => s + 1);
-    } else if (this.currentStep() === 3) {
-      // Finalize (Create or Update) at step 3
+      // Finalize (Create or Update) at step 2
       this.finishWizard();
     }
   }
@@ -320,11 +306,7 @@ export class ProjectWizardComponent {
               phone: m.phone,
               representativeType: m.representativeType
             }))
-          },
-          technicalTable: this.technicalTableAssignments().map(a => ({
-            axisId: a.eje,
-            advisorId: a.consultor.id
-          }))
+          }
         };
 
         this.adminService.updateProject(this.initialData.id, updateRequest).subscribe({
@@ -504,9 +486,6 @@ export class ProjectWizardComponent {
       case 2:
         // TODO: Implement for Step 2 if needed
         break;
-      case 3:
-        // TODO: Implement for Step 3 if needed
-        break;
     }
   }
 
@@ -526,13 +505,7 @@ export class ProjectWizardComponent {
     this.identificationData.set(data);
   }
 
-  updateTechnicalTable(assignment: TechnicalTableAssignment) {
-    this.technicalTableAssignments.update(prev => {
-      // Replace existing assignment for this axis or add new
-      const filtered = prev.filter(a => a.eje !== assignment.eje);
-      return [...filtered, assignment];
-    });
-  }
+  // Mesa Técnica eliminada del wizard: no actualizaciones necesarias
 
   updateResponseTeam(members: ResponseTeamMember[]) {
     this.responseTeam.set(members);
