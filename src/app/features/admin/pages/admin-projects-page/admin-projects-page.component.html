@@ -151,13 +151,13 @@
           <!-- Advisor & Actions -->
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              @if (getAdvisorName(project)) {
+              @if (hasAdvisorAxes(project)) {
                 <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                  {{ getAdvisorName(project).charAt(0) }}
+                  {{ (getAdvisorAxesLabel(project).charAt(0)) }}
                 </div>
                 <div class="flex flex-col">
-                  <span class="text-xs text-gray-400">Asesor Asignado</span>
-                  <span class="text-sm font-medium text-gray-900">{{ getAdvisorName(project) }}</span>
+                  <span class="text-xs text-gray-400">Ejes con asesor asignados</span>
+                  <span class="text-sm font-medium text-gray-900">{{ getAdvisorAxesLabel(project) }}</span>
                 </div>
               } @else {
                 <div class="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
@@ -181,7 +181,7 @@
               (click)="openAssignModal(project)"
               class="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
-              {{ project.advisor ? 'Reasignar' : 'Asignar Asesor' }}
+              {{ hasAdvisorAxes(project) ? 'Reasignar' : 'Asignar Asesor' }}
             </button>
           </div>
         </div>

@@ -43,6 +43,7 @@ export class AdminProjectsPageComponent implements OnInit {
   expandedDescriptions = signal<Set<string>>(new Set());
   assignModalAssignments = signal<TechnicalTableAssignment[]>([]);
   availableAxes = signal<EvaluationAxis[]>([]);
+  advisorAxesByProject = signal<Record<string, string[]>>({});
 
   constructor() {
     // No effect needed - we'll handle filter changes explicitly
@@ -68,6 +69,7 @@ export class AdminProjectsPageComponent implements OnInit {
 
         this.projects.set(projects);
         this.totalItems.set(total);
+        this.resolveAdvisorsForProjects();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -253,12 +255,43 @@ export class AdminProjectsPageComponent implements OnInit {
     }
   }
 
+  private resolveAdvisorsForProjects() {
+    const list = this.projects();
+    list.forEach(project => {
+      if (!project?.id) return;
+      this.projectsService.getProjectAdviser(project.id).subscribe({
+        next: (assignments) => {
+          const activeAxes = assignments
+            .filter(a => a.isActive && a.user && a.axis)
+            .map(a => a.axis.name || a.axis.code || a.axis.id)
+            .filter(name => !!name && String(name).trim().length > 0);
+          
+          this.advisorAxesByProject.update(current => ({
+            ...current,
+            [project.id]: activeAxes
+          }));
+        },
+        error: () => {}
+      });
+    });
+  }
+
   getAdvisorName(project: Project): string {
     return project.advisor?.name || '';
   }
 
   hasAdviserAssignments(project: Project): boolean {
     return !!project.advisor;
+  }
+
+  hasAdvisorAxes(project: Project): boolean {
+    const axes = this.advisorAxesByProject()[project.id] || [];
+    return axes.length > 0;
+  }
+
+  getAdvisorAxesLabel(project: Project): string {
+    const axes = this.advisorAxesByProject()[project.id] || [];
+    return axes.join(', ');
   }
 
   toggleDescription(projectId: string) {
