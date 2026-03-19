@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, delay, tap, catchError, map, throwError } from 'rxjs';
+import { Observable, of, delay, tap, catchError, map, throwError, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { User, Project, Organization, CreateUserDTO, UpdateUserDTO, CreateProjectDTO, CreateOrganizationDTO, PaginatedResponse, ProjectRequest, ApiResponse } from '../../../core/models/domain.models';
 import { AuthService } from '../../../core/auth/services/auth.service';
@@ -282,21 +282,25 @@ export class AdminDataService {
     );
   }
 
-  assignAdvisor(projectId: string, advisor: { id: string; name: string }): Observable<Project> {
-    let updatedProject: Project | undefined;
-    this.projects.update(current => current.map(p => {
-      if (p.id === projectId) {
-        updatedProject = { ...p, advisor };
-        return updatedProject;
-      }
-      return p;
-    }));
-    
-    if (!updatedProject) {
-      return throwError(() => new Error('Project not found'));
-    }
-    
-    return of(updatedProject).pipe(delay(500));
+  assignAdvisor(projectId: string, axisId: string, userId: string, isActive: boolean): Observable<Project> {
+    const payload = {
+      user: { id: userId },
+      axis: { id: axisId },
+      project: { id: projectId },
+      isActive
+    };
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/projects/adviser`, payload).pipe(
+      switchMap(() => this.http.get<ApiResponse<Project>>(`${this.apiUrl}/projects/${projectId}`)),
+      map(response => response.data),
+      tap(updatedProject => {
+        if (updatedProject?.id) {
+          this.projects.update(current => current.map(p => p.id === updatedProject.id ? updatedProject : p));
+        }
+      }),
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
   }
 
   getAllOrganizations(): Observable<Organization[]> {

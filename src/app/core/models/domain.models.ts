@@ -104,6 +104,26 @@ export interface ProjectAdvisor {
   name: string;
 }
 
+export interface AdvisorAxisAssignment {
+  id?: string;
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    avatarColor?: string | null;
+  };
+  axis: {
+    id: string;
+    code?: string;
+    name?: string;
+  };
+  project?: {
+    id: string;
+    code?: string;
+  };
+  isActive: boolean;
+}
 export interface AdvisorCandidate extends ProjectAdvisor {
   workload: number;
   recommended: boolean;

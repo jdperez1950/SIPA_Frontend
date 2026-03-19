@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, tap, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Project, PaginatedResponse, ApiResponse } from '../models/domain.models';
+import { Project, PaginatedResponse, ApiResponse, AdvisorAxisAssignment } from '../models/domain.models';
 
 @Injectable({
   providedIn: 'root'
@@ -113,6 +113,24 @@ export class ProjectsService {
       map(response => response.data),
       catchError(error => {
         console.error('Error fetching project team', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getProjectAdviser(projectId: string): Observable<AdvisorAxisAssignment[]> {
+    return this.http.get<any>(`${this.apiUrl}/projects/${projectId}/adviser`).pipe(
+      map(response => {
+        if (Array.isArray(response)) {
+          return response as AdvisorAxisAssignment[];
+        }
+        if (response && Array.isArray(response.data)) {
+          return response.data as AdvisorAxisAssignment[];
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching project adviser', error);
         return throwError(() => error);
       })
     );

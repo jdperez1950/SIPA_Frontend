@@ -81,7 +81,7 @@ export class StepTechnicalTableComponent implements OnInit {
   getAdvisorOptions(axisId: string): CustomDropdownItem[] {
     return this.getAdvisorsForAxis(axisId).map(advisor => ({
       id: advisor.id,
-      nombre: `${advisor.name} · Carga ${advisor.workload || 0}%`
+      nombre: advisor.name
     }));
   }
 

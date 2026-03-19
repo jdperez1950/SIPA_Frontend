@@ -131,6 +131,23 @@ export class AdminProjectsPageComponent implements OnInit {
     this.selectedProject.set(project);
     this.assignModalAssignments.set([]);
     this.showAssignModal.set(true);
+    this.projectsService.getProjectAdviser(project.id).subscribe({
+      next: (assignments) => {
+        const mapped = assignments
+          .filter(a => a.isActive)
+          .map(a => ({
+            eje: this.mapAxisIdToName(a.axis.id),
+            consultor: { 
+              id: a.user.id, 
+              nombre: a.user.name || a.user.email || a.user.id 
+            }
+          }));
+        this.assignModalAssignments.set(mapped);
+      },
+      error: () => {
+        this.assignModalAssignments.set([]);
+      }
+    });
   }
 
   closeAssignModal() {
@@ -162,11 +179,14 @@ export class AdminProjectsPageComponent implements OnInit {
     try {
       let updatedProject: Project | null = null;
       for (const assignment of assignments) {
+        const axisId = this.mapAxisNameToId(assignment.eje);
         updatedProject = await firstValueFrom(
-          this.adminDataService.assignAdvisor(project.id, {
-            id: assignment.consultor.id,
-            name: assignment.consultor.nombre
-          })
+          this.adminDataService.assignAdvisor(
+            project.id,
+            axisId,
+            assignment.consultor.id,
+            true
+          )
         );
       }
 
@@ -187,6 +207,26 @@ export class AdminProjectsPageComponent implements OnInit {
       this.isLoading.set(false);
       this.isSavingAssignments.set(false);
     }
+  }
+
+  private mapAxisNameToId(axisName: string): string {
+    const mapping: Record<string, string> = {
+      'Suelo': '7a731534-d744-43af-a5cb-3c2ab3581e6c',
+      'Social': '9e9b058e-eea4-4990-b132-dd6d4c83ee5d',
+      'Financiero': '7bc84206-1e7b-4aee-8cd1-f8459f549f05',
+      'Preconstrucción': '8149d573-f8cd-4e45-a077-c9805791ea1b'
+    };
+    return mapping[axisName] || axisName;
+  }
+
+  private mapAxisIdToName(axisId: string): string {
+    const mapping: Record<string, string> = {
+      '7a731534-d744-43af-a5cb-3c2ab3581e6c': 'Suelo',
+      '9e9b058e-eea4-4990-b132-dd6d4c83ee5d': 'Social',
+      '7bc84206-1e7b-4aee-8cd1-f8459f549f05': 'Financiero',
+      '8149d573-f8cd-4e45-a077-c9805791ea1b': 'Preconstrucción'
+    };
+    return mapping[axisId] || axisId;
   }
 
   // Helpers
