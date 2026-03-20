@@ -18,6 +18,7 @@
           id="responsible"
           [items]="responsiblePositions()"
           placeholder="Seleccione..."
+          [disabled]="readOnly"
           [invalid]="!!(responsibleControl.invalid && responsibleControl.touched)"
           [selectedValue]="responsibleControl.value"
           [enableSearch]="false"

@@ -75,6 +75,7 @@
           @case (1) {
             <app-step-identification 
               [initialData]="identificationData()"
+              [readOnly]="mode === 'READ_ONLY'"
               (dataChange)="updateIdentification($event)"
             ></app-step-identification>
           }
@@ -85,6 +86,7 @@
                 [organizationName]="data.organizationName"
                 [selectedMembers]="responseTeam()"
                 [initialResponsible]="responsible()"
+                [readOnly]="mode === 'READ_ONLY'"
                 (selectionChange)="updateResponseTeam($event)"
                 (responsibleChange)="responsible.set($event)"
               ></app-step-response-team>
@@ -98,7 +100,7 @@
     <!-- Footer / Actions -->
     <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between relative">
       <!-- Success Indicator -->
-      @if (isSaved()) {
+      @if (isSaved() && mode !== 'READ_ONLY') {
         <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-bounce">
           <span class="material-symbols-rounded text-lg">check_circle</span>
           <span class="text-sm font-medium">Guardado exitosamente</span>
@@ -107,49 +109,61 @@
       
       <button 
         (click)="prevStep()" 
-        [disabled]="currentStep() === 1 || isSaving()"
+        [disabled]="currentStep() === 1"
         class="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
       >
         <span class="material-symbols-rounded text-lg">arrow_back</span>
         Anterior
       </button>
 
-      @if (currentStep() < 2) {
-        <button 
-          (click)="nextStep()"
-          [disabled]="isSaving()"
-          class="px-4 py-2 rounded-lg bg-blue-600 text-sm text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          @if (isSaving()) {
-            <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
-            Procesando...
-          } @else {
+      @if (mode !== 'READ_ONLY') {
+        @if (currentStep() < 2) {
+          <button 
+            (click)="nextStep()"
+            [disabled]="isSaving()"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-sm text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (isSaving()) {
+              <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
+              Procesando...
+            } @else {
+              Siguiente
+              <span class="material-symbols-rounded text-lg">arrow_forward</span>
+            }
+          </button>
+        } @else {
+          <button 
+            (click)="finishWizard()"
+            [disabled]="isSaving()"
+            class="px-4 py-2 rounded-lg bg-green-600 text-sm text-white font-medium hover:bg-green-700 shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (isSaving()) {
+              <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
+              @if (initialData) {
+                Actualizando...
+              } @else {
+                Finalizando...
+              }
+            } @else {
+              @if (initialData) {
+                Actualizar
+              } @else {
+                Finalizar
+              }
+              <span class="material-symbols-rounded text-lg">check</span>
+            }
+          </button>
+        }
+      } @else {
+        @if (currentStep() < 2) {
+          <button 
+            (click)="nextStep()"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-sm text-white font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1.5"
+          >
             Siguiente
             <span class="material-symbols-rounded text-lg">arrow_forward</span>
-          }
-        </button>
-      } @else {
-        <button 
-          (click)="finishWizard()"
-          [disabled]="isSaving()"
-          class="px-4 py-2 rounded-lg bg-green-600 text-sm text-white font-medium hover:bg-green-700 shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          @if (isSaving()) {
-            <span class="material-symbols-rounded animate-spin text-lg">refresh</span>
-            @if (initialData) {
-              Actualizando...
-            } @else {
-              Finalizando...
-            }
-          } @else {
-            @if (initialData) {
-              Actualizar
-            } @else {
-              Finalizar
-            }
-            <span class="material-symbols-rounded text-lg">check</span>
-          }
-        </button>
+          </button>
+        }
       }
     </div>
 

@@ -7,7 +7,7 @@ import { ProjectsService } from '../../../../core/services/projects.service';
 import { Project, ProjectStatus } from '../../../../core/models/domain.models';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
-import { ProjectWizardComponent } from './components/project-wizard/project-wizard.component';
+import { ProjectWizardComponent, WizardMode } from './components/project-wizard/project-wizard.component';
 import { StepTechnicalTableComponent } from './components/project-wizard/steps/step-technical-table/step-technical-table.component';
 import { TechnicalTableAssignment, EvaluationAxis } from './components/project-wizard/project-wizard.types';
 import { firstValueFrom } from 'rxjs';
@@ -26,6 +26,7 @@ export class AdminProjectsPageComponent implements OnInit {
 
   // State
   showWizard = signal(false); // Controls Wizard visibility
+  wizardMode = signal<WizardMode>('FULL');
   searchQuery = signal('');
   selectedStatus = signal<ProjectStatus | null>(null);
   showAssignModal = signal<boolean>(false);
@@ -87,7 +88,8 @@ export class AdminProjectsPageComponent implements OnInit {
   }
 
   // Actions
-  toggleWizard(show: boolean) {
+  toggleWizard(show: boolean, mode: WizardMode = 'FULL') {
+    this.wizardMode.set(mode);
     this.showWizard.set(show);
     if (!show) {
       // Refresh list when wizard closes (in case new project was added)
@@ -101,13 +103,30 @@ export class AdminProjectsPageComponent implements OnInit {
     this.toggleWizard(true);
   }
 
+  viewProject(project: Project) {
+    this.isLoading.set(true);
+    this.projectsService.getProjectById(project.id).subscribe({
+      next: (response) => {
+        const fullProject = response.data;
+        this.selectedProject.set(fullProject);
+        this.toggleWizard(true, 'READ_ONLY');
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        const errorMessage = error?.error?.message || error?.message || 'Error al cargar el proyecto';
+        this.alertService.error(errorMessage);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
   editProject(project: Project) {
     this.isLoading.set(true);
     this.projectsService.getProjectById(project.id).subscribe({
       next: (response) => {
         const fullProject = response.data;
         this.selectedProject.set(fullProject);
-        this.toggleWizard(true);
+        this.toggleWizard(true, 'FULL');
         this.isLoading.set(false);
       },
       error: (error) => {

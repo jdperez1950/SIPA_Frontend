@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "http://172.27.0.65:5000/",
+    "target": "http://colombiansofture.com:30199/",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"

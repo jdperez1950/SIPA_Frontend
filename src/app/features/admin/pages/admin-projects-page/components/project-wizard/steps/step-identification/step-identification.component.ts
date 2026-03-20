@@ -29,6 +29,7 @@ import { FinanciacionFuente } from '../../../../../../../../core/models/domain.m
 })
 export class StepIdentificationComponent implements OnInit {
   @Input() initialData: IdentificationData | null = null;
+  @Input() readOnly = false;
   @Output() dataChange = new EventEmitter<IdentificationData>();
 
   private fb = inject(FormBuilder);
@@ -204,6 +205,10 @@ export class StepIdentificationComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
+    
+    if (this.readOnly) {
+      this.form.disable();
+    }
     
     // Emit changes to parent
     this.form.valueChanges.subscribe(value => {

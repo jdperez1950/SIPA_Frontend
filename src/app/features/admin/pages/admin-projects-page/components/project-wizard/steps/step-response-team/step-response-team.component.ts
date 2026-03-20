@@ -33,6 +33,7 @@ export class StepResponseTeamComponent implements OnInit {
   @Input({ required: true }) organizationName!: string;
   @Input({ required: true }) selectedMembers: ResponseTeamMember[] = [];
   @Input() initialResponsible: ParametroSelect | null = null;
+  @Input() readOnly = false;
   @Output() selectionChange = new EventEmitter<ResponseTeamMember[]>();
   @Output() responsibleChange = new EventEmitter<ParametroSelect | null>();
 
@@ -74,6 +75,11 @@ export class StepResponseTeamComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
+    
+    if (this.readOnly) {
+      this.userForm.disable();
+      this.responsibleControl.disable();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {

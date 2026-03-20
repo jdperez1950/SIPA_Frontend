@@ -16,7 +16,7 @@ import {
 } from './project-wizard.types';
 import { ModalAlertComponent, ModalAlertData } from '../../../../../../shared/components/modal-alert';
 
-export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY';
+export type WizardMode = 'FULL' | 'IDENTIFICATION_ONLY' | 'READ_ONLY';
 
 @Component({
   selector: 'app-project-wizard',
