@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AdminLayoutService } from '../../../services/admin-layout.service';
+import { TooltipComponent } from '../../../../../shared/components/tooltip/tooltip.component';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TooltipComponent],
   templateUrl: './sidebar.component.html',
   styles: []
 })

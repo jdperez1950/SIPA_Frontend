@@ -51,9 +51,11 @@ export interface TableAction {
                   <span class="material-symbols-rounded text-sm align-middle">unfold_less</span>
                 </button>
                 
-                <button (click)="toggleCardView()" class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 border-l border-gray-300 transition-colors" title="Cambiar Vista">
-                  <span class="material-symbols-rounded text-sm align-middle">{{ isCardView() ? 'table_chart' : 'grid_view' }}</span>
-                </button>
+                @if (showViewToggle) {
+                  <button (click)="toggleCardView()" class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 border-l border-gray-300 transition-colors" title="Cambiar Vista">
+                    <span class="material-symbols-rounded text-sm align-middle">{{ isCardView() ? 'table_chart' : 'grid_view' }}</span>
+                  </button>
+                }
               </div>
             }
           </div>
@@ -364,6 +366,7 @@ export class ExpandableTableComponent implements OnDestroy, AfterContentInit {
   @Input() showExpandControls = true;
   @Input() showFooter = true;
   @Input() showRowToggle = true;
+  @Input() showViewToggle = true;
 
   @Output() selectionChange = new EventEmitter<any[]>();
 

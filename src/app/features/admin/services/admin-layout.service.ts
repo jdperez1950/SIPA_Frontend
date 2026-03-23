@@ -10,7 +10,7 @@ export interface Breadcrumb {
   providedIn: 'root'
 })
 export class AdminLayoutService implements OnDestroy {
-  isSidebarOpen = signal<boolean>(true);
+  isSidebarOpen = signal<boolean>(false);
   breadcrumbs = signal<Breadcrumb[]>([]);
 
   private platformId = inject(PLATFORM_ID);
@@ -25,9 +25,6 @@ export class AdminLayoutService implements OnDestroy {
     if (isPlatformBrowser(this.platformId)) {
       // Tailwind 'lg' breakpoint is usually 1024px
       this.mediaQueryList = window.matchMedia('(min-width: 1024px)');
-      
-      // Set initial state
-      this.isSidebarOpen.set(this.mediaQueryList.matches);
 
       // Listener for changes
       this.mediaQueryListener = (e: MediaQueryListEvent) => {

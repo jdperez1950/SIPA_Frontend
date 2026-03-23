@@ -1,4 +1,4 @@
-import { Component, input, booleanAttribute, inject, HostListener, signal } from '@angular/core';
+import { Component, input, booleanAttribute, inject, HostListener, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PAVIS_COLORS } from '../../../core/constants/theme-colors';
 import { ElementRef } from '@angular/core';
@@ -8,9 +8,9 @@ import { ElementRef } from '@angular/core';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="relative inline-block" (mouseenter)="updatePosition()">
+    <div class="relative inline-block" (mouseenter)="showTooltip()" (mouseleave)="hideTooltip()">
       <ng-content></ng-content>
-      @if (visible()) {
+      @if (autoShow() ? internalVisible() : visible()) {
         <div 
           class="fixed z-[10000] px-2.5 py-1.5 text-xs font-medium rounded-lg shadow-lg pointer-events-none transition-opacity duration-200 leading-tight"
           [class]="positionClass()"
@@ -39,8 +39,10 @@ export class TooltipComponent {
   position = input<'top' | 'bottom' | 'left' | 'right'>('top');
   visible = input(false, { transform: booleanAttribute });
   variant = input<'dark' | 'light' | 'brand'>('dark');
+  autoShow = input(true, { transform: booleanAttribute });
   tooltipTop = signal('0px');
   tooltipLeft = signal('0px');
+  internalVisible = signal(false);
 
   positionClass(): string {
     const positions = {
@@ -106,10 +108,21 @@ export class TooltipComponent {
     this.tooltipLeft.set(`${rect.right + gap}px`);
   }
 
+  showTooltip(): void {
+    if (!this.autoShow()) return;
+    this.updatePosition();
+    this.internalVisible.set(true);
+  }
+
+  hideTooltip(): void {
+    if (!this.autoShow()) return;
+    this.internalVisible.set(false);
+  }
+
   @HostListener('window:scroll')
   @HostListener('window:resize')
   handleViewportChange(): void {
-    if (!this.visible()) return;
+    if (!this.visible() && !this.internalVisible()) return;
     this.updatePosition();
   }
 }
