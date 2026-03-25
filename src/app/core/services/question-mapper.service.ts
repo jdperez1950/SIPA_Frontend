@@ -80,8 +80,12 @@ export class QuestionMapperService {
     frontendResponse: QuestionResponse,
     projectId: string
   ): SaveAnswerRequest {
+    const isEmptyGuid = frontendResponse.id === '00000000-0000-0000-0000-000000000000';
+    const selectedOptionId = frontendResponse.selectedOptionId || frontendResponse.value;
+    const answerText = this.getOptionLabelById(frontendResponse.questionId, selectedOptionId);
+    
     return {
-      id: frontendResponse.id,
+      id: isEmptyGuid ? undefined : frontendResponse.id,
       project: {
         id: projectId
       },
@@ -89,11 +93,12 @@ export class QuestionMapperService {
         id: frontendResponse.questionId
       },
       currentAnswer: {
-        id: frontendResponse.selectedOptionId || frontendResponse.value
+        id: selectedOptionId
       },
+      answerText: answerText,
       organizationMessage: frontendResponse.observation,
       advisorMessage: frontendResponse.evaluatorObservation,
-      priority: frontendResponse.priority
+      priority: this.mapPriority(frontendResponse.priority)
     };
   }
 
@@ -204,15 +209,33 @@ export class QuestionMapperService {
   }
 
   private mapEvaluationState(evaluationState?: string): any {
-    if (!evaluationState) return 'PENDING';
+      if (!evaluationState) return 'Sin responder';
+      
+      const stateMap: Record<string, string> = {
+        'Validadas': 'Validadas',
+        'Devueltas': 'Devueltas',
+        'Sin validar': 'Sin validar',
+        'Sin responder': 'Sin responder',
+        'VALIDATED': 'Validadas',
+        'RETURNED': 'Devueltas',
+        'IN_PROCESS': 'Sin validar',
+        'PENDING': 'Sin responder'
+      };
+      return stateMap[evaluationState] || 'Sin responder';
+    }
+
+  private mapPriority(priority?: string): string | undefined {
+    if (!priority) return undefined;
     
-    const stateMap: Record<string, string> = {
-      'VALIDATED': 'VALIDATED',
-      'RETURNED': 'RETURNED',
-      'IN_PROCESS': 'IN_PROCESS',
-      'PENDING': 'PENDING'
+    const priorityMap: Record<string, string> = {
+      'Urgente': 'Urgente',
+      'Alerta': 'Alerta',
+      'Importante': 'Importante',
+      'URGENT': 'Urgente',
+      'IMPORTANT': 'Alerta',
+      'NORMAL': 'Importante'
     };
-    return stateMap[evaluationState] || 'PENDING';
+    return priorityMap[priority] || priority;
   }
 
   private getOptionIdByValue(questionId: string, value: any): string {

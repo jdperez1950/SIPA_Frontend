@@ -161,7 +161,7 @@ export class QuestionPageComponent implements OnInit {
         date: new Date().toISOString(),
         advisorName: this.currentUser()?.name || 'Asesor',
         advisorMessage: event.message,
-        priority: event.priority as 'NORMAL' | 'IMPORTANT' | 'URGENT',
+        priority: event.priority as 'Importante' | 'Alerta' | 'Urgente',
         validityPeriod: 'Pv' 
       };
 
@@ -306,7 +306,7 @@ export class QuestionPageComponent implements OnInit {
       answerId: existing?.answerId,
       evidence: existing?.evidence,
       observation: existing?.observation,
-      evaluationStatus: existing?.evaluationStatus || 'PENDING',
+      evaluationStatus: existing?.evaluationStatus || 'Sin responder',
       lastUpdated: new Date().toISOString(),
       isUnsaved: true
     });
@@ -321,7 +321,7 @@ export class QuestionPageComponent implements OnInit {
       answerId: existing?.answerId,
       evidence: existing?.evidence,
       observation: observation,
-      evaluationStatus: existing?.evaluationStatus || 'PENDING',
+      evaluationStatus: existing?.evaluationStatus || 'Sin responder',
       lastUpdated: new Date().toISOString(),
       isUnsaved: true
     });

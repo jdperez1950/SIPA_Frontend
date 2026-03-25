@@ -94,6 +94,7 @@ export interface SaveAnswerRequest {
   currentAnswer: {
     id: string;
   };
+  answerText?: string;
   advisorMessage?: string;
   organizationMessage?: string;
   priority?: string;

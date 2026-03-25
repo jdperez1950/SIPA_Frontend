@@ -91,7 +91,7 @@ export class QuestionRibbonComponent {
     }
     
     if (response.value !== null && response.value !== undefined && response.value !== '') {
-      return 'PENDING';
+      return 'Sin responder';
     }
     
     return null;

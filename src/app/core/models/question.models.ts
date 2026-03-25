@@ -74,7 +74,7 @@ export interface AssistanceLogEntry {
   date: string;
   advisorName: string;
   advisorMessage: string;
-  priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
+  priority: 'Importante' | 'Alerta' | 'Urgente';
   validityPeriod: string; // e.g. "Pv" (Periodo Vigente)
   correctionUpdate?: {
     responderName: string;
@@ -83,7 +83,7 @@ export interface AssistanceLogEntry {
   };
 }
 
-export type EvaluationStatus = 'PENDING' | 'VALIDATED' | 'RETURNED' | 'IN_PROCESS';
+export type EvaluationStatus = 'Sin responder' | 'Sin validar' | 'Validadas' | 'Devueltas';
 
 export interface QuestionResponse {
   id?: string;

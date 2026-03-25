@@ -37,20 +37,20 @@ Con límite de caracteres, también para las respuestas del responsable"
               <!-- Priority Selector -->
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span class="w-4 h-4 rounded-full" 
+                  <span class="w-4 h-4 rounded-full"
                     [ngClass]="{
-                      'bg-green-500': form.get('priority')?.value === 'NORMAL',
-                      'bg-orange-500': form.get('priority')?.value === 'IMPORTANT',
-                      'bg-red-500': form.get('priority')?.value === 'URGENT'
+                      'bg-green-500': form.get('priority')?.value === 'Importante',
+                      'bg-orange-500': form.get('priority')?.value === 'Alerta',
+                      'bg-red-500': form.get('priority')?.value === 'Urgente'
                     }"></span>
                 </div>
-                <select 
+                <select
                   formControlName="priority"
                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white appearance-none cursor-pointer text-gray-600"
                 >
-                  <option value="NORMAL">Normal</option>
-                  <option value="IMPORTANT">Importante</option>
-                  <option value="URGENT">Urgente</option>
+                  <option value="Importante">Importante</option>
+                  <option value="Alerta">Alerta</option>
+                  <option value="Urgente">Urgente</option>
                 </select>
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -87,7 +87,7 @@ export class TechnicalAssistanceRegisterComponent {
 
   form = new FormGroup({
     message: new FormControl('', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]),
-    priority: new FormControl('NORMAL', [Validators.required])
+    priority: new FormControl('Importante', [Validators.required])
   });
 
   onSubmit() {
@@ -102,7 +102,7 @@ export class TechnicalAssistanceRegisterComponent {
       // Reset form after emit
       setTimeout(() => {
         this.isSubmitting.set(false);
-        this.form.reset({ priority: 'NORMAL' });
+        this.form.reset({ priority: 'Importante' });
       }, 500);
     }
   }

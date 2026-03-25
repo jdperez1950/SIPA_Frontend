@@ -34,18 +34,18 @@ import { AssistanceLogEntry } from '../../../../core/models/question.models';
                   <td class="px-4 py-4 align-top">
                     <div class="space-y-2">
                       <div class="flex items-center gap-2 flex-wrap">
-                        @if (entry.priority !== 'NORMAL') {
+                        @if (entry.priority !== 'Importante') {
                           <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                             [ngClass]="{
-                              'bg-red-100 text-red-800': entry.priority === 'URGENT',
-                              'bg-blue-100 text-blue-800': entry.priority === 'IMPORTANT'
+                              'bg-red-100 text-red-800': entry.priority === 'Urgente',
+                              'bg-blue-100 text-blue-800': entry.priority === 'Alerta'
                             }">
-                            <span class="w-2 h-2 mr-1 rounded-full" 
+                            <span class="w-2 h-2 mr-1 rounded-full"
                               [ngClass]="{
-                                'bg-red-500': entry.priority === 'URGENT',
-                                'bg-blue-500': entry.priority === 'IMPORTANT'
+                                'bg-red-500': entry.priority === 'Urgente',
+                                'bg-blue-500': entry.priority === 'Alerta'
                               }"></span>
-                            {{ entry.priority === 'URGENT' ? 'URGENTE' : 'IMPORTANTE' }}
+                            {{ entry.priority }}
                           </span>
                         }
                         <span class="text-gray-500 text-xs">{{ entry.date | date:'dd/MM/yyyy' }}</span>

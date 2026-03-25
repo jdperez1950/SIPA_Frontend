@@ -1,4 +1,4 @@
-export type QuestionResponseStatus = 'VALIDATED' | 'RETURNED' | 'IN_PROCESS' | 'PENDING';
+export type QuestionResponseStatus = 'Validadas' | 'Devueltas' | 'Sin responder' | 'Sin validar';
 
 export interface QuestionStatusConfig {
   icon: string;
@@ -6,25 +6,25 @@ export interface QuestionStatusConfig {
 }
 
 export const QUESTION_STATUS_CONFIG: Record<QuestionResponseStatus, QuestionStatusConfig> = {
-  VALIDATED: {
+  'Validadas': {
     icon: 'check',
-    label: 'Validado'
+    label: 'Validadas'
   },
-  RETURNED: {
+  'Devueltas': {
     icon: 'warning',
     label: 'Requiere ajustes'
   },
-  IN_PROCESS: {
-    icon: 'sync',
-    label: 'En proceso'
-  },
-  PENDING: {
+  'Sin responder': {
     icon: 'check',
-    label: 'Respondido - Pendiente de validación'
+    label: 'Sin responder'
+  },
+  'Sin validar': {
+    icon: 'clock',
+    label: 'En proceso de validación'
   }
 };
 
-export const QUESTION_STATUS_ORDER: QuestionResponseStatus[] = ['VALIDATED', 'RETURNED', 'IN_PROCESS', 'PENDING'];
+export const QUESTION_STATUS_ORDER: QuestionResponseStatus[] = ['Validadas', 'Devueltas', 'Sin responder', 'Sin validar'];
 
 export const getQuestionStatusConfig = (status: QuestionResponseStatus | null): QuestionStatusConfig | null => {
   if (!status) {
