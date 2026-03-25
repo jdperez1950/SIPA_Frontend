@@ -97,8 +97,9 @@ export class QuestionMapperService {
       },
       answerText: answerText,
       organizationMessage: frontendResponse.observation,
-      advisorMessage: frontendResponse.evaluatorObservation,
-      priority: this.mapPriority(frontendResponse.priority)
+      adviserMessage: frontendResponse.evaluatorMessage,
+      priority: this.mapPriority(frontendResponse.priority),
+      state: this.mapEvaluationStateToFrontend(frontendResponse.evaluationStatus)
     };
   }
 
@@ -223,6 +224,20 @@ export class QuestionMapperService {
       };
       return stateMap[evaluationState] || 'Sin responder';
     }
+
+  private mapEvaluationStateToFrontend(evaluationState?: string): string | undefined {
+    if (!evaluationState || evaluationState === 'Sin responder') return undefined;
+    
+    const stateMap: Record<string, string> = {
+      'Validadas': 'Validadas',
+      'Devueltas': 'Devueltas',
+      'Sin validar': 'Sin validar',
+      'VALIDATED': 'Validadas',
+      'RETURNED': 'Devueltas',
+      'IN_PROCESS': 'Sin validar'
+    };
+    return stateMap[evaluationState] || evaluationState;
+  }
 
   private mapPriority(priority?: string): string | undefined {
     if (!priority) return undefined;

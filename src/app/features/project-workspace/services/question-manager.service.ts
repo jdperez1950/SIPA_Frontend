@@ -144,9 +144,18 @@ export class QuestionManagerService {
         success: true,
         message: result?.message || 'Respuesta guardada exitosamente'
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting response:', error);
-      throw error;
+      
+      let errorMessage = 'Error al guardar la respuesta';
+      
+      if (error?.error?.message) {
+        errorMessage = error.error.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 

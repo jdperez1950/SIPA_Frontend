@@ -94,6 +94,7 @@ export interface QuestionResponse {
   evidence?: EvidenceUpload[];
   evaluationStatus?: EvaluationStatus;
   evaluatorObservation?: string;
+  evaluatorMessage?: string;
   assistanceLog?: AssistanceLogEntry[];
   lastUpdated: string;
   selectedOptionId?: string;

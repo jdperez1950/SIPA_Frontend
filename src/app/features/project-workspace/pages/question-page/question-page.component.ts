@@ -147,12 +147,12 @@ export class QuestionPageComponent implements OnInit {
     }
   }
 
-  async onRegisterAssistance(event: { message: string, priority: string }) {
+  async onEvaluateAnswer(event: { state: 'Validadas' | 'Devueltas', message: string, priority: string, observation?: string }) {
     const qid = this.currentQuestion()?.id;
     if (!qid) return;
 
     try {
-      this.loadingService.show('Guardando nota de asistencia...');
+      this.loadingService.show('Guardando evaluación y nota de asistencia...');
       
       const response = this.questionManager.getResponse(qid);
       
@@ -168,25 +168,25 @@ export class QuestionPageComponent implements OnInit {
       const updatedResponse: any = {
         ...response,
         questionId: qid,
-        evaluatorObservation: event.message, 
-        priority: event.priority,
+        evaluationStatus: event.state,
+        evaluatorObservation: event.observation || response?.evaluatorObservation,
+        evaluatorMessage: event.message,
         assistanceLog: [newEntry, ...(response?.assistanceLog || [])],
         lastUpdated: new Date().toISOString(),
         isUnsaved: true
       };
 
-      this.questionManager.saveResponse(updatedResponse);
-
       const result = await this.questionManager.submitResponse(updatedResponse, this.projectId()!);
       
       if (result.success) {
-        this.alertService.success('Nota de asistencia registrada exitosamente');
-      } else {
-        throw new Error(result.message);
+        const message = event.state === 'Validadas' 
+          ? 'Respuesta validada exitosamente' 
+          : 'Respuesta devuelta para corrección';
+        this.alertService.success(message);
       }
     } catch (error: any) {
-      console.error('Error saving assistance note:', error);
-      this.alertService.error(error?.message || 'Error al guardar la nota de asistencia');
+      console.error('Error evaluating answer:', error);
+      this.alertService.error(error?.message || 'Error al guardar la evaluación');
     } finally {
       this.loadingService.hide();
     }
@@ -237,9 +237,9 @@ export class QuestionPageComponent implements OnInit {
      return resp ? resp.value : null;
    }
 
-  getEvaluationStatus(questionId: string) {
+  getEvaluationStatus(questionId: string): string | null {
     const resp = this.questionManager.getResponse(questionId);
-    return resp?.evaluationStatus;
+    return resp?.evaluationStatus || null;
   }
 
   getFeedbackText(question: QuestionDefinition): string | null {

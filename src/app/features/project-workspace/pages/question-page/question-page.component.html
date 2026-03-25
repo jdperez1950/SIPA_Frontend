@@ -320,7 +320,8 @@
     @if (isAdvisor()) {
       <div class="mt-8 border-t border-gray-200 pt-6">
         <app-technical-assistance-register
-          (register)="onRegisterAssistance($event)"
+          [currentStatus]="getEvaluationStatus(question.id)"
+          (register)="onEvaluateAnswer($event)"
         ></app-technical-assistance-register>
       </div>
     }

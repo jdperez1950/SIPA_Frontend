@@ -95,9 +95,10 @@ export interface SaveAnswerRequest {
     id: string;
   };
   answerText?: string;
-  advisorMessage?: string;
+  adviserMessage?: string;
   organizationMessage?: string;
   priority?: string;
+  state?: string;
 }
 
 export interface EvidenceUploadRequest {
