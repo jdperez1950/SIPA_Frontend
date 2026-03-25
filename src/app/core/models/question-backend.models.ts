@@ -76,14 +76,15 @@ export interface AnswerRequestBackend {
   currentAnswer?: QuestionOptionResponseBackend;
   advisorMessage?: string;
   priority?: string;
-  validity?: string;
+  answerText?: string;
   progressPercentage?: number;
-  evaluationState?: string;
+  state?: string;
   organizationMessage?: string;
   evidences?: EvidenceResponseBackend[];
 }
 
 export interface SaveAnswerRequest {
+  id?: string;
   project: {
     id: string;
   };

@@ -86,6 +86,7 @@ export interface AssistanceLogEntry {
 export type EvaluationStatus = 'PENDING' | 'VALIDATED' | 'RETURNED' | 'IN_PROCESS';
 
 export interface QuestionResponse {
+  id?: string;
   answerId?: string;
   questionId: string;
   value: any;
@@ -99,7 +100,7 @@ export interface QuestionResponse {
   userId?: string;
   userName?: string;
   priority?: string;
-  validity?: string;
+  answerText?: string;
   progressPercentage?: number;
   isUnsaved?: boolean;
 }

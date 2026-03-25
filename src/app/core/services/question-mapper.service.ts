@@ -58,18 +58,19 @@ export class QuestionMapperService {
 
   mapBackendResponse(backendAnswer: AnswerRequestBackend): QuestionResponse {
     return {
+      id: backendAnswer.id,
       answerId: backendAnswer.id,
       questionId: backendAnswer.question.id,
       value: backendAnswer.currentAnswer?.id,
       selectedOptionId: backendAnswer.currentAnswer?.id,
       observation: backendAnswer.organizationMessage,
-      evaluationStatus: this.mapEvaluationState(backendAnswer.evaluationState),
+      evaluationStatus: this.mapEvaluationState(backendAnswer.state),
       evaluatorObservation: backendAnswer.advisorMessage,
       lastUpdated: backendAnswer.answeredAt || new Date().toISOString(),
       userId: backendAnswer.user?.id,
       userName: backendAnswer.user?.name,
       priority: backendAnswer.priority,
-      validity: backendAnswer.validity,
+      answerText: backendAnswer.answerText,
       progressPercentage: backendAnswer.progressPercentage,
       evidence: this.mapEvidences(backendAnswer.evidences, backendAnswer.question.attachments)
     };
@@ -80,6 +81,7 @@ export class QuestionMapperService {
     projectId: string
   ): SaveAnswerRequest {
     return {
+      id: frontendResponse.id,
       project: {
         id: projectId
       },
