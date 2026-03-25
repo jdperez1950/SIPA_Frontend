@@ -15,6 +15,7 @@ import { TechnicalAssistanceRegisterComponent } from '../../components/technical
 import { LoadingService } from '../../../../core/services/loading.service';
 import { ProjectsService } from '../../../../core/services/projects.service';
 import { AlertService } from '../../../../core/services/alert.service';
+import { AnswerSummaryComponent } from '../../components/answer-summary/answer-summary.component';
 import { getAxisColorByName, AXIS_COLORS } from '../../../../core/config/axis-colors.config';
 import { QuestionService } from '../../../../core/services/question.service';
 import { AuthService } from '../../../../core/auth/services/auth.service';
@@ -24,7 +25,7 @@ import { environment } from '../../../../../environments/environment';
 @Component({
   selector: 'app-question-page',
   standalone: true,
-  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, TechnicalAssistanceLogComponent, TechnicalAssistanceRegisterComponent, FormsModule],
+  imports: [CommonModule, DynamicInputComponent, EvidenceUploaderComponent, TechnicalAssistanceLogComponent, TechnicalAssistanceRegisterComponent, FormsModule, AnswerSummaryComponent],
   templateUrl: './question-page.component.html'
 })
 export class QuestionPageComponent implements OnInit {
@@ -252,6 +253,25 @@ export class QuestionPageComponent implements OnInit {
   hasAnswer(questionId: string): boolean {
     const val = this.getCurrentValue(questionId);
     return val !== null && val !== undefined && val !== '';
+  }
+
+  hasSubmittedSummary(questionId: string): boolean {
+    const resp = this.questionManager.getResponse(questionId);
+    // Verificar si la respuesta ya fue guardada en el backend y no está en estado "Sin responder"
+    return !!resp && !!resp.answerText && resp.evaluationStatus !== 'Sin responder';
+  }
+
+  getSubmittedAnswerText(questionId: string): string {
+    const resp = this.questionManager.getResponse(questionId);
+    return resp?.answerText || '';
+  }
+
+  getSubmittedAnswerDescription(question: QuestionDefinition): string {
+    const resp = this.questionManager.getResponse(question.id);
+    const optionId = resp?.selectedOptionId || resp?.value;
+    if (!optionId) return '';
+    const option = question.options?.find(o => o.value === optionId);
+    return option?.helpText || '';
   }
 
   shouldShowEvidence(question: QuestionDefinition): boolean {

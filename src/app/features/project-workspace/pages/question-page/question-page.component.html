@@ -54,20 +54,29 @@
 
           <!-- Área de Respuesta -->
           <div>
-            @if (isOrganization()) {
-              <div class="text-sky-500 text-sm font-medium mb-2 italic">Responda si cumple con el requisito:</div>
+            @if (hasSubmittedSummary(question.id) && isOrganization() && getEvaluationStatus(question.id) === 'Devueltas') {
+              <div class="text-sky-500 text-sm font-medium mb-2 italic">Actualizar respuesta:</div>
               <app-dynamic-input 
                   [question]="question"
                   [initialValue]="getCurrentValue(question.id)"
                   (valueChange)="onValueChange(question.id, $event)"
               ></app-dynamic-input>
             } @else {
-              <div class="text-sky-500 text-sm font-medium mb-2 italic">Respuesta de la organización:</div>
-              <app-dynamic-input 
-                  [question]="question"
-                  [initialValue]="getCurrentValue(question.id)"
-                  [disabled]="true"
-              ></app-dynamic-input>
+              @if (isOrganization()) {
+                <div class="text-sky-500 text-sm font-medium mb-2 italic">Responda si cumple con el requisito:</div>
+                <app-dynamic-input 
+                    [question]="question"
+                    [initialValue]="getCurrentValue(question.id)"
+                    (valueChange)="onValueChange(question.id, $event)"
+                ></app-dynamic-input>
+              } @else {
+                <div class="text-sky-500 text-sm font-medium mb-2 italic">Respuesta de la organización:</div>
+                <app-dynamic-input 
+                    [question]="question"
+                    [initialValue]="getCurrentValue(question.id)"
+                    [disabled]="true"
+                ></app-dynamic-input>
+              }
             }
             
             <!-- Estado Visual de Cumplimiento -->
@@ -239,24 +248,28 @@
         </div>
 
         <!-- Columna Derecha: Observaciones -->
-        <div class="lg:col-span-3 p-6">
-           <div class="text-sky-500 text-sm font-medium mb-2 italic">Descripción / Observaciones</div>
-           @if (isOrganization()) {
-             <textarea 
-               [ngModel]="getObservation(question.id)"
-               (ngModelChange)="onObservationChange(question.id, $event)"
-               [disabled]="!isObservationEnabled(question.id)"
-               class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
-               placeholder="Escriba aquí sus observaciones..."
-             ></textarea>
-           } @else {
-             <textarea 
-               [ngModel]="getObservation(question.id)"
-               [disabled]="true"
-               class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
-               placeholder="No hay observaciones..."
-             ></textarea>
-           }
+        <div class="lg:col-span-3 p-6 flex flex-col h-full">
+           <div class="flex-grow">
+             <div class="text-sky-500 text-sm font-medium mb-2 italic">Descripción / Observaciones</div>
+             @if (isOrganization()) {
+               <textarea 
+                 [ngModel]="getObservation(question.id)"
+                 (ngModelChange)="onObservationChange(question.id, $event)"
+                 [disabled]="!isObservationEnabled(question.id)"
+                 class="w-full h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
+                 placeholder="Escriba aquí sus observaciones..."
+               ></textarea>
+             } @else {
+               <textarea 
+                 [ngModel]="getObservation(question.id)"
+                 [disabled]="true"
+                 class="w-full h-[400px] p-4 border border-gray-200 rounded focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none text-sm text-gray-700 resize-none disabled:bg-gray-100 disabled:text-gray-400"
+                 placeholder="No hay observaciones..."
+               ></textarea>
+             }
+           </div>
+
+
         </div>
       </div>
 
@@ -315,6 +328,18 @@
         </div>
       </div>
     </div>
+
+               <!-- Resumen de Respuesta Registrada (Al final del panel, debajo de observaciones/bitácora) -->
+           @if (isOrganization() && hasSubmittedSummary(question.id)) {
+             <div class="mt-8 pt-6 border-t border-gray-200">
+               <div class="text-sky-500 text-sm font-medium mb-2 italic">Respuesta registrada:</div>
+               <app-answer-summary 
+                  [answerText]="getSubmittedAnswerText(question.id)"
+                  [answerDescription]="'Una vez el asesor asignado valide su respuesta verá habilitada la bitácora.'"
+                  [status]="getEvaluationStatus(question.id) || 'Sin validar'"
+               ></app-answer-summary>
+             </div>
+           }
 
     <!-- Registro de Asistencia Técnica (Solo Asesor) -->
     @if (isAdvisor()) {
