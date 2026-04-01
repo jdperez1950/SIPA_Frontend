@@ -3,24 +3,57 @@
   <div class="hidden lg:flex lg:w-1/2 flex-col items-center relative overflow-hidden" style="background-color: #2690ce; background-image: url('/img/fondo_pavis.png'); background-size: cover; background-position: bottom center; background-repeat: no-repeat;">
     
     <!-- Contenedor del contenido -->
-    <div class="relative z-10 flex flex-col items-center justify-start w-full h-full p-12 pt-6">
+    <div class="relative z-10 flex flex-col items-center justify-start w-full h-full p-12 pt-6 animate-fade-in-down">
       <!-- Icono Plataforma -->
       <img src="/img/icono_plataforma_pavis.png" alt="Plataforma PAVIS" class="w-full max-w-md drop-shadow-lg z-20" style="margin-top: 1vh;">
     </div>
   </div>
 
   <!-- SECCIÓN DERECHA: Formulario -->
-  <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:w-1/2 bg-white relative">
+  <div class="flex-1 flex flex-col justify-center py-6 px-4 sm:px-6 lg:flex-none lg:w-1/2 bg-pavis-bg relative animate-fade-in-up min-h-screen lg:h-screen overflow-y-auto overflow-x-hidden">
     
-    <div class="mx-auto w-full max-w-sm lg:w-96">
-      <!-- HEADER MÓVIL (Solo visible en pantallas pequeñas) -->
+    <!-- NUEVO CONTENIDO TEMPORAL (80/20) -->
+    <div class="flex-1 flex flex-col w-full h-full min-h-max max-w-4xl mx-auto">
+      
+      <!-- LOGO MINISTERIO (Visible en todas las resoluciones) -->
+      <div class="flex-none flex items-center justify-center pt-2 pb-6 animate-fade-in-down" style="animation-delay: 0.5s;">
+        <img src="/img/icono_ministerio.png" alt="Ministerio de Vivienda, Ciudad y Territorio" class="h-23 md:h-26 object-contain">
+      </div>
+
+      <!-- Fila Superior (80%) -->
+      <div class="flex-auto lg:flex-[8] flex items-center justify-center min-h-0 pb-6 lg:pb-4">
+        <a href="https://cargaslaborales-app-prd-lb-476125949.us-east-2.elb.amazonaws.com/Caracterizacion/DatosBasicos" target="_blank" rel="noopener noreferrer" class="w-full h-full flex items-center justify-center hover:scale-[1.02] transition-transform duration-300">
+          <!-- Imagen Desktop (Horizontal) -->
+          <img src="/img/inscripcion_proyecto_2.jpeg" alt="Registro de proyecto" class="hidden md:block w-full h-auto max-h-full object-cover rounded-2xl shadow-xl border border-gray-200">
+          
+          <!-- Imagen Móvil (Vertical) -->
+          <img src="/img/Inscripcion_proyecto.jpeg" alt="Registro de proyecto" class="block md:hidden w-full h-auto object-contain rounded-2xl shadow-xl border border-gray-200">
+        </a>
+      </div>
+
+      <!-- Fila Inferior (20%) -->
+      <div class="flex-none lg:flex-[2] flex items-center justify-center">
+        <div class="w-full bg-blue-50 border-1 border-[#2690ce] rounded-2xl p-6 text-center shadow-sm">
+          <p class="text-gray-700 font-medium mb-4 text-lg">
+            Si tienes dudas, inquietudes o sugerencias, puedes contactarnos a través del siguiente formulario:
+          </p>
+          <a href="https://forms.cloud.microsoft/r/jicACmCVFG" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-8 py-3 bg-[#2690ce] text-white font-bold rounded-xl hover:bg-[#1a75a8] transition-all shadow-md hover:shadow-lg">
+            <span class="material-symbols-rounded">support_agent</span>
+            Formulario de Contacto
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENEDOR ORIGINAL OCULTO -->
+    <div class="hidden mx-auto w-full max-w-sm lg:w-96">
+      
+      <!-- [TEMPORAL] TODO COMENTADO
       <div class="lg:hidden text-center mb-10 flex flex-col items-center p-4 bg-white/80 rounded-lg backdrop-blur-sm">
         <img src="/img/icono_plataforma_pavis.png" alt="Plataforma PAVIS" class="h-16 object-contain mb-4">
       </div>
 
-      <!-- HEADER FORMULARIO (Desktop + Móvil) -->
       <div class="text-center mb-8">
-        <!-- Logo Ministerio -->
         <div class="flex justify-center mb-8">
           <img src="/img/icono_ministerio.png" alt="Ministerio de Vivienda, Ciudad y Territorio" class="h-36 object-contain">
         </div>
@@ -30,7 +63,6 @@
         </h2>
       </div>
 
-      <!-- MENSAJES DE ERROR -->
       @if (errorMessage()) {
         <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md">
           <div class="flex">
@@ -46,26 +78,25 @@
         </div>
       }
 
-      <!-- FORMULARIO -->
       <app-login-form
         [isLoading]="isLoading()"
         (login)="handleLogin($event)">
       </app-login-form>
 
-      <!-- REGISTRO LINK -->
       <div class="mt-8 text-center bg-gray-50 rounded-lg p-6 border border-gray-100 shadow-sm">
         <p class="text-gray-600 mb-2 font-medium">Inscríbete al programa PAVIS</p>
         <a href="https://cargaslaborales-app-prd-lb-476125949.us-east-2.elb.amazonaws.com/Caracterizacion/DatosBasicos" target="_blank" rel="noopener noreferrer" class="inline-block text-lg font-bold text-pavis-primary hover:text-pavis-secondary transition-colors underline decoration-2 underline-offset-4">
           Ingresa aquí
         </a>
       </div>
+      -->
 
       <!-- VERSION FOOTER -->
-      <div class="mt-10 text-center">
+      <!-- <div class="mt-10 text-center">
         <p class="text-xs text-gray-400">
           v2.0 - 30-03.2026
         </p>
-      </div>
+      </div> -->
       
     </div>
   </div>
